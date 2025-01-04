@@ -27,5 +27,9 @@
 </template>
 
 <script setup lang="ts">
-const { currentGroup } = useGroup()
+const { currentGroup, fetchCurrentGroup } = useGroup()
+
+onMounted(() => {
+  fetchCurrentGroup()
+})
 </script>

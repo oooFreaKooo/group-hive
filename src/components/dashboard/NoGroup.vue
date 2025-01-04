@@ -20,10 +20,17 @@
         </button>
       </div>
     </div>
+
+    <CreateGroupModal v-model="showCreateModal" />
+    <JoinGroupModal v-model="showJoinModal" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import CreateGroupModal from './CreateGroupModal.vue'
+import JoinGroupModal from './JoinGroupModal.vue'
+
 const showCreateModal = ref(false)
 const showJoinModal = ref(false)
 </script>

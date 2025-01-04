@@ -46,6 +46,32 @@ export function useAuthForm() {
     }
   }
 
+  const ensureProfile = async () => {
+    const {
+      data: { user },
+    } = await client.auth.getUser()
+
+    if (!user) return
+
+    // Check if profile exists
+    const { data: profile } = await client
+      .from('profiles')
+      .select()
+      .eq('id', user.id)
+      .single()
+
+    // If no profile exists, create one
+    if (!profile) {
+      const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+      await client
+        .from('profiles')
+        .insert({
+          id: user.id,
+          name
+        })
+    }
+  }
+
   const handleRegister = async (email: string, password: string) => {
     if (!validateForm(email, password)) return
 
@@ -53,12 +79,17 @@ export function useAuthForm() {
     error.value = ''
 
     try {
-      const { error: authError } = await client.auth.signUp({
+      const { error: authError, data } = await client.auth.signUp({
         email,
         password
       })
 
       if (authError) throw authError
+
+      // If the user was created successfully, ensure they have a profile
+      if (data.user) {
+        await ensureProfile()
+      }
 
       await router.push('/auth/login?registered=true')
     } catch (err: any) {
@@ -72,6 +103,7 @@ export function useAuthForm() {
     error,
     loading,
     handleLogin,
-    handleRegister
+    handleRegister,
+    ensureProfile
   }
 }

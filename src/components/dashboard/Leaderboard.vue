@@ -30,7 +30,7 @@ const members = ref([
   {
     id: 1,
     name: 'John Doe',
-    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+    avatar_url: "https://api.dicebear.com/9.x/avataaars-neutral/svg",
     points: 100
   }
 ])
