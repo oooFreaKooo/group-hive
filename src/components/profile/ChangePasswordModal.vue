@@ -38,10 +38,9 @@
                                     as="h5"
                                     class="modal-title"
                                 >
-                                    Join a Group
+                                    Change Password
                                 </DialogTitle>
                                 <button
-                                    type="button"
                                     class="btn-close"
                                     aria-label="Close"
                                     @click="$emit('update:modelValue', false)"
@@ -52,16 +51,43 @@
                                 <form @submit.prevent="handleSubmit">
                                     <div class="mb-3">
                                         <label
-                                            for="inviteCode"
+                                            for="currentPassword"
                                             class="form-label"
-                                        >Invite Code</label>
+                                        >Current Password</label>
                                         <input
-                                            id="inviteCode"
-                                            v-model="inviteCode"
-                                            type="text"
-                                            placeholder="Enter the group invite code"
-                                            class="form-control"
+                                            id="currentPassword"
+                                            v-model="form.currentPassword"
+                                            type="password"
                                             required
+                                            class="form-control"
+                                        >
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label
+                                            for="newPassword"
+                                            class="form-label"
+                                        >New Password</label>
+                                        <input
+                                            id="newPassword"
+                                            v-model="form.newPassword"
+                                            type="password"
+                                            required
+                                            class="form-control"
+                                        >
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label
+                                            for="confirmPassword"
+                                            class="form-label"
+                                        >Confirm New Password</label>
+                                        <input
+                                            id="confirmPassword"
+                                            v-model="form.confirmPassword"
+                                            type="password"
+                                            required
+                                            class="form-control"
                                         >
                                     </div>
 
@@ -85,8 +111,8 @@
                                             :disabled="loading"
                                             class="btn btn-primary"
                                         >
-                                            <span v-if="loading">Joining...</span>
-                                            <span v-else>Join Group</span>
+                                            <span v-if="loading">Changing...</span>
+                                            <span v-else>Change Password</span>
                                         </button>
                                     </div>
                                 </form>
@@ -113,16 +139,42 @@ defineProps<{
     modelValue: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
     (e: 'update:modelValue', value: boolean): void
 }>()
 
-const inviteCode = ref('')
-// const { currentGroup, loading, error, joinGroup } = useGroup()
-const { loading, error, joinGroup } = useGroup()
+const client = useSupabaseClient()
+const loading = ref(false)
+const error = ref('')
+
+const form = ref({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+})
 
 const handleSubmit = async () => {
-    await joinGroup(inviteCode.value)
+    if (form.value.newPassword !== form.value.confirmPassword) {
+        error.value = 'New passwords do not match'
+        return
+    }
+
+    loading.value = true
+    error.value = ''
+
+    try {
+        const { error: err } = await client.auth.updateUser({
+            password: form.value.newPassword,
+        })
+
+        if (err) { throw err }
+
+        emit('update:modelValue', false)
+    } catch (err: any) {
+        error.value = err.message
+    } finally {
+        loading.value = false
+    }
 }
 </script>
 

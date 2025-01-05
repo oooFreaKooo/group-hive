@@ -1,46 +1,217 @@
 <template>
-  <div class="flex min-h-[calc(100vh-4rem)] flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-      <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-        Sign in to your account
-      </h2>
-      <p v-if="registered" class="mt-2 text-center text-sm text-green-600">
-        Registration successful! Please sign in.
-      </p>
-    </div>
+    <div class="container">
+        <div class="min-vh-100 d-flex align-items-center justify-content-center">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <form
+                            class="d-flex flex-column gap-4"
+                            @submit="handleSubmit"
+                        >
+                            <div class="text-center">
+                                <NuxtImg
+                                    src="/logo-icon.png"
+                                    class="mx-auto mb-4 rounded"
+                                    height="80"
+                                />
+                                <h2 class="fw-bold mb-2">
+                                    Login
+                                </h2>
+                                <p class="text-muted">
+                                    Geben Sie Ihre Anmeldedaten unten ein.
+                                </p>
+                            </div>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-      <div class="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
-        <AuthForm
-          mode="login"
-          button-text="Sign in"
-          @submit="handleLogin"
-        />
-        
-        <SocialAuth />
+                            <div>
+                                <label
+                                    for="email"
+                                    class="form-label"
+                                >E-Mail</label>
+                                <input
+                                    id="email"
+                                    v-model="form.email"
+                                    type="email"
+                                    class="form-control"
+                                    :class="{ 'is-invalid': errors.email }"
+                                    required
+                                >
+                                <div
+                                    v-if="errors.email"
+                                    class="invalid-feedback"
+                                >
+                                    {{ errors.email }}
+                                </div>
+                            </div>
 
-        <div class="mt-6">
-          <div class="relative">
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 text-gray-500">
-                Don't have an account?
-                <NuxtLink
-                  to="/auth/register"
-                  class="font-medium text-primary-600 hover:text-primary-500"
-                >
-                  Sign up
-                </NuxtLink>
-              </span>
+                            <div>
+                                <label
+                                    for="password"
+                                    class="form-label"
+                                >Passwort</label>
+                                <input
+                                    id="password"
+                                    v-model="form.password"
+                                    type="password"
+                                    class="form-control"
+                                    :class="{ 'is-invalid': errors.password }"
+                                    required
+                                >
+                                <div
+                                    v-if="errors.password"
+                                    class="invalid-feedback"
+                                >
+                                    {{ errors.password }}
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary w-100"
+                                :disabled="isLoading"
+                            >
+                                <div
+                                    v-if="isLoading"
+                                    class="spinner-border spinner-border-sm me-2"
+                                    role="status"
+                                >
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                Anmelden
+                            </button>
+
+                            <div class="position-relative">
+                                <hr class="text-muted">
+                                <div class="position-absolute top-50 start-50 translate-middle px-3 bg-white">
+                                    <span class="text-muted">oder</span>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="btn btn-dark w-100"
+                                :disabled="isLoading"
+                                @click="signInWithProvider('GITHUB')"
+                            >
+                                <i class="bi bi-github me-2" />
+                                Mit GitHub fortfahren
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <span class="text-muted">Noch kein Konto?</span>
+                    <router-link
+                        to="/auth/register"
+                        class="text-primary text-decoration-none ms-2"
+                    >
+                        Registrieren
+                    </router-link>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
-const route = useRoute()
-const { handleLogin } = useAuthForm()
-const registered = computed(() => route.query.registered === 'true')
+import { ValidationError } from 'yup'
+import { signInValidation } from '~/utils/formValidation'
+import { BaseError, useErrorHandler } from '~/composables/useErrorHandler'
+
+definePageMeta({
+    middleware: ['guest'],
+})
+
+useSeoMeta({
+    title: 'Anmelden - GroupHive',
+})
+
+const { auth } = useSupabaseClient()
+const { errorHandler } = useErrorHandler()
+
+const form = reactive({
+    email: undefined,
+    password: undefined,
+})
+const isLoading = ref(false)
+const errors = ref<Record<string, string>>({})
+
+const signInWithCredential = async () => {
+    try {
+        isLoading.value = true
+
+        const signIn = await auth.signInWithPassword({
+            email: form.email ?? '',
+            password: form.password ?? '',
+        })
+
+        if (signIn.error) {
+            throw new BaseError(signIn.error.status, signIn.error.message)
+        }
+
+        navigateTo('/dashboard')
+        isLoading.value = false
+    } catch (error) {
+        isLoading.value = false
+        errorHandler(error as BaseError)
+    }
+}
+
+const signInWithProvider = async (provider: 'GITHUB' | 'GOOGLE') => {
+    try {
+        isLoading.value = true
+
+        let signIn = null
+
+        if (provider === 'GITHUB') {
+            signIn = await auth.signInWithOAuth({
+                provider: 'github',
+                options: {
+                    redirectTo: `${window.location.origin}/confirm`,
+                },
+            })
+        }
+
+        if (signIn?.error) {
+            throw new BaseError(signIn.error.status, signIn.error.message)
+        }
+
+        navigateTo('/dashboard')
+        isLoading.value = false
+    } catch (error) {
+        isLoading.value = false
+        errorHandler(error as BaseError)
+    }
+}
+
+const handleSubmit = async (event: Event) => {
+    event.preventDefault()
+    errors.value = {}
+
+    try {
+        // Validate form using Yup schema
+        await signInValidation.validate(form, { abortEarly: false })
+
+        isLoading.value = true
+        await signInWithCredential()
+    } catch (error) {
+        if (error instanceof Error) {
+            // Handle Yup validation errors
+            if (error instanceof ValidationError) {
+                error.inner.forEach((err) => {
+                    if (err.path) {
+                        errors.value[err.path] = err.message
+                    }
+                })
+            } else if (error instanceof BaseError) {
+                errorHandler(error)
+            }
+        }
+        isLoading.value = false
+    }
+}
 </script>
+
+<style scoped>
+
+</style>

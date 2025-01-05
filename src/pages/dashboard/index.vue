@@ -1,35 +1,51 @@
 <template>
-  <div class="py-6">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
-      
-      <div v-if="!currentGroup" class="mt-6">
-        <NoGroup />
-      </div>
-      
-      <div v-else class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <!-- Group Overview -->
-        <GroupOverview :group="currentGroup" />
-        
-        <!-- Tasks Section -->
-        <div class="space-y-6">
-          <TaskList />
-          <CreateTaskButton />
+    <div class="py-4">
+        <div class="container">
+            <h1 class="h2">
+                Dashboard
+            </h1>
+
+            <div
+                v-if="!currentGroup"
+                class="mt-4"
+            >
+                <NoGroup />
+            </div>
+
+            <div
+                v-else
+                class="mt-4 row g-4"
+            >
+                <!-- Group Overview -->
+                <div class="col-12 col-lg-6">
+                    <GroupOverview :group="currentGroup" />
+                </div>
+
+                <!-- Tasks Section -->
+                <div class="col-12 col-lg-6">
+                    <div class="d-flex flex-column gap-4">
+                        <TaskList />
+                        <CreateTaskButton />
+                    </div>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="col-12">
+                    <Leaderboard />
+                </div>
+            </div>
         </div>
-        
-        <!-- Leaderboard -->
-        <div class="lg:col-span-2">
-          <Leaderboard />
-        </div>
-      </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
 const { currentGroup, fetchCurrentGroup } = useGroup()
 
+definePageMeta({
+    middleware: ['auth'],
+})
+
 onMounted(() => {
-  fetchCurrentGroup()
+    fetchCurrentGroup()
 })
 </script>

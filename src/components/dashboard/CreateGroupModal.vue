@@ -1,114 +1,176 @@
 <template>
-  <TransitionRoot appear :show="modelValue" as="template">
-    <Dialog as="div" @close="$emit('update:modelValue', false)" class="relative z-10">
-      <TransitionChild
+    <TransitionRoot
+        appear
+        :show="modelValue"
         as="template"
-        enter="duration-300 ease-out"
-        enter-from="opacity-0"
-        enter-to="opacity-100"
-        leave="duration-200 ease-in"
-        leave-from="opacity-100"
-        leave-to="opacity-0"
-      >
-        <div class="fixed inset-0 bg-black bg-opacity-25" />
-      </TransitionChild>
+    >
+        <Dialog
+            as="div"
+            class="modal-wrapper"
+            @close="$emit('update:modelValue', false)"
+        >
+            <TransitionChild
+                as="template"
+                enter="fade"
+                enter-from="opacity-0"
+                enter-to="opacity-100"
+                leave="fade"
+                leave-from="opacity-100"
+                leave-to="opacity-0"
+            >
+                <div class="modal-backdrop" />
+            </TransitionChild>
 
-      <div class="fixed inset-0 overflow-y-auto">
-        <div class="flex min-h-full items-center justify-center p-4 text-center">
-          <TransitionChild
-            as="template"
-            enter="duration-300 ease-out"
-            enter-from="opacity-0 scale-95"
-            enter-to="opacity-100 scale-100"
-            leave="duration-200 ease-in"
-            leave-from="opacity-100 scale-100"
-            leave-to="opacity-0 scale-95"
-          >
-            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
-                Create a New Group
-              </DialogTitle>
+            <div class="modal d-block">
+                <div class="modal-dialog modal-dialog-centered">
+                    <TransitionChild
+                        as="template"
+                        enter="fade"
+                        enter-from="opacity-0 scale-95"
+                        enter-to="opacity-100 scale-100"
+                        leave="fade"
+                        leave-from="opacity-100 scale-100"
+                        leave-to="opacity-0 scale-95"
+                    >
+                        <DialogPanel class="modal-content">
+                            <div class="modal-header">
+                                <DialogTitle
+                                    as="h5"
+                                    class="modal-title"
+                                >
+                                    Create a New Group
+                                </DialogTitle>
+                                <button
+                                    type="button"
+                                    class="btn-close"
+                                    aria-label="Close"
+                                    @click="$emit('update:modelValue', false)"
+                                />
+                            </div>
 
-              <form @submit.prevent="handleSubmit" class="mt-4">
-                <div class="space-y-4">
-                  <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Group Name</label>
-                    <input
-                      type="text"
-                      id="name"
-                      v-model="form.name"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                      required
-                    />
-                  </div>
+                            <div class="modal-body">
+                                <form @submit.prevent="handleSubmit">
+                                    <div class="mb-3">
+                                        <label
+                                            for="name"
+                                            class="form-label"
+                                        >Group Name</label>
+                                        <input
+                                            id="name"
+                                            v-model="form.name"
+                                            type="text"
+                                            class="form-control"
+                                            required
+                                        >
+                                    </div>
 
-                  <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea
-                      id="description"
-                      v-model="form.description"
-                      rows="3"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                    />
-                  </div>
+                                    <div class="mb-3">
+                                        <label
+                                            for="description"
+                                            class="form-label"
+                                        >Description</label>
+                                        <textarea
+                                            id="description"
+                                            v-model="form.description"
+                                            rows="3"
+                                            class="form-control"
+                                        />
+                                    </div>
+
+                                    <div
+                                        v-if="error"
+                                        class="alert alert-danger mt-3"
+                                    >
+                                        {{ error }}
+                                    </div>
+
+                                    <div class="modal-footer px-0 pb-0">
+                                        <button
+                                            type="button"
+                                            class="btn btn-secondary"
+                                            @click="$emit('update:modelValue', false)"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            :disabled="loading"
+                                            class="btn btn-primary"
+                                        >
+                                            <span v-if="loading">Creating...</span>
+                                            <span v-else>Create Group</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
                 </div>
-
-                <div v-if="error" class="mt-4 text-sm text-red-600">
-                  {{ error }}
-                </div>
-
-                <div class="mt-6 flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    @click="$emit('update:modelValue', false)"
-                    class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    :disabled="loading"
-                    class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-                  >
-                    <span v-if="loading">Creating...</span>
-                    <span v-else>Create Group</span>
-                  </button>
-                </div>
-              </form>
-            </DialogPanel>
-          </TransitionChild>
-        </div>
-      </div>
-    </Dialog>
-  </TransitionRoot>
+            </div>
+        </Dialog>
+    </TransitionRoot>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
+    Dialog,
+    DialogPanel,
+    DialogTitle,
+    TransitionChild,
+    TransitionRoot,
 } from '@headlessui/vue'
 
-const props = defineProps<{
-  modelValue: boolean
+defineProps<{
+    modelValue: boolean
 }>()
 
 defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
+    (e: 'update:modelValue', value: boolean): void
 }>()
 
 const form = ref({
-  name: '',
-  description: ''
+    name: '',
+    description: '',
 })
 
-const { currentGroup, loading, error, createGroup } = useGroup()
+// const { currentGroup, loading, error, createGroup } = useGroup()
+const { loading, error, createGroup } = useGroup()
 
 const handleSubmit = async () => {
-  await createGroup(form.value)
+    await createGroup(form.value)
 }
-</script> 
+</script>
+
+<style scoped>
+.modal-wrapper {
+  position: relative;
+  z-index: 1050;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+  transform: scale(1);
+}
+</style>

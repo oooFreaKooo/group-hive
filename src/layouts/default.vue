@@ -1,62 +1,94 @@
 <template>
-  <div>
-    <header class="bg-white shadow-sm">
-      <nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Top">
-        <div class="flex h-16 items-center justify-between">
-          <div class="flex items-center">
-            <NuxtLink to="/" class="text-xl font-bold text-primary-600">
-              GroupHive
-            </NuxtLink>
-          </div>
-          <div class="ml-10 space-x-4">
-            <template v-if="user">
-              <NuxtLink
-                to="/dashboard"
-                class="text-sm font-medium text-gray-700 hover:text-primary-600"
-              >
-                Dashboard
-              </NuxtLink>
-              <button
-                @click="handleLogout"
-                class="text-sm font-medium text-gray-700 hover:text-primary-600"
-              >
-                Logout
-              </button>
-            </template>
-            <template v-else>
-              <NuxtLink
-                to="/auth/login"
-                class="text-sm font-medium text-gray-700 hover:text-primary-600"
-              >
-                Login
-              </NuxtLink>
-              <NuxtLink
-                to="/auth/register"
-                class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
-              >
-                Sign up
-              </NuxtLink>
-            </template>
-          </div>
-        </div>
-      </nav>
-    </header>
+    <div>
+        <header class="bg-white shadow-sm">
+            <nav
+                class="navbar navbar-expand navbar-light container-fluid"
+                aria-label="Top"
+            >
+                <div class="container">
+                    <NuxtLink
+                        class="navbar-brand"
+                        to="/"
+                    >
+                        <NuxtImg
+                            src="/logo.png"
+                            width="70"
+                            height="50"
+                            alt="Logo"
+                        />
+                    </NuxtLink>
 
-    <main>
-      <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <slot />
-      </div>
-    </main>
-  </div>
+                    <div class="d-flex align-items-center gap-4">
+                        <template v-if="user">
+                            <NuxtLink
+                                to="/dashboard"
+                                class="nav-link"
+                            >
+                                Dashboard
+                            </NuxtLink>
+                            <Dropdown>
+                                <DropdownToggle class="d-flex align-items-center gap-2 btn btn-link text-dark text-decoration-none p-0">
+                                    <NuxtImg
+                                        :src="user.user_metadata?.avatar_url || '/default-avatar.png'"
+                                        class="rounded-circle"
+                                        width="32"
+                                        height="32"
+                                        style="object-fit: cover;"
+                                    />
+                                </DropdownToggle>
+                                <DropdownMenu>
+                                    <DropdownItem @click="showProfileSettings = true">
+                                        Settings
+                                    </DropdownItem>
+                                    <DropdownItem @click="handleLogout">
+                                        Logout
+                                    </DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+                        </template>
+                        <template v-else>
+                            <NuxtLink
+                                to="/auth/login"
+                                class="nav-link"
+                            >
+                                Login
+                            </NuxtLink>
+                            <NuxtLink
+                                to="/auth/register"
+                                class="btn btn-primary"
+                            >
+                                Sign up
+                            </NuxtLink>
+                        </template>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <div class="container py-4">
+                <slot />
+            </div>
+        </main>
+
+        <ProfileSettingsModal v-model="showProfileSettings" />
+    </div>
 </template>
 
 <script setup lang="ts">
+import ProfileSettingsModal from '~/components/profile/ProfileSettingsModal.vue'
+
 const user = useSupabaseUser()
 const client = useSupabaseClient()
 const router = useRouter()
+const showProfileSettings = ref(false)
 
 const handleLogout = async () => {
-  await client.auth.signOut()
-  router.push('/auth/login')
+    await client.auth.signOut()
+    router.push('/auth/login')
 }
 </script>
+
+<style scoped>
+/* We can remove all the dropdown styles since we're using Bootstrap's dropdown */
+</style>
