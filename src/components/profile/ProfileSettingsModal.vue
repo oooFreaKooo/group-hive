@@ -169,23 +169,12 @@ const saveChanges = async () => {
     error.value = ''
 
     try {
-    // First update the profile in the profiles table
-        const updates = {
-            id: user.value?.id,
-            username: form.value.name,
-            updated_at: new Date(),
-        }
-
-        const { error: profileError } = await client
-            .from('profiles')
-            .upsert(updates)
-
-        if (profileError) { throw profileError }
-
-        // Then update the user metadata
+        // Update user metadata
         const { error: updateError } = await client.auth.updateUser({
             data: {
                 name: form.value.name,
+                display_name: form.value.name,
+                updated_at: new Date().toISOString(),
             },
         })
 

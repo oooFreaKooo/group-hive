@@ -1,0 +1,93 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Profile {
+  id           String      @id @unique
+  displayName  String?
+  avatarUrl    String?
+  role         UserRole    @default(USER)
+  city         String?
+  postalCode   String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  groupMembers GroupUser[]
+  ownedGroups  Group[]
+}
+
+model Group {
+  id             Int         @id @default(autoincrement())
+  name           String
+  description    String?
+  invitationCode String      @unique
+  ownerId        String
+  city           String?
+  postalCode     String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  members        GroupUser[]
+  owner          Profile     @relation(fields: [ownerId], references: [id])
+  tasks          Task[]
+}
+
+model GroupUser {
+  id             Int            @id @default(autoincrement())
+  profileId      String
+  groupId        Int
+  role           GroupRole      @default(MEMBER)
+  points         Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  group          Group          @relation(fields: [groupId], references: [id])
+  profile        Profile        @relation(fields: [profileId], references: [id])
+  pointHistory   PointHistory[]
+  completedTasks Task[]         @relation("TaskCompletion")
+  assignedTasks  Task[]         @relation("TaskAssignment")
+
+  @@unique([profileId, groupId])
+}
+
+model Task {
+  id            Int            @id @default(autoincrement())
+  title         String
+  description   String?
+  dueDate       DateTime?
+  completed     Boolean        @default(false)
+  pointValue    Int            @default(0)
+  groupId       Int
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  completedBy   GroupUser?     @relation("TaskCompletion", fields: [completedById], references: [id])
+  completedById Int?
+  group         Group          @relation(fields: [groupId], references: [id])
+  pointHistory  PointHistory[]
+  assignedTo    GroupUser?     @relation("TaskAssignment", fields: [assignedToId], references: [id])
+  assignedToId  Int?
+}
+
+model PointHistory {
+  id          Int       @id @default(autoincrement())
+  points      Int
+  reason      String
+  groupUserId Int
+  taskId      Int?
+  createdAt   DateTime  @default(now())
+  groupUser   GroupUser @relation(fields: [groupUserId], references: [id])
+  task        Task?     @relation(fields: [taskId], references: [id])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum GroupRole {
+  MEMBER
+  ADMIN
+}

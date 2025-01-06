@@ -78,23 +78,6 @@
                                 </div>
                                 Anmelden
                             </button>
-
-                            <div class="position-relative">
-                                <hr class="text-muted">
-                                <div class="position-absolute top-50 start-50 translate-middle px-3 bg-white">
-                                    <span class="text-muted">oder</span>
-                                </div>
-                            </div>
-
-                            <button
-                                type="button"
-                                class="btn btn-dark w-100"
-                                :disabled="isLoading"
-                                @click="signInWithProvider('GITHUB')"
-                            >
-                                <i class="bi bi-github me-2" />
-                                Mit GitHub fortfahren
-                            </button>
                         </form>
                     </div>
                 </div>
@@ -146,33 +129,6 @@ const signInWithCredential = async () => {
         })
 
         if (signIn.error) {
-            throw new BaseError(signIn.error.status, signIn.error.message)
-        }
-
-        navigateTo('/dashboard')
-        isLoading.value = false
-    } catch (error) {
-        isLoading.value = false
-        errorHandler(error as BaseError)
-    }
-}
-
-const signInWithProvider = async (provider: 'GITHUB' | 'GOOGLE') => {
-    try {
-        isLoading.value = true
-
-        let signIn = null
-
-        if (provider === 'GITHUB') {
-            signIn = await auth.signInWithOAuth({
-                provider: 'github',
-                options: {
-                    redirectTo: `${window.location.origin}/confirm`,
-                },
-            })
-        }
-
-        if (signIn?.error) {
             throw new BaseError(signIn.error.status, signIn.error.message)
         }
 

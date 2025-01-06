@@ -17,13 +17,13 @@
                 >
                     <div class="d-flex align-items-center gap-3">
                         <div>
-                            <img
+                            <NuxtImg
                                 class="rounded-circle"
                                 width="32"
                                 height="32"
-                                :src="member.avatar_url"
+                                :src="member.avatar_url || '/default-avatar.png'"
                                 :alt="member.name"
-                            >
+                            />
                         </div>
                         <div class="flex-grow-1 text-truncate">
                             <p class="mb-0 fw-medium text-truncate">
@@ -47,7 +47,7 @@ defineProps<{
         members: Array<{
             id: string
             name: string
-            avatar_url: string
+            avatar_url: string | null
             points: number
         }>
     }

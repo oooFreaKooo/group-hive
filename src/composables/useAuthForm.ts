@@ -38,41 +38,13 @@ export function useAuthForm () {
 
             if (authError) { throw authError }
 
-            // If we have a user, ensure profile and redirect
             if (data?.user) {
-                await ensureProfile()
                 await navigateTo('/dashboard', { replace: true })
             }
         } catch (err: any) {
             error.value = err.message
         } finally {
             loading.value = false
-        }
-    }
-
-    const ensureProfile = async () => {
-        const {
-            data: { user },
-        } = await client.auth.getUser()
-
-        if (!user) { return }
-
-        // Check if profile exists
-        const { data: profile } = await client
-            .from('profiles')
-            .select()
-            .eq('id', user.id)
-            .single()
-
-        // If no profile exists, create one
-        if (!profile) {
-            const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
-            await client
-                .from('profiles')
-                .insert({
-                    id: user.id,
-                    name,
-                } as Database['public']['Tables']['profiles']['Row'])
         }
     }
 
@@ -112,6 +84,5 @@ export function useAuthForm () {
         loading,
         handleLogin,
         handleRegister,
-        ensureProfile,
     }
 }

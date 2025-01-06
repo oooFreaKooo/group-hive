@@ -125,6 +125,8 @@ defineProps<{
     modelValue: boolean
 }>()
 
+const user = useSupabaseUser()
+console.log(user.value?.id)
 defineEmits<{
     (e: 'update:modelValue', value: boolean): void
 }>()

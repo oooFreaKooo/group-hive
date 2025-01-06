@@ -42,12 +42,13 @@ const props = defineProps<{
     }
 }>()
 
+const user = useSupabaseUser()
+
 const emit = defineEmits<{
     (e: 'update:modelValue', value: { name: string }): void
     (e: 'error', value: string): void
 }>()
 
-const user = useSupabaseUser()
 const showAvatarModal = ref(false)
 const previewAvatar = ref('')
 
