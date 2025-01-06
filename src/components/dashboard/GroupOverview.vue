@@ -54,15 +54,20 @@
             <h5 class="mb-0">
                 Members
             </h5>
-            <b-button
+            <UseClipboard
                 v-if="isAdmin(group)"
-                class="btn btn-outline-primary btn-sm"
-                target="#liveToast"
-                toggle="toast"
-                @click="copyInviteCode"
+                v-slot="{ copy, copied }"
+                :source="inviteCode"
             >
-                Copy Invite Code
-            </b-button>
+                <b-button
+                    class="btn btn-outline-primary btn-sm"
+                    target="#liveToast"
+                    toggle="toast"
+                    @click="copy()"
+                >
+                    {{ copied ? 'Copied' : 'Copy' }}
+                </b-button>
+            </UseClipboard>
         </div>
 
         <div class="members-list">
@@ -135,20 +140,7 @@ const props = defineProps<{
 
 const { isAdmin, isOwner, deleteGroup } = useGroup()
 const showEditModal = ref(false)
-
-const copyInviteCode = async () => {
-    try {
-        await navigator.clipboard?.writeText(props.group.invitationCode)
-    } catch {
-        // Fallback for browsers that don't support clipboard API
-        const textarea = document.createElement('textarea')
-        textarea.value = props.group.invitationCode
-        document.body.appendChild(textarea)
-        textarea.select()
-        document.execCommand('copy')
-        document.body.removeChild(textarea)
-    }
-}
+const inviteCode = ref(props.group.invitationCode)
 
 const confirmDelete = async () => {
     if (confirm('Are you sure you want to delete this group? This action cannot be undone.')) {

@@ -8,13 +8,17 @@
                     style="width: 96px; height: 96px; object-fit: cover;"
                 />
 
-                <AppIcon
-                    class="position-absolute bottom-0 end-0 rounded-circle shadow-sm"
-                    color="black"
-                    name="pencil"
-                    btn
+                <button
+                    class="position-absolute bottom-0 end-0 p-0 border-0 bg-transparent"
                     @click="showAvatarModal = true"
-                />
+                >
+                    <AppIcon
+                        class="rounded-circle shadow-sm"
+                        color="black"
+                        name="pencil"
+                        btn
+                    />
+                </button>
             </div>
             <div class="flex-grow-1">
                 <label class="form-label">Display Name</label>

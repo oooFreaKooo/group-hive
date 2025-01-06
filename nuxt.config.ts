@@ -38,6 +38,12 @@ export default defineNuxtConfig({
 
     compatibilityDate: '2025-01-04',
 
+    vite: {
+        optimizeDeps: {
+            include: [ 'yup', '@headlessui/vue' ],
+        },
+    },
+
     googleFonts: {
         families: {
             Inter: [

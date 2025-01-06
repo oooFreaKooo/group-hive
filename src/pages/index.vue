@@ -17,7 +17,7 @@
                         Get started
                     </NuxtLink>
                     <NuxtLink
-                        to="/about"
+                        to="/"
                         class="btn btn-link text-dark text-decoration-none"
                     >
                         Learn more <span aria-hidden="true">→</span>
