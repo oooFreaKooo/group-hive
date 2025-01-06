@@ -29,7 +29,7 @@
                             <DropdownToggle class="d-flex align-items-center gap-2 btn btn-link text-dark text-decoration-none p-0">
                                 <div class="d-flex align-items-center gap-2">
                                     <NuxtImg
-                                        :src="user.user_metadata?.avatar_url || '/default-avatar.png'"
+                                        :src="profile?.avatarUrl || '/default-avatar.png'"
                                         class="rounded-circle"
                                         width="32"
                                         height="32"

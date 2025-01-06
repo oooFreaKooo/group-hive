@@ -48,31 +48,6 @@
                             </div>
 
                             <div class="modal-body">
-                                <div class="mb-4">
-                                    <label class="form-label">Upload Image</label>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <input
-                                            ref="fileInput"
-                                            type="file"
-                                            accept="image/*"
-                                            class="d-none"
-                                            @change="handleFileUpload"
-                                        >
-                                        <button
-                                            class="btn btn-outline-secondary"
-                                            @click="() => fileInput?.click()"
-                                        >
-                                            Choose File
-                                        </button>
-                                        <span
-                                            v-if="selectedFile"
-                                            class="text-muted small"
-                                        >
-                                            {{ selectedFile.name }}
-                                        </span>
-                                    </div>
-                                </div>
-
                                 <div>
                                     <label class="form-label">Generate Avatar</label>
                                     <div class="row g-2">
@@ -139,49 +114,13 @@ const emit = defineEmits<{
     (e: 'error', value: string): void
 }>()
 
-const client = useSupabaseClient()
 const user = useSupabaseUser()
-const fileInput = ref<HTMLInputElement>()
-const selectedFile = ref<File>()
+const { profile, refreshProfile } = useProfile()
 const selectedSeed = ref('')
 const loading = ref(false)
 
-const handleFileUpload = async (event: Event) => {
-    const input = event.target as HTMLInputElement
-    if (input.files?.length) {
-        try {
-            loading.value = true
-            const file = input.files[0]
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${user.value?.id}-${Math.random()}.${fileExt}`
-            const filePath = `${fileName}`
-
-            // Upload file to storage
-            const { error: uploadError } = await client.storage
-                .from('avatars')
-                .upload(filePath, file)
-
-            if (uploadError) { throw uploadError }
-
-            // Get public URL
-            const { data: { publicUrl } } = client.storage
-                .from('avatars')
-                .getPublicUrl(filePath)
-
-            selectedFile.value = file
-            selectedSeed.value = ''
-            emit('update:previewAvatar', publicUrl)
-        } catch (err: any) {
-            emit('error', err.message)
-        } finally {
-            loading.value = false
-        }
-    }
-}
-
 const selectGeneratedAvatar = (seed: string) => {
     selectedSeed.value = seed
-    selectedFile.value = undefined
     emit('update:previewAvatar', `https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=${seed}`)
 }
 
@@ -196,19 +135,26 @@ const confirmAvatarSelection = async () => {
             : props.previewAvatar
 
         // Update profile with new avatar URL
-        const { error: updateError } = await useFetch('/api/profile/update', {
+        await $fetch('/api/profile/update', {
             method: 'PUT',
             body: {
                 id: user.value.id,
                 avatarUrl,
+                // Preserve existing profile data
+                displayName: profile.value?.displayName,
+                city: profile.value?.city,
+                postalCode: profile.value?.postalCode,
             },
         })
 
-        if (updateError.value) { throw updateError.value }
+        // Refresh the profile data to get the latest changes
+        await refreshProfile()
 
+        // Update the preview in parent component
+        emit('update:previewAvatar', avatarUrl)
         emit('update:modelValue', false)
     } catch (err: any) {
-        emit('error', err.message)
+        emit('error', err.message || 'Failed to update avatar')
     } finally {
         loading.value = false
     }

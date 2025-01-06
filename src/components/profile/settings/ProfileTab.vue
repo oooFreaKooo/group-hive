@@ -79,7 +79,15 @@ const emit = defineEmits<{
 }>()
 
 const showAvatarModal = ref(false)
-const previewAvatar = computed(() => props.modelValue.avatarUrl || profile.value?.avatarUrl || '')
+const previewAvatar = computed({
+    get: () => props.modelValue.avatarUrl || profile.value?.avatarUrl || '',
+    set: (value) => {
+        emit('update:modelValue', {
+            ...props.modelValue,
+            avatarUrl: value,
+        })
+    },
+})
 
 const form = computed({
     get: () => props.modelValue,

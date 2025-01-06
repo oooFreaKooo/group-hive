@@ -16,7 +16,6 @@ export default defineEventHandler(async (event) => {
                 postalCode: postalCode as string,
             },
         })
-
         return profile
     } catch (error) {
         console.error('Error updating profile:', error)
