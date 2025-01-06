@@ -207,9 +207,6 @@ const signUpWithCredential = async () => {
         const signUp = await auth.signUp({
             email: form.email,
             password: form.password,
-            options: {
-                emailRedirectTo: `${window.location.origin}/auth/confirm`,
-            },
         })
 
         if (signUp.error) {

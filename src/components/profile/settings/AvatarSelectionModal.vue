@@ -128,7 +128,7 @@ import {
     TransitionRoot,
 } from '@headlessui/vue'
 
-defineProps<{
+const props = defineProps<{
     modelValue: boolean
     previewAvatar: string
 }>()
@@ -140,6 +140,7 @@ const emit = defineEmits<{
 }>()
 
 const client = useSupabaseClient()
+const user = useSupabaseUser()
 const fileInput = ref<HTMLInputElement>()
 const selectedFile = ref<File>()
 const selectedSeed = ref('')
@@ -152,7 +153,7 @@ const handleFileUpload = async (event: Event) => {
             loading.value = true
             const file = input.files[0]
             const fileExt = file.name.split('.').pop()
-            const fileName = `${Math.random()}.${fileExt}`
+            const fileName = `${user.value?.id}-${Math.random()}.${fileExt}`
             const filePath = `${fileName}`
 
             // Upload file to storage
@@ -184,8 +185,33 @@ const selectGeneratedAvatar = (seed: string) => {
     emit('update:previewAvatar', `https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=${seed}`)
 }
 
-const confirmAvatarSelection = () => {
-    emit('update:modelValue', false)
+const confirmAvatarSelection = async () => {
+    if (!user.value?.id) { return }
+
+    try {
+        loading.value = true
+
+        const avatarUrl = selectedSeed.value
+            ? `https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=${selectedSeed.value}`
+            : props.previewAvatar
+
+        // Update profile with new avatar URL
+        const { error: updateError } = await useFetch('/api/profile/update', {
+            method: 'PUT',
+            body: {
+                id: user.value.id,
+                avatarUrl,
+            },
+        })
+
+        if (updateError.value) { throw updateError.value }
+
+        emit('update:modelValue', false)
+    } catch (err: any) {
+        emit('error', err.message)
+    } finally {
+        loading.value = false
+    }
 }
 </script>
 

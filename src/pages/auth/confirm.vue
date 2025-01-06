@@ -115,7 +115,6 @@
 </template>
 
 <script setup lang="ts">
-import { PrismaClient } from '@prisma/client'
 import { object, string } from 'yup'
 import { useErrorHandler } from '~/composables/useErrorHandler'
 
@@ -123,7 +122,6 @@ definePageMeta({
     middleware: ['auth'], // Ensure user is authenticated
 })
 
-const prisma = new PrismaClient()
 const user = useSupabaseUser()
 const client = useSupabaseClient()
 const { errorHandler } = useErrorHandler()
@@ -153,18 +151,22 @@ const saveProfile = async () => {
         // Validate form
         await profileValidation.validate(profileForm, { abortEarly: false })
 
-        // Create profile in database using Prisma client
-        await prisma.profile.create({
-            data: {
+        // Create profile using API
+        const response = await $fetch('/api/profile/create', {
+            method: 'POST',
+            body: {
                 id: user.value.id,
                 displayName: profileForm.displayName,
                 city: profileForm.city,
                 postalCode: profileForm.postalCode,
-                role: 'USER',
             },
         })
 
-        // Redirect to dashboard since user is already logged in
+        if (!response) {
+            throw new Error('Failed to create profile')
+        }
+
+        // Redirect to dashboard
         navigateTo('/dashboard')
     } catch (error: any) {
         if (error.inner) {

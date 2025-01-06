@@ -1,9 +1,9 @@
 <template>
     <div class="mt-4">
-        <div class="d-flex align-items-center gap-4">
+        <div class="d-flex align-items-center gap-4 mb-4">
             <div class="position-relative">
                 <NuxtImg
-                    :src="previewAvatar || user?.user_metadata?.avatar_url || '/default-avatar.png'"
+                    :src="previewAvatar || '/default-avatar.png'"
                     class="rounded-circle"
                     style="width: 96px; height: 96px; object-fit: cover;"
                 />
@@ -16,12 +16,34 @@
                     @click="showAvatarModal = true"
                 />
             </div>
-            <div>
+            <div class="flex-grow-1">
                 <label class="form-label">Display Name</label>
                 <input
-                    v-model="form.name"
+                    v-model="form.displayName"
                     type="text"
                     class="form-control"
+                    placeholder="Enter your display name"
+                >
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">City</label>
+                <input
+                    v-model="form.city"
+                    type="text"
+                    class="form-control"
+                    placeholder="Enter your city"
+                >
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Postal Code</label>
+                <input
+                    v-model="form.postalCode"
+                    type="text"
+                    class="form-control"
+                    placeholder="Enter your postal code"
                 >
             </div>
         </div>
@@ -38,22 +60,58 @@
 <script setup lang="ts">
 const props = defineProps<{
     modelValue: {
-        name: string
+        displayName: string
+        city: string
+        postalCode: string
+        avatarUrl: string
     }
 }>()
 
 const user = useSupabaseUser()
+const profile = ref<any>(null)
+const error = ref('')
 
 const emit = defineEmits<{
-    (e: 'update:modelValue', value: { name: string }): void
+    (e: 'update:modelValue', value: { displayName: string, city: string, postalCode: string, avatarUrl: string }): void
     (e: 'error', value: string): void
 }>()
 
 const showAvatarModal = ref(false)
-const previewAvatar = ref('')
+const previewAvatar = computed(() => props.modelValue.avatarUrl || profile.value?.avatarUrl || '')
 
 const form = computed({
-    get: () => props.modelValue,
+    get: () => ({
+        displayName: props.modelValue.displayName || profile.value?.displayName || '',
+        city: props.modelValue.city || profile.value?.city || '',
+        postalCode: props.modelValue.postalCode || profile.value?.postalCode || '',
+        avatarUrl: props.modelValue.avatarUrl || profile.value?.avatarUrl || '',
+    }),
     set: value => emit('update:modelValue', value),
 })
+
+// Load initial profile data
+onMounted(async () => {
+    if (user.value?.id) {
+        try {
+            profile.value = await $fetch('/api/profile/get', {
+                query: { userId: user.value.id },
+            })
+        } catch (err: any) {
+            console.error('Error fetching profile:', err)
+            error.value = err.message
+        }
+    }
+})
+
+// Watch for profile changes and update form
+watch(profile, (newProfile) => {
+    if (newProfile) {
+        emit('update:modelValue', {
+            displayName: newProfile.displayName || '',
+            city: newProfile.city || '',
+            postalCode: newProfile.postalCode || '',
+            avatarUrl: newProfile.avatarUrl || '',
+        })
+    }
+}, { immediate: true })
 </script>

@@ -67,7 +67,7 @@
                                 <!-- Profile Tab -->
                                 <ProfileTab
                                     v-if="currentTab === 'profile'"
-                                    v-model="form"
+                                    v-model="profileForm"
                                     @error="error = $event"
                                 />
 
@@ -80,7 +80,7 @@
                                 <!-- Account Tab -->
                                 <AccountTab
                                     v-if="currentTab === 'account'"
-                                    v-model="form"
+                                    v-model="accountForm"
                                 />
 
                                 <div
@@ -124,10 +124,6 @@ import {
     TransitionRoot,
 } from '@headlessui/vue'
 
-import ProfileTab from './settings/ProfileTab.vue'
-import GroupsTab from './settings/GroupsTab.vue'
-import AccountTab from './settings/AccountTab.vue'
-
 defineProps<{
     modelValue: boolean
 }>()
@@ -146,39 +142,72 @@ const currentTab = ref('profile')
 const loading = ref(false)
 const error = ref('')
 
-const client = useSupabaseClient()
 const user = useSupabaseUser()
 
-const form = ref({
-    name: user.value?.user_metadata?.name || '',
+const profileForm = reactive({
+    displayName: '',
+    avatarUrl: '',
+    city: '',
+    postalCode: '',
+})
+
+const accountForm = ref({
     email: user.value?.email || '',
 })
 
 // Initialize form data when user changes
-watch(user, (newUser) => {
+watch(user, async (newUser) => {
     if (newUser) {
-        form.value = {
-            name: newUser.user_metadata?.name || '',
-            email: newUser.email || '',
+        try {
+            const profile = await $fetch('/api/profile/get', {
+                query: { userId: newUser.id },
+            })
+            if (profile) {
+                profileForm.displayName = profile.displayName || ''
+                profileForm.avatarUrl = profile.avatarUrl || ''
+                profileForm.city = profile.city || ''
+                profileForm.postalCode = profile.postalCode || ''
+            }
+            accountForm.value.email = newUser.email || ''
+        } catch (err: any) {
+            console.error('Error fetching profile:', err)
+            error.value = err.message
         }
     }
 }, { immediate: true })
 
 const saveChanges = async () => {
+    if (!user.value?.id) { return }
+
     loading.value = true
     error.value = ''
 
     try {
-        // Update user metadata
-        const { error: updateError } = await client.auth.updateUser({
-            data: {
-                name: form.value.name,
-                display_name: form.value.name,
-                updated_at: new Date().toISOString(),
+        // Update profile in database
+        const data = await $fetch('/api/profile/update', {
+            method: 'PUT',
+            body: {
+                id: user.value.id,
+                displayName: profileForm.displayName,
+                avatarUrl: profileForm.avatarUrl,
+                city: profileForm.city,
+                postalCode: profileForm.postalCode,
             },
         })
 
-        if (updateError) { throw updateError }
+        if (!data) { throw new Error('Failed to update profile') }
+
+        // Refresh the profile data
+        const newProfile = await $fetch('/api/profile/get', {
+            query: { userId: user.value.id },
+        })
+
+        if (newProfile) {
+            profileForm.displayName = newProfile.displayName || ''
+            profileForm.avatarUrl = newProfile.avatarUrl || ''
+            profileForm.city = newProfile.city || ''
+            profileForm.postalCode = newProfile.postalCode || ''
+        }
 
         emit('update:modelValue', false)
     } catch (err: any) {
