@@ -67,9 +67,7 @@ const props = defineProps<{
     }
 }>()
 
-const user = useSupabaseUser()
-const profile = ref<any>(null)
-const error = ref('')
+const { profile } = useProfile()
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: { displayName: string, city: string, postalCode: string, avatarUrl: string }): void
@@ -80,38 +78,19 @@ const showAvatarModal = ref(false)
 const previewAvatar = computed(() => props.modelValue.avatarUrl || profile.value?.avatarUrl || '')
 
 const form = computed({
-    get: () => ({
-        displayName: props.modelValue.displayName || profile.value?.displayName || '',
-        city: props.modelValue.city || profile.value?.city || '',
-        postalCode: props.modelValue.postalCode || profile.value?.postalCode || '',
-        avatarUrl: props.modelValue.avatarUrl || profile.value?.avatarUrl || '',
-    }),
+    get: () => props.modelValue,
     set: value => emit('update:modelValue', value),
 })
 
-// Load initial profile data
-onMounted(async () => {
-    if (user.value?.id) {
-        try {
-            profile.value = await $fetch('/api/profile/get', {
-                query: { userId: user.value.id },
-            })
-        } catch (err: any) {
-            console.error('Error fetching profile:', err)
-            error.value = err.message
-        }
-    }
-})
-
-// Watch for profile changes and update form
-watch(profile, (newProfile) => {
-    if (newProfile) {
+// Initialize form with profile data when component mounts
+onMounted(() => {
+    if (profile.value) {
         emit('update:modelValue', {
-            displayName: newProfile.displayName || '',
-            city: newProfile.city || '',
-            postalCode: newProfile.postalCode || '',
-            avatarUrl: newProfile.avatarUrl || '',
+            displayName: profile.value.displayName || '',
+            city: profile.value.city || '',
+            postalCode: profile.value.postalCode || '',
+            avatarUrl: profile.value.avatarUrl || '',
         })
     }
-}, { immediate: true })
+})
 </script>

@@ -143,40 +143,33 @@ const loading = ref(false)
 const error = ref('')
 
 const user = useSupabaseUser()
+const { profile, refreshProfile } = useProfile()
 
-const profileForm = reactive({
-    displayName: '',
-    avatarUrl: '',
-    city: '',
-    postalCode: '',
+const profileForm = ref({
+    displayName: profile.value?.displayName || '',
+    avatarUrl: profile.value?.avatarUrl || '',
+    city: profile.value?.city || '',
+    postalCode: profile.value?.postalCode || '',
+})
+
+// Initialize form with profile data
+onMounted(async () => {
+    await refreshProfile()
+    if (profile.value) {
+        profileForm.value = {
+            displayName: profile.value.displayName || '',
+            avatarUrl: profile.value.avatarUrl || '',
+            city: profile.value.city || '',
+            postalCode: profile.value.postalCode || '',
+        }
+    }
 })
 
 const accountForm = ref({
     email: user.value?.email || '',
 })
 
-// Initialize form data when user changes
-watch(user, async (newUser) => {
-    if (newUser) {
-        try {
-            const profile = await $fetch('/api/profile/get', {
-                query: { userId: newUser.id },
-            })
-            if (profile) {
-                profileForm.displayName = profile.displayName || ''
-                profileForm.avatarUrl = profile.avatarUrl || ''
-                profileForm.city = profile.city || ''
-                profileForm.postalCode = profile.postalCode || ''
-            }
-            accountForm.value.email = newUser.email || ''
-        } catch (err: any) {
-            console.error('Error fetching profile:', err)
-            error.value = err.message
-        }
-    }
-}, { immediate: true })
-
-const saveChanges = async () => {
+async function saveChanges () {
     if (!user.value?.id) { return }
 
     loading.value = true
@@ -184,35 +177,23 @@ const saveChanges = async () => {
 
     try {
         // Update profile in database
-        const data = await $fetch('/api/profile/update', {
+        await $fetch('/api/profile/update', {
             method: 'PUT',
             body: {
                 id: user.value.id,
-                displayName: profileForm.displayName,
-                avatarUrl: profileForm.avatarUrl,
-                city: profileForm.city,
-                postalCode: profileForm.postalCode,
+                displayName: profileForm.value.displayName,
+                avatarUrl: profileForm.value.avatarUrl,
+                city: profileForm.value.city,
+                postalCode: profileForm.value.postalCode,
             },
         })
 
-        if (!data) { throw new Error('Failed to update profile') }
-
         // Refresh the profile data
-        const newProfile = await $fetch('/api/profile/get', {
-            query: { userId: user.value.id },
-        })
-
-        if (newProfile) {
-            profileForm.displayName = newProfile.displayName || ''
-            profileForm.avatarUrl = newProfile.avatarUrl || ''
-            profileForm.city = newProfile.city || ''
-            profileForm.postalCode = newProfile.postalCode || ''
-        }
+        await refreshProfile()
 
         emit('update:modelValue', false)
     } catch (err: any) {
-        console.error('Profile update error:', err)
-        error.value = err.message
+        error.value = err.message || 'Failed to update profile'
     } finally {
         loading.value = false
     }

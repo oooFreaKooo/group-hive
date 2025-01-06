@@ -1,10 +1,13 @@
 export const useProfile = () => {
+    const user = useSupabaseUser()
+    const profile = ref<any>(null)
+
     const checkProfile = async (userId: string) => {
         try {
-            const { data } = await useFetch<{ exists: boolean }>('/api/profile/exists', {
+            const data = await $fetch<{ exists: boolean }>('/api/profile/exists', {
                 params: { userId },
             })
-            return data.value?.exists ?? false
+            return data?.exists ?? false
         } catch (error) {
             console.error('Error checking profile:', error)
             return false
@@ -13,18 +16,26 @@ export const useProfile = () => {
 
     const getProfile = async (userId: string) => {
         try {
-            const { data } = await useFetch('/api/profile/get', {
+            const data = await $fetch('/api/profile/get', {
                 params: { userId },
             })
-            return data.value
+            return data
         } catch (error) {
             console.error('Error getting profile:', error)
             return null
         }
     }
 
+    const refreshProfile = async () => {
+        if (user.value?.id) {
+            profile.value = await getProfile(user.value.id)
+        }
+    }
+
     return {
+        profile,
         checkProfile,
         getProfile,
+        refreshProfile,
     }
 }
