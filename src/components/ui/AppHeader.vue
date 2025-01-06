@@ -73,17 +73,8 @@
 const user = useSupabaseUser()
 const client = useSupabaseClient()
 const router = useRouter()
-const { getProfile } = useProfile()
+const { profile } = useProfile()
 const showProfileSettings = ref(false)
-const profile = ref<any>(null)
-
-watch(user, async () => {
-    if (user.value) {
-        profile.value = await getProfile(user.value.id)
-    } else {
-        profile.value = null
-    }
-}, { immediate: true })
 
 const handleLogout = async () => {
     await client.auth.signOut()

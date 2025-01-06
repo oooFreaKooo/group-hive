@@ -32,10 +32,18 @@ interface UpdateGroupData extends CreateGroupData {
 
 export const useGroup = () => {
     const user = useSupabaseUser()
-    const groups = ref<Group[]>([])
-    const currentGroup = ref<Group | null>(null)
+    const { profile } = useProfile()
+    const groups = useState<Group[]>('groups', () => [])
+    const currentGroup = useState<Group | null>('currentGroup', () => null)
     const loading = ref(false)
     const error = ref<string | null>(null)
+
+    // Watch profile changes to refresh groups
+    watch(profile, () => {
+        if (profile.value) {
+            fetchGroups()
+        }
+    })
 
     const fetchGroups = async () => {
         if (!user.value?.id) { return }

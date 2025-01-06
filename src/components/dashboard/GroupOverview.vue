@@ -16,37 +16,25 @@
                 <span class="badge bg-success">
                     {{ group.members.length }} members
                 </span>
-                <div
-                    v-if="isAdmin(group)"
-                    class="dropdown"
-                >
-                    <button
-                        class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                    >
-                        Manage
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li>
-                            <button
-                                class="dropdown-item"
-                                @click="showEditModal = true"
-                            >
-                                Edit Group
-                            </button>
-                        </li>
-                        <li v-if="isOwner(group)">
-                            <button
-                                class="dropdown-item text-danger"
-                                @click="confirmDelete"
-                            >
-                                Delete Group
-                            </button>
-                        </li>
-                    </ul>
-                </div>
+                <Dropdown v-if="isAdmin(group)">
+                    <DropdownToggle class="d-flex align-items-center gap-2 btn btn-link text-dark text-decoration-none p-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-body">Manage</span>
+                        </div>
+                    </DropdownToggle>
+                    <DropdownMenu>
+                        <DropdownItem @click="showEditModal = true">
+                            Edit Group
+                        </DropdownItem>
+                        <DropdownItem
+                            v-if="isOwner(group)"
+                            class="text-danger"
+                            @click="confirmDelete"
+                        >
+                            Delete Group
+                        </DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
             </div>
         </div>
 

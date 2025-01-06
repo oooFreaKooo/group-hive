@@ -1,6 +1,12 @@
 export const useProfile = () => {
     const user = useSupabaseUser()
-    const profile = ref<any>(null)
+    const profile = useState<{
+        displayName: string | null
+        avatarUrl: string | null
+        role: 'USER' | 'ADMIN'
+        city: string | null
+        postalCode: string | null
+    } | null>('profile', () => null)
 
     const checkProfile = async (userId: string) => {
         try {

@@ -158,7 +158,7 @@ onMounted(async () => {
     if (profile.value) {
         profileForm.value = {
             displayName: profile.value.displayName || '',
-            avatarUrl: profile.value.avatarUrl || null,
+            avatarUrl: profile.value.avatarUrl || '',
             city: profile.value.city || '',
             postalCode: profile.value.postalCode || '',
         }
@@ -182,7 +182,7 @@ async function saveChanges () {
             body: {
                 id: user.value.id,
                 displayName: profileForm.value.displayName,
-                avatarUrl: profileForm.value.avatarUrl || null,
+                avatarUrl: profileForm.value.avatarUrl || '',
                 city: profileForm.value.city,
                 postalCode: profileForm.value.postalCode,
             },
