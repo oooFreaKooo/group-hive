@@ -38,7 +38,7 @@
                                     as="h5"
                                     class="modal-title"
                                 >
-                                    Create a New Group
+                                    Edit Group
                                 </DialogTitle>
                                 <button
                                     type="button"
@@ -123,8 +123,8 @@
                                             :disabled="loading"
                                             class="btn btn-primary"
                                         >
-                                            <span v-if="loading">Creating...</span>
-                                            <span v-else>Create Group</span>
+                                            <span v-if="loading">Saving...</span>
+                                            <span v-else>Save Changes</span>
                                         </button>
                                     </div>
                                 </form>
@@ -138,7 +138,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import {
     Dialog,
     DialogPanel,
@@ -146,36 +145,32 @@ import {
     TransitionChild,
     TransitionRoot,
 } from '@headlessui/vue'
+import type { Group } from '~/composables/useGroup'
 
-defineProps<{
+const props = defineProps<{
     modelValue: boolean
+    group: Group
 }>()
-
-const user = useSupabaseUser()
-console.log(user.value?.id)
-
-const form = ref({
-    name: '',
-    description: '',
-    city: '',
-    postalCode: '',
-})
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: boolean): void
 }>()
 
-const { loading, error, createGroup } = useGroup()
+const form = ref({
+    name: props.group.name,
+    description: props.group.description || '',
+    city: props.group.city || '',
+    postalCode: props.group.postalCode || '',
+})
+
+const { loading, error, updateGroup } = useGroup()
 
 const handleSubmit = async () => {
-    const group = await createGroup(form.value)
-    if (group) {
-        form.value = {
-            name: '',
-            description: '',
-            city: '',
-            postalCode: '',
-        }
+    const result = await updateGroup({
+        id: props.group.id,
+        ...form.value,
+    })
+    if (result) {
         emit('update:modelValue', false)
     }
 }
@@ -183,33 +178,33 @@ const handleSubmit = async () => {
 
 <style scoped>
 .modal-wrapper {
-  position: relative;
-  z-index: 1050;
+    position: relative;
+    z-index: 1050;
 }
 
 .modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: all 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
+    opacity: 0;
+    transform: scale(0.95);
 }
 
 .fade-enter-to,
 .fade-leave-from {
-  opacity: 1;
-  transform: scale(1);
+    opacity: 1;
+    transform: scale(1);
 }
 </style>

@@ -1,189 +1,213 @@
-import { ref } from 'vue'
-import type { Database } from '~/types/database.types'
+import type { Group as PrismaGroup, GroupUser as PrismaGroupUser } from '@prisma/client'
 
-export interface GroupForm {
+interface GroupUser extends PrismaGroupUser {
+    profile: {
+        id: string
+        displayName: string | null
+        avatarUrl: string | null
+    }
+}
+
+export interface Group extends Omit<PrismaGroup, 'createdAt' | 'updatedAt'> {
+    createdAt: string
+    updatedAt: string
+    members: GroupUser[]
+    owner: {
+        id: string
+        displayName: string | null
+        avatarUrl: string | null
+    }
+}
+
+interface CreateGroupData {
     name: string
     description?: string
+    city?: string
+    postalCode?: string
 }
 
-interface GroupMember {
-    id: string
-    name: string
-    avatar_url: string | null
-    points: number
+interface UpdateGroupData extends CreateGroupData {
+    id: number
 }
 
-interface GroupData {
-    name: string
-    members: GroupMember[]
-}
-
-export interface GroupMemberWithGroup {
-    role: string
-    group: {
-        id: string
-        name: string
-    }
-}
-
-export function useGroup () {
-    const currentGroup = ref<GroupData | null>(null)
-    const loading = ref(false)
-    const error = ref('')
-    const router = useRouter()
-    const client = useSupabaseClient<Database>()
+export const useGroup = () => {
     const user = useSupabaseUser()
+    const groups = ref<Group[]>([])
+    const currentGroup = ref<Group | null>(null)
+    const loading = ref(false)
+    const error = ref<string | null>(null)
 
-    const fetchCurrentGroup = async () => {
+    const fetchGroups = async () => {
         if (!user.value?.id) { return }
 
+        loading.value = true
+        error.value = null
+
         try {
-            const { data: membership } = await client
-                .from('group_members')
-                .select('group_id')
-                .eq('user_id', user.value.id)
-                .single()
+            const data = await $fetch<Group[]>('/api/group/get', {
+                params: { profileId: user.value.id },
+            })
+            groups.value = data
+        } catch (err: any) {
+            console.error('Error fetching groups:', err)
+            error.value = err.message || 'Failed to fetch groups'
+        } finally {
+            loading.value = false
+        }
+    }
 
-            if (membership) {
-                const { data: group } = await client
-                    .from('groups')
-                    .select(`
-                        *,
-                        members:group_members(
-                            points,
-                            user:users!inner(
-                                id,
-                                raw_user_meta_data,
-                                email
-                            )
-                        )
-                    `)
-                    .eq('id', membership.group_id)
-                    .single()
+    const fetchGroup = async (id: number) => {
+        if (!user.value?.id) { return }
 
-                if (group) {
-                    currentGroup.value = {
-                        name: group.name,
-                        members: group.members?.map((m: any) => ({
-                            id: m.user.id,
-                            name: m.user.raw_user_meta_data.name || m.user.email?.split('@')[0] || 'Unknown',
-                            avatar_url: m.user.raw_user_meta_data.avatar_url || '/default-avatar.png',
-                            points: m.points,
-                        })) || [],
-                    }
-                }
-            }
-        } catch (err) {
+        loading.value = true
+        error.value = null
+
+        try {
+            const data = await $fetch<Group>('/api/group/get', {
+                params: { id, profileId: user.value.id },
+            })
+            currentGroup.value = data
+            return data
+        } catch (err: any) {
             console.error('Error fetching group:', err)
-        }
-    }
-
-    const createGroup = async (form: GroupForm) => {
-        loading.value = true
-        error.value = ''
-
-        try {
-            // Create a new group
-            const { data: group, error: groupError } = await client
-                .from('groups')
-                .insert({
-                    name: form.name,
-                    description: form.description,
-                    created_by: user.value?.id,
-                    invite_code: generateInviteCode(),
-                })
-                .select()
-                .single()
-
-            if (groupError) { throw groupError }
-
-            // Add the creator as a member
-            const { error: memberError } = await client
-                .from('group_members')
-                .insert({
-                    group_id: group.id,
-                    user_id: user.value?.id,
-                    role: 'admin',
-                    points: 0,
-                })
-
-            if (memberError) { throw memberError }
-
-            currentGroup.value = {
-                name: group.name,
-                members: [
-                    {
-                        id: user.value?.id || '',
-                        name: user.value?.user_metadata?.name || user.value?.email?.split('@')[0] || 'Unknown',
-                        avatar_url: user.value?.user_metadata?.avatar_url || '/default-avatar.png',
-                        points: 0,
-                    },
-                ],
-            }
-            await router.push('/dashboard')
-        } catch (err: any) {
-            console.error('Error:', err)
-            error.value = err.message
+            error.value = err.message || 'Failed to fetch group'
+            return null
         } finally {
             loading.value = false
         }
     }
 
-    const joinGroup = async (inviteCode: string) => {
+    const createGroup = async (groupData: CreateGroupData) => {
+        if (!user.value?.id) { return }
+
         loading.value = true
-        error.value = ''
+        error.value = null
 
         try {
-            // Find the group by invite code
-            const { data: group, error: groupError } = await client
-                .from('groups')
-                .select()
-                .eq('invite_code', inviteCode)
-                .single()
-
-            if (groupError) { throw groupError }
-
-            // Add the user as a member
-            const { error: memberError } = await client
-                .from('group_members')
-                .insert({
-                    group_id: group.id,
-                    user_id: user.value?.id,
-                    role: 'member',
-                    points: 0,
-                })
-
-            if (memberError) { throw memberError }
-
-            currentGroup.value = {
-                name: group.name,
-                members: [
-                    {
-                        id: user.value?.id || '',
-                        name: user.value?.user_metadata?.name || user.value?.email?.split('@')[0] || 'Unknown',
-                        avatar_url: user.value?.user_metadata?.avatar_url || '/default-avatar.png',
-                        points: 0,
-                    },
-                ],
-            }
-            await router.push('/dashboard')
+            const data = await $fetch<Group>('/api/group/create', {
+                method: 'POST',
+                body: {
+                    ...groupData,
+                    ownerId: user.value.id,
+                },
+            })
+            await fetchGroups()
+            return data
         } catch (err: any) {
-            error.value = err.message
+            console.error('Error creating group:', err)
+            error.value = err.message || 'Failed to create group'
+            return null
         } finally {
             loading.value = false
         }
+    }
+
+    const updateGroup = async (groupData: UpdateGroupData) => {
+        if (!user.value?.id) { return }
+
+        loading.value = true
+        error.value = null
+
+        try {
+            const data = await $fetch<Group>('/api/group/update', {
+                method: 'PUT',
+                body: {
+                    ...groupData,
+                    profileId: user.value.id,
+                },
+            })
+            if (currentGroup.value?.id === groupData.id) {
+                currentGroup.value = data
+            }
+            await fetchGroups()
+            return data
+        } catch (err: any) {
+            console.error('Error updating group:', err)
+            error.value = err.message || 'Failed to update group'
+            return null
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const deleteGroup = async (id: number) => {
+        if (!user.value?.id) { return }
+
+        loading.value = true
+        error.value = null
+
+        try {
+            await $fetch('/api/group/delete', {
+                method: 'DELETE',
+                body: {
+                    id,
+                    profileId: user.value.id,
+                },
+            })
+            if (currentGroup.value?.id === id) {
+                currentGroup.value = null
+            }
+            await fetchGroups()
+            return true
+        } catch (err: any) {
+            console.error('Error deleting group:', err)
+            error.value = err.message || 'Failed to delete group'
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const joinGroup = async (invitationCode: string) => {
+        if (!user.value?.id) { return }
+
+        loading.value = true
+        error.value = null
+
+        try {
+            const data = await $fetch<GroupUser>('/api/group/join', {
+                method: 'POST',
+                body: {
+                    invitationCode,
+                    profileId: user.value.id,
+                },
+            })
+            await fetchGroups()
+            return data
+        } catch (err: any) {
+            console.error('Error joining group:', err)
+            error.value = err.message || 'Failed to join group'
+            return null
+        } finally {
+            loading.value = false
+        }
+    }
+
+    // Check if the current user is an admin of the group
+    const isAdmin = (group: Group) => {
+        if (!user.value?.id || !group) { return false }
+        const member = group.members.find(m => m.profileId === user.value?.id)
+        return member?.role === 'ADMIN'
+    }
+
+    // Check if the current user is the owner of the group
+    const isOwner = (group: Group) => {
+        if (!user.value?.id || !group) { return false }
+        return group.ownerId === user.value.id
     }
 
     return {
+        groups,
         currentGroup,
         loading,
         error,
-        fetchCurrentGroup,
+        fetchGroups,
+        fetchGroup,
         createGroup,
+        updateGroup,
+        deleteGroup,
         joinGroup,
+        isAdmin,
+        isOwner,
     }
-}
-
-function generateInviteCode () {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }

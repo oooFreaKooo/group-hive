@@ -39,13 +39,14 @@
 </template>
 
 <script setup lang="ts">
-const { currentGroup, fetchCurrentGroup } = useGroup()
+const { groups, fetchGroups } = useGroup()
+const currentGroup = computed(() => groups.value[0])
 
 definePageMeta({
     middleware: ['auth'],
 })
 
 onMounted(() => {
-    fetchCurrentGroup()
+    fetchGroups()
 })
 </script>

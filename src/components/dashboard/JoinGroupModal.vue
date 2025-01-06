@@ -113,16 +113,19 @@ defineProps<{
     modelValue: boolean
 }>()
 
-defineEmits<{
+const inviteCode = ref('')
+const emit = defineEmits<{
     (e: 'update:modelValue', value: boolean): void
 }>()
 
-const inviteCode = ref('')
-// const { currentGroup, loading, error, joinGroup } = useGroup()
 const { loading, error, joinGroup } = useGroup()
 
 const handleSubmit = async () => {
-    await joinGroup(inviteCode.value)
+    const result = await joinGroup(inviteCode.value)
+    if (result) {
+        inviteCode.value = ''
+        emit('update:modelValue', false)
+    }
 }
 </script>
 
