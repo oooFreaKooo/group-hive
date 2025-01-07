@@ -22,21 +22,6 @@
                         @add="handleTransferAdd"
                     />
                 </div>
-                <div class="app-body-sidebar">
-                    <PaymentSection
-                        :title="paymentConfig.title"
-                        :subtitle="paymentConfig.subtitle"
-                        :card-types="paymentConfig.cardTypes"
-                        :payments="paymentConfig.payments"
-                        :faq-title="paymentConfig.faqTitle"
-                        :faq-placeholder="paymentConfig.faqPlaceholder"
-                        @card-select="handleCardSelect"
-                        @payment-details="handlePaymentDetails"
-                        @faq-input="handleFaqInput"
-                        @save="handleSave"
-                        @settings="handleSettings"
-                    />
-                </div>
             </div>
         </div>
     </div>
@@ -159,48 +144,6 @@ withDefaults(defineProps<{
             },
         ],
     }),
-    paymentConfig: () => ({
-        title: 'New Payment',
-        subtitle: 'Choose a card to transfer money',
-        cardTypes: [
-            {
-                type: 'mastercard',
-                icon: 'credit-card',
-            },
-            {
-                type: 'visa',
-                icon: 'wallet2',
-            },
-        ],
-        payments: [
-            {
-                id: '1',
-                cardType: 'Visa',
-                expiry: '12/24',
-                lastDigits: '1234',
-                title: 'Apple Inc.',
-                amount: '100 $',
-            },
-            {
-                id: '2',
-                cardType: 'Mastercard',
-                expiry: '12/24',
-                lastDigits: '1234',
-                title: 'Pinterest',
-                amount: '150 $',
-            },
-            {
-                id: '3',
-                cardType: 'Visa',
-                expiry: '12/24',
-                lastDigits: '1234',
-                title: 'Spotify',
-                amount: '150 $',
-            },
-        ],
-        faqTitle: 'Most frequently asked questions',
-        faqPlaceholder: 'Type here',
-    }),
 })
 
 const handleServiceSearch = (_query: string) => {
@@ -225,26 +168,6 @@ const handleTransferFilter = () => {
 
 const handleTransferAdd = () => {
     // Implement transfer add handler
-}
-
-const handleCardSelect = (_type: string) => {
-    // Implement card select handler
-}
-
-const handlePaymentDetails = (_id: string | number) => {
-    // Implement payment details handler
-}
-
-const handleFaqInput = (_question: string) => {
-    // Implement FAQ input handler
-}
-
-const handleSave = () => {
-    // Implement save handler
-}
-
-const handleSettings = () => {
-    // Implement settings handler
 }
 </script>
 
@@ -280,9 +203,6 @@ a {
     margin-right: auto;
 }
 
-.app-body-sidebar {
-}
-
 .footer {
     margin-top: auto;
     h1 {
@@ -302,37 +222,6 @@ a {
         padding-top: 1rem;
         font-size: 0.75rem;
         color: var(--c-text-tertiary);
-    }
-}
-
-.icon-button {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 0;
-    background-color: transparent;
-    border: 1px solid var(--c-gray-500);
-    color: var(--c-text-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: 0.25s ease;
-    flex-shrink: 0;
-    &.large {
-        width: 42px;
-        height: 42px;
-        font-size: 1.25em;
-    }
-
-    i {
-        transition: 0.25s ease;
-    }
-
-    &:hover,
-    &:focus {
-        background-color: var(--c-gray-600);
-        box-shadow: 0 0 0 4px var(--c-gray-800), 0 0 0 5px var(--c-text-tertiary);
     }
 }
 
@@ -546,76 +435,6 @@ a {
     }
 }
 
-.payments {
-    display: flex;
-    flex-direction: column;
-    margin-top: 1.5rem;
-}
-
-.payment {
-    display: flex;
-    align-items: center;
-    & + * {
-        margin-top: 1rem;
-    }
-}
-
-.payment-card {
-    width: 125px;
-    padding: 0.375rem;
-    aspect-ratio: 3 / 2;
-    flex-shrink: 0;
-    border-radius: 6px;
-    color: var(--c-gray-800);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    font-weight: 600;
-    &.green {
-        background-color: var(--c-green-500);
-    }
-
-    &.olive {
-        background-color: var(--c-olive-500);
-    }
-
-    &.gray {
-        background-color: var(--c-gray-300);
-    }
-
-    span:last-child {
-        align-self: flex-end;
-    }
-}
-
-.payment-details {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    margin-left: 1.5rem;
-    h3 {
-        font-size: 1rem;
-        color: var(--c-text-tertiary);
-    }
-
-    div {
-        margin-top: 0.75rem;
-        padding-top: 0.75rem;
-        padding-bottom: 0.75rem;
-        border-top: 1px solid var(--c-gray-600);
-        border-bottom: 1px solid var(--c-gray-600);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex: 1;
-
-        span {
-            font-size: 1.5rem;
-        }
-    }
-}
-
 .filter-options {
     margin-left: 1.25rem;
     padding-left: 1.25rem;
@@ -765,40 +584,6 @@ a {
         color: var(--c-gray-800);
         background-color: var(--c-white);
         border-color: var(--c-white);
-    }
-}
-
-.faq {
-    margin-top: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    p {
-        color: var(--c-text-tertiary);
-        font-size: 0.875rem;
-    }
-
-    div {
-        margin-top: 0.75rem;
-        padding-top: 0.75rem;
-        padding-bottom: 0.75rem;
-        border-top: 1px solid var(--c-gray-600);
-        border-bottom: 1px solid var(--c-gray-600);
-        font-size: 0.875rem;
-        display: flex;
-        align-items: center;
-
-        label {
-            padding-right: 1rem;
-            margin-right: 1rem;
-            border-right: 1px solid var(--c-gray-600);
-        }
-
-        input {
-            border: 0;
-            background-color: transparent;
-            padding: 0.25em 0;
-            width: 100%;
-        }
     }
 }
 

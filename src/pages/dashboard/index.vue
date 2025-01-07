@@ -17,6 +17,11 @@
                 <GroupOverview :group="currentGroup" />
             </div>
 
+            <!-- Members Section -->
+            <div class="col-12 col-lg-6">
+                <MembersSection :group="currentGroup" />
+            </div>
+
             <!-- Tasks Section -->
             <div class="col-12 col-lg-6">
                 <div class="d-flex flex-column gap-4">
@@ -34,6 +39,8 @@
 </template>
 
 <script setup lang="ts">
+import MembersSection from '~/components/dashboard/Group/MembersSection.vue'
+
 const { groups, fetchGroups } = useGroup()
 const currentGroup = computed(() => groups.value[0])
 
