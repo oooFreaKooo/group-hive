@@ -1,39 +1,39 @@
 <template>
     <section class="member-section">
         <h2>Members</h2>
-        <div class="member-section-header">
-            <p>This is the members section</p>
-            <div class="d-flex gap-2 align-items-center">
-                <span class="badge bg-success">
-                    {{ group.members.length }} members
-                </span>
-                <Dropdown v-if="isAdmin(group)">
-                    <DropdownToggle class="d-flex align-items-center gap-2 btn btn-link text-dark text-decoration-none p-0">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-body">Manage</span>
-                        </div>
-                    </DropdownToggle>
-                    <DropdownMenu>
-                        <DropdownItem
-                            v-if="isAdmin(group)"
-                            @click="showInviteModal = true"
-                        >
-                            Invite Members
-                        </DropdownItem>
-                        <DropdownItem @click="showEditModal = true">
-                            Edit Group
-                        </DropdownItem>
-                        <DropdownItem
-                            v-if="isOwner(group)"
-                            class="text-danger"
-                            @click="confirmDelete"
-                        >
-                            Delete Group
-                        </DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
-            </div>
+
+        <p>{{ group.description }}</p>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-success">
+                {{ group.members.length }} members
+            </span>
+            <Dropdown v-if="isAdmin(group)">
+                <DropdownToggle class="d-flex align-items-center gap-2 btn btn-link text-dark text-decoration-none p-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-white">Manage</span>
+                    </div>
+                </DropdownToggle>
+                <DropdownMenu>
+                    <DropdownItem
+                        v-if="isAdmin(group)"
+                        @click="showInviteModal = true"
+                    >
+                        Invite Members
+                    </DropdownItem>
+                    <DropdownItem @click="showEditModal = true">
+                        Edit Group
+                    </DropdownItem>
+                    <DropdownItem
+                        v-if="isOwner(group)"
+                        class="text-danger"
+                        @click="confirmDelete"
+                    >
+                        Delete Group
+                    </DropdownItem>
+                </DropdownMenu>
+            </Dropdown>
         </div>
+
         <div class="members">
             <div
                 v-for="member in group.members"
@@ -94,6 +94,10 @@ defineEmits<{
 </script>
 
 <style scoped>
+.member-section {
+    max-width: 600px;
+}
+
 .faq {
     margin-top: 1.5rem;
     display: flex;

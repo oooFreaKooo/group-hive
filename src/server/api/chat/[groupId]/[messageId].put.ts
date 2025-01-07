@@ -13,32 +13,41 @@ export default defineEventHandler(async (event) => {
             })
         }
 
-        const groupId = Number.parseInt(event.context.params?.groupId || '')
+        const messageId = Number.parseInt(event.context.params?.messageId || '')
         const body = await readBody(event)
 
-        // Get the GroupUser record for the current user in this group
-        const groupUser = await prisma.groupUser.findUnique({
-            where: {
-                profileId_groupId: {
-                    profileId: user.id,
-                    groupId,
+        // Get the message and verify ownership
+        const message = await prisma.message.findUnique({
+            where: { id: messageId },
+            include: {
+                author: {
+                    include: {
+                        profile: true,
+                    },
                 },
             },
         })
 
-        if (!groupUser) {
+        if (!message) {
             throw createError({
-                statusCode: 403,
-                message: 'Not a member of this group',
+                statusCode: 404,
+                message: 'Message not found',
             })
         }
 
-        const message = await prisma.message.create({
+        if (message.author.profile.id !== user.id) {
+            throw createError({
+                statusCode: 403,
+                message: 'Not authorized to edit this message',
+            })
+        }
+
+        // Update the message
+        const updatedMessage = await prisma.message.update({
+            where: { id: messageId },
             data: {
                 content: body.content,
-                groupId,
-                authorId: groupUser.id,
-                replyToId: body.replyToId,
+                isEdited: true,
             },
             include: {
                 author: {
@@ -58,12 +67,12 @@ export default defineEventHandler(async (event) => {
             },
         })
 
-        return message
+        return updatedMessage
     } catch (error) {
-        console.error('Error creating message:', error)
+        console.error('Error updating message:', error)
         throw createError({
             statusCode: 500,
-            message: 'Error creating message',
+            message: 'Error updating message',
         })
     }
 })

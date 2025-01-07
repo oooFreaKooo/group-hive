@@ -535,32 +535,6 @@ a {
     }
 }
 
-.payment-section {
-    & > h2 {
-        font-size: 1.5rem;
-    }
-}
-
-.payment-section-header {
-    display: flex;
-    align-items: center;
-    margin-top: 1rem;
-    p {
-        color: var(--c-text-tertiary);
-        font-size: 0.875rem;
-    }
-
-    div {
-        padding-left: 1rem;
-        margin-left: auto;
-        display: flex;
-        align-items: center;
-        & > * + * {
-            margin-left: 0.5rem;
-        }
-    }
-}
-
 .card-button {
     display: flex;
     width: 50px;

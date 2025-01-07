@@ -42,6 +42,15 @@ export default defineEventHandler(async (event) => {
                         profile: true,
                     },
                 },
+                replyTo: {
+                    include: {
+                        author: {
+                            include: {
+                                profile: true,
+                            },
+                        },
+                    },
+                },
             },
             orderBy: {
                 createdAt: 'asc',

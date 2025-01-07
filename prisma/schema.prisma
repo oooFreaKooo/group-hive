@@ -38,19 +38,20 @@ model Group {
 }
 
 model GroupUser {
-  id             Int            @id @default(autoincrement())
+  id             Int              @id @default(autoincrement())
   profileId      String
   groupId        Int
-  role           GroupRole      @default(MEMBER)
-  points         Int            @default(0)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  group          Group          @relation(fields: [groupId], references: [id])
-  profile        Profile        @relation(fields: [profileId], references: [id])
+  role           GroupRole        @default(MEMBER)
+  points         Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  group          Group            @relation(fields: [groupId], references: [id])
+  profile        Profile          @relation(fields: [profileId], references: [id])
   pointHistory   PointHistory[]
-  completedTasks Task[]         @relation("TaskCompletion")
-  assignedTasks  Task[]         @relation("TaskAssignment")
-  Message        Message[]
+  completedTasks Task[]           @relation("TaskCompletion")
+  assignedTasks  Task[]           @relation("TaskAssignment")
+  sentMessages   Message[]        @relation("AuthoredMessages")
+  mentionedIn    MessageMention[]
 
   @@unique([profileId, groupId])
 }
@@ -85,14 +86,28 @@ model PointHistory {
 }
 
 model Message {
-  id        Int       @id @default(autoincrement())
+  id        Int              @id @default(autoincrement())
   content   String
   groupId   Int
   authorId  Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  group     Group     @relation(fields: [groupId], references: [id])
-  author    GroupUser @relation(fields: [authorId], references: [id])
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  isEdited  Boolean          @default(false)
+  replyToId Int?
+  replyTo   Message?         @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies   Message[]        @relation("MessageReplies")
+  group     Group            @relation(fields: [groupId], references: [id])
+  author    GroupUser        @relation("AuthoredMessages", fields: [authorId], references: [id])
+  mentions  MessageMention[]
+}
+
+model MessageMention {
+  messageId   Int
+  groupUserId Int
+  message     Message   @relation(fields: [messageId], references: [id])
+  groupUser   GroupUser @relation(fields: [groupUserId], references: [id])
+
+  @@id([messageId, groupUserId])
 }
 
 enum UserRole {

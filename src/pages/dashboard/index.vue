@@ -1,6 +1,5 @@
 <template>
     <div class="">
-        <MainLayout />
         <div
             v-if="!currentGroup"
             class="mt-4"
@@ -12,16 +11,6 @@
             v-else
             class="mt-4 row g-4"
         >
-            <!-- Group Overview -->
-            <div class="col-12 col-lg-6">
-                <GroupOverview :group="currentGroup" />
-            </div>
-
-            <!-- Members Section -->
-            <div class="col-12 col-lg-6">
-                <MembersSection :group="currentGroup" />
-            </div>
-
             <!-- Tasks Section -->
             <div class="col-12 col-lg-6">
                 <div class="d-flex flex-column gap-4">
@@ -29,12 +18,17 @@
                     <CreateTaskButton />
                 </div>
             </div>
+            <!-- Members Section -->
+            <div class="col-12 col-lg-6">
+                <MembersSection :group="currentGroup" />
+            </div>
 
             <!-- Leaderboard -->
             <div class="col-12">
                 <Leaderboard />
             </div>
         </div>
+        <MainLayout />
     </div>
 </template>
 
