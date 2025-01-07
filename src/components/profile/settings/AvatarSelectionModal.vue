@@ -48,22 +48,58 @@
                             </div>
 
                             <div class="modal-body">
-                                <div>
-                                    <label class="form-label">Generate Avatar</label>
+                                <div class="d-flex justify-content-center mb-3">
+                                    <NuxtImg
+                                        :src="previewAvatar || '/default-avatar.png'"
+                                        class="rounded-circle shadow-lg"
+                                        style="width: 160px; height: 160px; object-fit: cover;"
+                                    />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Custom Seed</label>
+                                    <div class="input-group">
+                                        <input
+                                            v-model="customSeed"
+                                            type="text"
+                                            class="form-control"
+                                            placeholder="Enter seed..."
+                                            @keyup.enter="handleCustomSeed"
+                                        >
+                                        <button
+                                            class="btn btn-outline-secondary"
+                                            @click="handleCustomSeed"
+                                        >
+                                            Generate
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="bg-body-secondary p-2 rounded border">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="mb-0">Random Avatars</label>
+                                        <b-button
+                                            color="primary"
+                                            icon="bi:dice-5"
+                                            @click="regenerateSeeds"
+                                        >
+                                            Shuffle
+                                        </b-button>
+                                    </div>
                                     <div class="row g-2">
                                         <div
-                                            v-for="seed in ['1', '2', '3', '4', '5', '6', '7', '8']"
+                                            v-for="seed in seeds"
                                             :key="seed"
                                             class="col-3"
                                         >
                                             <button
-                                                class="position-relative w-100 p-0 border overflow-hidden rounded"
+                                                class="position-relative w-100 p-0 overflow-hidden rounded"
                                                 :class="{ 'border-primary': selectedSeed === seed }"
                                                 style="aspect-ratio: 1;"
                                                 @click="selectGeneratedAvatar(seed)"
                                             >
                                                 <NuxtImg
-                                                    :src="`https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=${seed}`"
+                                                    :src="`https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${seed}`"
                                                     class="w-100 h-100"
                                                 />
                                             </button>
@@ -117,11 +153,40 @@ const emit = defineEmits<{
 const user = useSupabaseUser()
 const { profile, refreshProfile } = useProfile()
 const selectedSeed = ref('')
+const customSeed = ref('')
 const loading = ref(false)
+const seeds = ref<string[]>([])
+
+// Generate a random string for seed
+const generateRandomSeed = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    let result = ''
+    for (let i = 0; i < 8; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length))
+    }
+    return result
+}
+
+// Initialize or regenerate 8 random seeds
+const regenerateSeeds = () => {
+    seeds.value = Array.from({ length: 8 }, () => generateRandomSeed())
+}
+
+// Initialize seeds on component mount
+onMounted(() => {
+    regenerateSeeds()
+})
 
 const selectGeneratedAvatar = (seed: string) => {
     selectedSeed.value = seed
-    emit('update:previewAvatar', `https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=${seed}`)
+    emit('update:previewAvatar', `https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${seed}`)
+}
+
+// Handle custom seed input
+const handleCustomSeed = () => {
+    if (customSeed.value.trim()) {
+        selectGeneratedAvatar(customSeed.value.trim())
+    }
 }
 
 const confirmAvatarSelection = async () => {
@@ -131,7 +196,7 @@ const confirmAvatarSelection = async () => {
         loading.value = true
 
         const avatarUrl = selectedSeed.value
-            ? `https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=${selectedSeed.value}`
+            ? `https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${selectedSeed.value}`
             : props.previewAvatar
 
         // Update profile with new avatar URL

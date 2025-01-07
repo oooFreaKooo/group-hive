@@ -23,6 +23,12 @@
                         </div>
                     </DropdownToggle>
                     <DropdownMenu>
+                        <DropdownItem
+                            v-if="isAdmin(group)"
+                            @click="showInviteModal = true"
+                        >
+                            Invite Members
+                        </DropdownItem>
                         <DropdownItem @click="showEditModal = true">
                             Edit Group
                         </DropdownItem>
@@ -42,20 +48,6 @@
             <h5 class="mb-0">
                 Members
             </h5>
-            <UseClipboard
-                v-if="isAdmin(group)"
-                v-slot="{ copy, copied }"
-                :source="inviteCode"
-            >
-                <b-button
-                    class="btn btn-outline-primary btn-sm"
-                    target="#liveToast"
-                    toggle="toast"
-                    @click="copy()"
-                >
-                    {{ copied ? 'Copied' : 'Copy' }}
-                </b-button>
-            </UseClipboard>
         </div>
 
         <div class="members-list">
@@ -96,26 +88,19 @@
             </ul>
         </div>
 
+        <!-- Invite Group Modal -->
+        <InviteGroupModal
+            v-if="showInviteModal"
+            v-model="showInviteModal"
+            :group="group"
+        />
+
         <!-- Edit Group Modal -->
         <EditGroupModal
             v-if="showEditModal"
             v-model="showEditModal"
             :group="group"
         />
-
-        <!-- Toast Notification -->
-        <div
-            class="toast-container position-fixed bottom-0 end-0 p-3"
-        >
-            <Toast
-                id="liveToast"
-                variant="success"
-            >
-                <ToastBody>
-                    Invitation code copied to clipboard!
-                </ToastBody>
-            </Toast>
-        </div>
     </div>
 </template>
 
@@ -128,7 +113,7 @@ const props = defineProps<{
 
 const { isAdmin, isOwner, deleteGroup } = useGroup()
 const showEditModal = ref(false)
-const inviteCode = ref(props.group.invitationCode)
+const showInviteModal = ref(false)
 
 const confirmDelete = async () => {
     if (confirm('Are you sure you want to delete this group? This action cannot be undone.')) {
