@@ -151,9 +151,6 @@ defineProps<{
     modelValue: boolean
 }>()
 
-const user = useSupabaseUser()
-console.log(user.value?.id)
-
 const form = ref({
     name: '',
     description: '',

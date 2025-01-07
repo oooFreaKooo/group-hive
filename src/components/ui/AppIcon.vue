@@ -202,29 +202,29 @@ const handleClick = (event: Event) => {
     font-size: 8px;
 }
 .icon-sm {
-    width: 24px;
-    height: 24px;
-    font-size: 16px;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
 }
 .icon-md {
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
+    width: 24px;
+    height: 24px;
+    font-size: 18px;
 }
 .icon-lg {
     width: 48px;
     height: 48px;
-    font-size: 32px;
+    font-size: 24px;
 }
 .icon-xl {
     width: 64px;
     height: 64px;
-    font-size: 48px;
+    font-size: 32px;
 }
 .icon-xxl {
     width: 96px;
     height: 96px;
-    font-size: 64px;
+    font-size: 48px;
 }
 
 /* Animations */
