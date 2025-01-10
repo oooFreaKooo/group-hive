@@ -203,28 +203,6 @@ a {
     margin-right: auto;
 }
 
-.footer {
-    margin-top: auto;
-    h1 {
-        font-size: 1.5rem;
-        line-height: 1.125;
-        display: flex;
-        align-items: flex-start;
-        small {
-            font-size: 0.5em;
-            margin-left: 0.25em;
-        }
-    }
-
-    div {
-        border-top: 1px solid var(--c-gray-600);
-        margin-top: 1.5rem;
-        padding-top: 1rem;
-        font-size: 0.75rem;
-        color: var(--c-text-tertiary);
-    }
-}
-
 .tiles {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

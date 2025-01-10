@@ -33,7 +33,7 @@
                                 :key="item.label"
                                 :href="item.href"
                                 :class="{ active: item.active }"
-                                class="mx-5"
+                                class="mx-5 text-black"
                             >
                                 {{ item.label }}
                             </NuxtLink>
@@ -96,7 +96,7 @@ function toggleMobileNav () {
 <style scoped lang="scss">
 .app-header-actions-buttons {
     display: flex;
-    border-left: 1px solid var(--c-gray-600);
+    border-left: 1px solid var(--bs-gray-400);
     margin-left: 2rem;
     padding-left: 2rem;
 
@@ -111,7 +111,7 @@ function toggleMobileNav () {
     padding-bottom: 0.25rem;
     padding-top: 0.25rem;
     width: 175px;
-    border-bottom: 1px solid var(--c-gray-600);
+    border-bottom: 1px solid var(--bs-gray-400);
     @media (max-width: 1200px) {
         border-bottom: 0;
     }
@@ -131,16 +131,16 @@ function toggleMobileNav () {
     line-height: 1.25;
     margin-left: 0.75rem;
     span:first-child {
-        color: var(--c-text-primary);
+        color: var(--bs-gray-900);
     }
     span:last-child {
-        color: var(--c-text-tertiary);
+        color: var(--bs-gray-600);
     }
 }
 
 .tabs {
-    color: var(--c-text-tertiary);
-    border-bottom: 1px solid var(--c-gray-600);
+    color: var(--bs-gray-600);
+    border-bottom: 1px solid var(--bs-gray-400);
 
     a {
         padding-top: 1rem;
@@ -152,8 +152,8 @@ function toggleMobileNav () {
         &.active,
         &:hover,
         &:focus {
-            color: var(--c-text-primary);
-            border-color: var(--c-text-primary);
+            color: var(--bs-gray-900);
+            border-color: var(--bs-gray-900);
         }
     }
 }

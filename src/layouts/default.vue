@@ -6,67 +6,16 @@
                 class="px-4"
             />
 
-            <main class="row p-4">
-                <div class="col-12 col-lg-2 pt-4">
-                    <SideNavigation
-                        :navigation-items="sideNavConfig.navigationItems"
-                        :footer-title="sideNavConfig.footerTitle"
-                        :footer-content="sideNavConfig.footerContent"
-                        :group="currentGroup"
-                    />
-                </div>
-                <div class="col-12 col-lg-10 pt-4">
-                    <slot />
-                </div>
-            </main>
+            <slot />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-const { groups, fetchGroups } = useGroup()
-const currentGroup = computed(() => groups.value[0])
-
 const navigationItems = [
     { label: 'Home', href: '/' },
     { label: 'Dashboard', href: '/dashboard' },
 ]
-
-const sideNavConfig = ref({
-    navigationItems: [
-        {
-            label: 'Overview',
-            href: '/',
-            icon: 'house',
-        },
-        {
-            label: 'Chat',
-            href: '/',
-            icon: 'chat',
-        },
-        {
-            label: 'My Tasks',
-            href: '/',
-            icon: 'list',
-        },
-        {
-            label: 'Leaderboard',
-            href: '/',
-            icon: 'trophy',
-        },
-        {
-            label: 'Account',
-            href: '/',
-            icon: 'person',
-        },
-    ],
-    footerTitle: 'Almeria',
-    footerContent: 'All Rights Reserved 2021',
-})
-
-onMounted(() => {
-    fetchGroups()
-})
 </script>
 
 <style>

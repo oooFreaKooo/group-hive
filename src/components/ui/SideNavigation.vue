@@ -1,82 +1,99 @@
 <template>
-    <div class="app-body-navigation">
+    <div class="app-body-navigation vh-100 d-flex flex-column justify-content-between">
         <nav class="navigation">
-            <NuxtLink
+            <button
                 v-for="item in navigationItems"
                 :key="item.label"
-                :href="item.href"
+                class="text-black d-flex align-items-center text-decoration-none transition-hover mb-4 last-mb-0 bg-transparent border-0"
+                :class="{ active: currentComponent === item.component }"
+                @click="$emit('navigate', item.component)"
             >
                 <AppIcon
                     :name="item.icon"
                     size="md"
-                    class="me-2"
+                    color="black"
+                    class="me-2 fs-5 flex-shrink-0"
                 />
                 <span>{{ item.label }}</span>
-            </NuxtLink>
+            </button>
         </nav>
         <footer class="footer">
-            <h1>{{ footerTitle }}<small>©</small></h1>
-            <div v-html="footerContent" />
+            <h1 class="fs-4 lh-sm d-flex align-items-start">
+                {{ footerTitle }}<small class="fs-6 ms-1">©</small>
+            </h1>
+            <div class="border-top border-gray-400 mt-4 pt-3 fs-8 text-gray-600">
+                {{ footerContent }}
+            </div>
         </footer>
     </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 interface NavigationItem {
     label: string
-    href: string
+    component: string
     icon: string
 }
 
-defineProps<{
+const props = defineProps<{
     navigationItems: NavigationItem[]
     footerTitle: string
     footerContent: string
+    activeComponent: string
+}>()
+
+const currentComponent = computed(() => props.activeComponent)
+
+defineEmits<{
+    navigate: [component: string]
 }>()
 </script>
 
 <style scoped lang="scss">
 .app-body-navigation {
     width: 175px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+
     @media (max-width: 1200px) {
         display: none;
     }
 }
 
 .navigation {
-    display: flex;
-
-    flex-direction: column;
-    align-items: flex-start;
-    color: var(--c-text-tertiary);
-    a {
-        display: flex;
-        align-items: center;
-        text-decoration: none;
+    button {
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        color: var(--bs-gray-600);
         transition: 0.25s ease;
 
         * {
             transition: 0.25s ease;
         }
 
-        i {
-            margin-right: 0.75rem;
-            font-size: 1.25em;
-            flex-shrink: 0;
-        }
-
-        & + a {
-            margin-top: 1.25rem;
-        }
-
         &:hover,
         &:focus {
             transform: translateX(4px);
-            color: var(--c-text-primary);
+            color: var(--bs-gray-900);
+        }
+
+        &.active {
+            color: var(--bs-gray-900);
+            transform: translateX(4px);
         }
     }
+}
+
+.last-mb-0:last-child {
+    margin-bottom: 0 !important;
+}
+
+.transition-hover {
+    transition: 0.25s ease;
+}
+
+.fs-8 {
+    font-size: 0.75rem;
 }
 </style>

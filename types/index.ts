@@ -1,3 +1,5 @@
+import type { Group, GroupUser, Profile } from '@prisma/client'
+
 export { }
 
 declare global {
@@ -6,6 +8,12 @@ declare global {
         label: string
         href: string
         active?: boolean
+    }
+
+    interface GroupWithMembers extends Group {
+        members: (GroupUser & {
+            profile: Profile
+        })[]
     }
 
     type NavItems = NavigationItem[]
