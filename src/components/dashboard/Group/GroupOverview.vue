@@ -17,7 +17,7 @@
                     {{ group.members.length }} members
                 </span>
                 <Dropdown v-if="isAdmin(group)">
-                    <DropdownToggle class="d-flex align-items-center gap-2 btn btn-link text-dark text-decoration-none p-0">
+                    <DropdownToggle class="d-flex align-items-center gap-2 btn btn-link text-decoration-none p-0">
                         <div class="d-flex align-items-center gap-2">
                             <span class="text-body">Manage</span>
                         </div>

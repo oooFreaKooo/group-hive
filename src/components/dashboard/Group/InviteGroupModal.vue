@@ -51,7 +51,7 @@
 
                             <div class="modal-body pt-0">
                                 <div class="d-flex align-items-center gap-2 bg-light rounded p-2 border">
-                                    <code class="flex-grow-1 small text-dark">{{ inviteCode }}</code>
+                                    <code class="flex-grow-1 small">{{ inviteCode }}</code>
                                     <UseClipboard
                                         v-slot="{ copy, copied }"
                                         :source="inviteCode"

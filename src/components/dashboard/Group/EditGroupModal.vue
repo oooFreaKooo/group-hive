@@ -145,7 +145,6 @@ import {
     TransitionChild,
     TransitionRoot,
 } from '@headlessui/vue'
-import type { Group } from '~/composables/useGroup'
 
 const props = defineProps<{
     modelValue: boolean

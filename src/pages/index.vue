@@ -18,7 +18,7 @@
                     </NuxtLink>
                     <NuxtLink
                         to="/"
-                        class="btn btn-link text-dark text-decoration-none"
+                        class="btn btn-link text-decoration-none"
                     >
                         Learn more <span aria-hidden="true">→</span>
                     </NuxtLink>

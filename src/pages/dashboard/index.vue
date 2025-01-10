@@ -1,48 +1,35 @@
 <template>
-    <div class="">
+    <div v-if="status === 'pending'">
         <div
-            v-if="!currentGroup"
-            class="mt-4"
+            class="spinner-border"
+            role="status"
         >
-            <NoGroup />
+            Loading...
         </div>
-
-        <div
-            v-else
-            class="mt-4 row g-4"
-        >
-            <!-- Tasks Section -->
-            <div class="col-12 col-lg-6">
-                <div class="d-flex flex-column gap-4">
-                    <TaskList />
-                    <CreateTaskButton />
-                </div>
-            </div>
-            <!-- Members Section -->
-            <div class="col-12 col-lg-6">
-                <MembersSection :group="currentGroup" />
-            </div>
-
-            <!-- Leaderboard -->
-            <div class="col-12">
-                <Leaderboard />
-            </div>
+    </div>
+    <div v-else-if="data && status === 'success'">
+        <CreateOrJoinGroup v-if="data.profile && data.profile.ownedGroups.length == 0" />
+        <div v-else>
+            <MembersSection
+                :group="data.profile?.ownedGroups[0] as unknown as GroupWithMembers"
+                :profile="data.profile as unknown as Profile"
+            />
         </div>
-        <MainLayout />
     </div>
 </template>
 
 <script setup lang="ts">
-import MembersSection from '~/components/dashboard/Group/MembersSection.vue'
+import type { Group, GroupUser, Profile } from '@prisma/client'
 
-const { groups, fetchGroups } = useGroup()
-const currentGroup = computed(() => groups.value[0])
+interface GroupWithMembers extends Group {
+    members: (GroupUser & {
+        profile: Profile
+    })[]
+}
+
+const { data, status } = await useFetch('/api/profile/get')
 
 definePageMeta({
     middleware: ['auth'],
-})
-
-onMounted(() => {
-    fetchGroups()
 })
 </script>

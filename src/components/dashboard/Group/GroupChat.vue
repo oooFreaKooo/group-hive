@@ -1,151 +1,160 @@
 <template>
-    <h2 class="mt-3">
-        Group Chat
-    </h2>
-    <div class="group-chat">
+    <div class="bg-body text-black h-100 d-flex flex-column">
         <div
             ref="messagesContainer"
-            class="messages"
+            class="messages flex-grow-1 overflow-auto p-2"
         >
             <div
                 v-for="message in messages"
                 :key="message.id"
-                class="message"
+                class="message mb-2 border rounded shadow-sm"
                 :class="{ 'is-reply': message.replyTo }"
             >
-                <div
-                    v-if="message.replyTo"
-                    class="reply-to"
-                >
-                    <div class="reply-content card py-1 px-2">
-                        <span class="fw-bold">{{ message.replyTo.author.profile.displayName }}</span>
-                        {{ message.replyTo.content }}
-                    </div>
-                </div>
-                <div class="message-header">
-                    <div class="message-author">
+                <div class="d-flex align-items-center justify-content-between p-2">
+                    <div class="d-flex align-items-center">
                         <NuxtImg
-                            class="rounded-circle me-2"
+                            class="rounded-circle me-2 border border-secondary"
                             width="24"
                             height="24"
                             :src="message.author.profile.avatarUrl || '/default-avatar.png'"
                             :alt="message.author.profile.displayName || 'User'"
                         />
-                        <span class="author-name">{{ message.author.profile.displayName }}</span>
-                        <span
-                            v-if="message.isEdited"
-                            class="edited-badge"
-                        >(edited)</span>
+                        <span class="fw-medium">{{ message.author.profile.displayName }}</span>
                     </div>
-                    <div class="message-actions">
-                        <span class="message-time">{{ formatDate(message.createdAt) }}</span>
+
+                    <div class="message-actions d-flex align-items-center gap-2">
                         <button
-                            class="action-button"
+                            class="btn btn-link btn-sm p-1 text-muted"
                             @click="replyTo(message)"
                         >
                             <i class="bi bi-reply" />
                         </button>
                         <div
                             v-if="isOwnMessage(message)"
-                            class="message-menu"
+                            class="message-menu d-flex"
                         >
                             <button
-                                class="action-button"
+                                class="btn btn-link btn-sm p-1 text-muted"
                                 @click="editMessage(message)"
                             >
                                 <i class="bi bi-pencil" />
                             </button>
                             <button
-                                class="action-button text-danger"
+                                class="btn btn-link btn-sm p-1 text-danger"
                                 @click="deleteMessage(message)"
                             >
                                 <i class="bi bi-trash" />
                             </button>
                         </div>
+                        <span class="message-time small text-muted mx-2">{{ formatDate(message.createdAt) }}</span>
                     </div>
                 </div>
                 <div
-                    class="message-content"
-                    :class="{ editing: editingMessage?.id === message.id }"
+                    v-if="message.replyTo"
+                    class="ms-2 mb-2"
                 >
-                    <template v-if="editingMessage?.id === message.id">
-                        <textarea
-                            v-model="editContent"
-                            class="edit-input"
-                            @keydown.enter.prevent="saveEdit"
-                            @keydown.esc="cancelEdit"
-                        />
-                        <div class="edit-actions">
-                            <button
-                                class="btn btn-sm btn-primary"
-                                @click="saveEdit"
-                            >
-                                Save
-                            </button>
-                            <button
-                                class="btn btn-sm btn-secondary"
-                                @click="cancelEdit"
-                            >
-                                Cancel
-                            </button>
+                    <div class="border-start border-4 border-primary p-2 bg-secondary text-light small rounded ms-4">
+                        <div class="fw-bold">
+                            {{ message.replyTo.author.profile.displayName }}
                         </div>
-                    </template>
-                    <template v-else>
-                        <span v-html="formatMessageContent(message.content)" />
-                    </template>
+                        <div>
+                            {{ message.replyTo.content }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div
+                        class="ps-4"
+                        :class="{ 'bg-secondary rounded p-2': editingMessage?.id === message.id }"
+                    >
+                        <template v-if="editingMessage?.id !== message.id">
+                            <span class="ms-3">{{ formatMessageContent(message.content) }}</span>
+                            <span
+                                v-if="message.isEdited"
+                                class="mx-2 small text-muted"
+                            >(edited)</span>
+                        </template>
+                        <template v-else>
+                            <div class="text-white p-2">
+                                Edit message
+                            </div>
+                            <textarea
+                                v-model="editContent"
+                                class="form-control border-white mb-2"
+                                @keydown.enter.prevent="saveEdit"
+                                @keydown.esc="cancelEdit"
+                            />
+                            <div class="d-flex gap-2">
+                                <button
+                                    class="btn btn-sm btn-success"
+                                    @click="saveEdit"
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    class="btn btn-sm btn-outline-warning"
+                                    @click="cancelEdit"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <div class=" p-3 border-top">
+                <div
+                    v-if="replyingTo"
+                    class="reply-preview mb-2 p-2 bg-secondary rounded"
+                >
+                    <div class="reply-info d-flex align-items-center justify-content-between small text-muted">
+                        <span>Replying to {{ replyingTo.author.profile.displayName }}</span>
+                        <button
+                            class="btn btn-link btn-sm p-1 text-muted"
+                            @click="cancelReply"
+                        >
+                            <i class="bi bi-x" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="message-input">
-            <div
-                v-if="replyingTo"
-                class="reply-preview"
+        <div class="d-flex gap-2 position-relative px-2">
+            <textarea
+                v-model="newMessage"
+                class="form-control bg-transparent border-secondary"
+                :placeholder="replyingTo ? 'Write your reply...' : 'Type a message...'"
+                @keydown.enter.prevent="sendMessage"
+                @input="handleInput"
+            />
+            <button
+                class="btn btn-secondary align-self-end"
+                :disabled="!newMessage.trim()"
+                @click="sendMessage"
             >
-                <div class="reply-info">
-                    <span>Replying to {{ replyingTo.author.profile.displayName }}</span>
-                    <button
-                        class="close-button"
-                        @click="cancelReply"
-                    >
-                        <i class="bi bi-x" />
-                    </button>
-                </div>
-            </div>
-            <div class="input-container">
-                <textarea
-                    v-model="newMessage"
-                    class="message-textarea"
-                    :placeholder="replyingTo ? 'Write your reply...' : 'Type a message...'"
-                    @keydown.enter.prevent="sendMessage"
-                    @input="handleInput"
+                <i class="bi bi-send" />
+            </button>
+        </div>
+        <div
+            v-if="showMentionSuggestions"
+            class="position-absolute bottom-100 start-0 bg-secondary border border-secondary rounded mb-2 overflow-auto"
+            style="width: 200px; max-height: 200px;"
+        >
+            <div
+                v-for="member in filteredMembers"
+                :key="member.id"
+                class="d-flex align-items-center p-2 cursor-pointer hover-bg-secondary"
+                @click="selectMention(member)"
+            >
+                <NuxtImg
+                    class="rounded-circle me-2"
+                    width="20"
+                    height="20"
+                    :src="member.profile.avatarUrl || '/default-avatar.png'"
+                    :alt="member.profile.displayName || 'User'"
                 />
-                <button
-                    class="send-button"
-                    :disabled="!newMessage.trim()"
-                    @click="sendMessage"
-                >
-                    <i class="bi bi-send" />
-                </button>
-            </div>
-            <div
-                v-if="showMentionSuggestions"
-                class="mention-suggestions"
-            >
-                <div
-                    v-for="member in filteredMembers"
-                    :key="member.id"
-                    class="mention-item"
-                    @click="selectMention(member)"
-                >
-                    <NuxtImg
-                        class="rounded-circle me-2"
-                        width="20"
-                        height="20"
-                        :src="member.profile.avatarUrl || '/default-avatar.png'"
-                        :alt="member.profile.displayName || 'User'"
-                    />
-                    <span>{{ member.profile.displayName }}</span>
-                </div>
+                <span>{{ member.profile.displayName }}</span>
             </div>
         </div>
     </div>
@@ -328,217 +337,46 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.group-chat {
-    display: flex;
-    flex-direction: column;
-    height: 600px;
-    margin-top: 1.5rem;
-    border: 1px solid var(--c-gray-600);
-    border-radius: 8px;
-}
-
 .messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem;
+    scrollbar-color: var(--bs-secondary-900) var(--bs-secondary-800);
+    scrollbar-width: thin;
 }
 
-.message {
-    margin-bottom: 1rem;
-    &.is-reply {
-        margin-top: 0.5rem;
-    }
+.message-time {
+    opacity: 1 !important;
+    transition: none;
 }
 
-.reply-to {
-    margin-bottom: 0.5rem;
-    padding-left: 0.5rem;
-    border-left: 2px solid var(--c-gray-600);
-}
-
-.reply-content {
-    font-size: 0.875rem;
-    background: var(--c-gray-700);
-    color: var(--c-text-tertiary);
-}
-
-.message-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.25rem;
-}
-
-.message-author {
-    display: flex;
-    align-items: center;
-}
-
-.author-name {
-    font-weight: 500;
-    margin-right: 0.5rem;
-}
-
-.edited-badge {
-    font-size: 0.75rem;
-    color: var(--c-text-tertiary);
-}
-
-.message-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.message-actions > *:not(.message-time) {
     opacity: 0;
     transition: opacity 0.2s;
 }
 
-.message:hover .message-actions {
+.message:hover .message-actions > *:not(.message-time) {
     opacity: 1;
 }
 
-.message-time {
-    color: var(--c-text-tertiary);
-    font-size: 0.75rem;
-}
-
-.action-button {
-    background: transparent;
-    border: none;
-    padding: 0.25rem;
-    color: var(--c-text-tertiary);
-    cursor: pointer;
-    transition: color 0.2s;
-
-    &:hover {
-        color: var(--c-text-primary);
-    }
-}
-
-.message-content {
-    padding-left: 2rem;
-    &.editing {
-        padding: 0.5rem;
-        background: var(--c-gray-700);
-        border-radius: 4px;
-    }
-}
-
-.edit-input {
-    width: 100%;
-    min-height: 60px;
-    background: transparent;
-    border: 1px solid var(--c-gray-600);
-    border-radius: 4px;
-    padding: 0.5rem;
-    color: var(--c-text-primary);
-    resize: vertical;
-}
-
-.edit-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.message-input {
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-    border-top: 1px solid var(--c-gray-600);
-}
-
-.reply-preview {
-    margin-bottom: 0.5rem;
-    padding: 0.5rem;
-    background: var(--c-gray-700);
-    border-radius: 4px;
-}
-
-.reply-info {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.875rem;
-    color: var(--c-text-tertiary);
-}
-
-.close-button {
-    background: transparent;
-    border: none;
-    color: var(--c-text-tertiary);
-    cursor: pointer;
-    padding: 0.25rem;
-
-    &:hover {
-        color: var(--c-text-primary);
-    }
-}
-
-.input-container {
-    display: flex;
-    gap: 0.5rem;
-    position: relative;
+.message-actions {
+    opacity: 1;
+    transition: none;
 }
 
 .message-textarea {
-    flex: 1;
     min-height: 40px;
     max-height: 120px;
-    background: transparent;
-    border: 1px solid var(--c-gray-600);
-    border-radius: 4px;
-    padding: 0.5rem;
-    color: var(--c-text-primary);
     resize: vertical;
 }
 
-.send-button {
-    background: var(--c-gray-600);
-    border: none;
-    border-radius: 4px;
-    padding: 0.5rem;
-    color: var(--c-text-primary);
-    cursor: pointer;
-    transition: 0.25s ease;
-    align-self: flex-end;
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    &:not(:disabled):hover {
-        background: var(--c-gray-700);
-    }
-}
-
-.mention-suggestions {
-    position: absolute;
-    bottom: 100%;
-    left: 0;
-    width: 200px;
-    max-height: 200px;
-    overflow-y: auto;
-    background: var(--c-gray-700);
-    border: 1px solid var(--c-gray-600);
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-}
-
-.mention-item {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover {
-        background: var(--c-gray-600);
-    }
-}
-
 :deep(.mention) {
-    color: var(--c-primary);
+    color: var(--bs-primary);
     font-weight: 500;
+}
+
+.hover-bg-secondary:hover {
+    background-color: var(--bs-secondary);
+}
+
+.cursor-pointer {
+    cursor: pointer;
 }
 </style>

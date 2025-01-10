@@ -1,34 +1,4 @@
-import type { Group as PrismaGroup, GroupUser as PrismaGroupUser } from '@prisma/client'
-
-interface GroupUser extends PrismaGroupUser {
-    profile: {
-        id: string
-        displayName: string | null
-        avatarUrl: string | null
-    }
-}
-
-export interface Group extends Omit<PrismaGroup, 'createdAt' | 'updatedAt'> {
-    createdAt: string
-    updatedAt: string
-    members: GroupUser[]
-    owner: {
-        id: string
-        displayName: string | null
-        avatarUrl: string | null
-    }
-}
-
-interface CreateGroupData {
-    name: string
-    description?: string
-    city?: string
-    postalCode?: string
-}
-
-interface UpdateGroupData extends CreateGroupData {
-    id: number
-}
+import type { Group } from '@prisma/client'
 
 export const useGroup = () => {
     const user = useSupabaseUser()
@@ -85,7 +55,7 @@ export const useGroup = () => {
         }
     }
 
-    const createGroup = async (groupData: CreateGroupData) => {
+    const createGroup = async (groupData: Group) => {
         if (!user.value?.id) { return }
 
         loading.value = true
