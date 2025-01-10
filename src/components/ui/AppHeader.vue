@@ -49,29 +49,7 @@
                     <!-- Auth Actions -->
                     <div class="d-lg-flex d-none">
                         <template v-if="user">
-                            <Dropdown>
-                                <DropdownToggle class="d-flex align-items-center p-0">
-                                    <div class="user-profile">
-                                        <span>{{ profile?.displayName }}</span>
-                                        <span>
-                                            <NuxtImg
-                                                :src="profile?.avatarUrl || '/default-avatar.png'"
-                                                class="rounded-circle"
-                                                width="38"
-                                                height="38"
-                                            />
-                                        </span>
-                                    </div>
-                                </DropdownToggle>
-                                <DropdownMenu>
-                                    <DropdownItem @click="showProfileSettings = true">
-                                        Settings
-                                    </DropdownItem>
-                                    <DropdownItem @click="handleLogout">
-                                        Logout
-                                    </DropdownItem>
-                                </DropdownMenu>
-                            </Dropdown>
+                            <ProfileButton />
                         </template>
                         <template v-else>
                             <NuxtLink
@@ -89,7 +67,6 @@
                         </template>
                     </div>
                 </div>
-                <ProfileSettingsModal v-model="showProfileSettings" />
             </div>
         </nav>
 
@@ -108,28 +85,15 @@ defineProps<{
 }>()
 
 const user = useSupabaseUser()
-const client = useSupabaseClient()
-const router = useRouter()
-const { profile } = useProfile()
-const showProfileSettings = ref(false)
 
 const isMobileNavOpen = ref(false)
 
 function toggleMobileNav () {
     isMobileNavOpen.value = !isMobileNavOpen.value
 }
-
-const handleLogout = async () => {
-    await client.auth.signOut()
-    router.push('/auth/login')
-}
 </script>
 
 <style scoped lang="scss">
-.dropdown-toggle {
-    color: transparent;
-}
-
 .app-header-actions-buttons {
     display: flex;
     border-left: 1px solid var(--c-gray-600);
@@ -191,46 +155,6 @@ const handleLogout = async () => {
             color: var(--c-text-primary);
             border-color: var(--c-text-primary);
         }
-    }
-}
-
-.user-profile {
-    display: flex;
-    align-items: center;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    color: var(--c-text-tertiary);
-    transition: 0.25s ease;
-
-    &:hover,
-    &:focus {
-        color: var(--c-text-primary);
-        span:last-child {
-            box-shadow: 0 0 0 4px var(--c-gray-800), 0 0 0 5px var(--c-text-tertiary);
-        }
-    }
-
-    span:first-child {
-        display: flex;
-        font-size: 1.125rem;
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--c-gray-600);
-        font-weight: 300;
-    }
-
-    span:last-child {
-        transition: 0.25s ease;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        overflow: hidden;
-        margin-left: 1.5rem;
-        flex-shrink: 0;
     }
 }
 </style>
