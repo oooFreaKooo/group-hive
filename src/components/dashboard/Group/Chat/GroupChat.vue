@@ -20,6 +20,7 @@
         </div>
 
         <MessageInput
+            ref="messageInputRef"
             :replying-to="replyingTo"
             :members="members"
             @send="sendMessage"
@@ -37,6 +38,7 @@
 
 <script setup lang="ts">
 import type { Message, GroupUser, MentionSuggestion } from './types'
+import MessageInput from './MessageInput.vue'
 
 const props = defineProps<{
     groupId: number
@@ -50,6 +52,8 @@ const activeMember = ref<GroupUser | null>(null)
 const popoverStyle = ref('')
 
 const { activePopover, setActivePopover, handleClickOutside, handleEscKey } = usePopoverState()
+
+const messageInputRef = ref<InstanceType<typeof MessageInput> | null>(null)
 
 // Fetch initial messages
 const { data: groupMessages } = await useFetch<Message[]>(`/api/chat/${props.groupId}`)
@@ -145,12 +149,12 @@ const handleAvatarClick = (author: GroupUser) => {
     setActivePopover(author.id)
 }
 
-const mentionUser = (_member: GroupUser) => {
-    // This will be handled by MessageInput component
+const mentionUser = (member: GroupUser) => {
+    messageInputRef.value?.insertMention(member)
 }
 
 const handleMentionSuggestion = (_suggestion: MentionSuggestion) => {
-    // Handle mention suggestions if needed
+    // We don't need to handle this in the parent as it's handled in MessageInput
 }
 
 onMounted(() => {

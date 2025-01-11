@@ -15,26 +15,43 @@
             </div>
         </div>
 
-        <textarea
-            v-model="message"
-            class="form-control bg-transparent border-secondary"
-            :placeholder="replyingTo ? 'Write your reply...' : 'Type a message...'"
-            @keydown.enter.prevent="$emit('send', message)"
-            @input="handleInput"
-        />
+        <div class="flex-grow-1 position-relative">
+            <textarea
+                ref="textareaRef"
+                v-model="message"
+                class="form-control bg-transparent border-secondary"
+                :placeholder="replyingTo ? 'Write your reply...' : 'Type a message...'"
+                @keydown.enter.prevent="handleSend"
+                @input="handleInput"
+            />
+            <div
+                v-if="showMentionSuggestions && filteredMembers.length > 0"
+                class="mention-suggestions"
+            >
+                <div
+                    v-for="member in filteredMembers"
+                    :key="member.id"
+                    class="mention-item d-flex align-items-center p-2"
+                    @click="handleMentionSelect(member)"
+                >
+                    <NuxtImg
+                        class="rounded-circle me-2"
+                        width="20"
+                        height="20"
+                        :src="member.profile.avatarUrl || '/default-avatar.png'"
+                        :alt="member.profile.displayName || 'User'"
+                    />
+                    <span>{{ member.profile.displayName }}</span>
+                </div>
+            </div>
+        </div>
         <button
             class="btn btn-secondary align-self-end"
             :disabled="!message.trim()"
-            @click="$emit('send', message)"
+            @click="handleSend"
         >
             <i class="bi bi-send" />
         </button>
-
-        <MentionSuggestions
-            :show="showMentionSuggestions"
-            :filtered-members="filteredMembers"
-            @select="handleMentionSelect"
-        />
     </div>
 </template>
 
@@ -56,6 +73,7 @@ const message = ref('')
 const cursorPosition = ref(0)
 const showMentionSuggestions = ref(false)
 const mentionQuery = ref('')
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 const filteredMembers = computed(() => {
     if (!mentionQuery.value) { return [] }
@@ -92,23 +110,47 @@ const handleInput = (event: Event) => {
 }
 
 const handleMentionSelect = (member: GroupUser) => {
-    const mention = `@[${member.profile.displayName}](${member.id})`
-    const lastAtSymbol = message.value.lastIndexOf('@', cursorPosition.value)
+    insertMention(member)
+}
 
-    message.value = message.value.slice(0, lastAtSymbol) + mention + message.value.slice(cursorPosition.value)
+const handleSend = () => {
+    if (!message.value.trim()) { return }
+    emit('send', message.value)
+    message.value = ''
+}
+
+const insertMention = (member: GroupUser) => {
+    const mention = `@[${member.profile.displayName}](${member.id})`
+    const textarea = textareaRef.value
+
+    if (textarea) {
+        const currentPos = textarea.selectionStart
+        const text = message.value
+        const lastAtSymbol = text.lastIndexOf('@', currentPos)
+
+        if (showMentionSuggestions.value) {
+            // If suggestions are shown, replace from @ to cursor
+            message.value = text.slice(0, lastAtSymbol) + mention + text.slice(currentPos) + ' '
+        } else {
+            // If clicked on name, insert at cursor
+            message.value = text.slice(0, currentPos) + mention + ' ' + text.slice(currentPos)
+        }
+
+        // Focus and move cursor after mention and space
+        nextTick(() => {
+            textarea.focus()
+            const newCursorPos = (lastAtSymbol !== -1 ? lastAtSymbol : currentPos) + mention.length + 1
+            textarea.setSelectionRange(newCursorPos, newCursorPos)
+        })
+    }
+
     showMentionSuggestions.value = false
     mentionQuery.value = ''
-
-    // Set focus back to textarea and move cursor after mention
-    nextTick(() => {
-        const textarea = document.querySelector('textarea')
-        if (textarea) {
-            textarea.focus()
-            const newCursorPos = lastAtSymbol + mention.length
-            textarea.setSelectionRange(newCursorPos, newCursorPos)
-        }
-    })
 }
+
+defineExpose({
+    insertMention,
+})
 </script>
 
 <style scoped lang="scss">
@@ -120,5 +162,29 @@ textarea {
     min-height: 40px;
     max-height: 120px;
     resize: vertical;
+}
+
+.mention-suggestions {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    margin-bottom: 4px;
+    background: white;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.mention-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background-color: var(--bs-gray-100);
+    }
 }
 </style>

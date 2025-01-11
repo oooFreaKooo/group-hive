@@ -15,7 +15,7 @@
                     @click.stop="$emit('avatar-click', message.author)"
                 />
                 <span
-                    class="fw-medium cursor-pointer"
+                    class="author fw-medium"
                     @click="$emit('mention-user', message.author)"
                 >{{ message.author.profile.displayName }}</span>
             </div>
@@ -106,9 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { Message, GroupUser } from './types'
-import { useSupabaseUser } from '#imports'
 
 const props = defineProps<{
     message: Message
@@ -139,13 +137,17 @@ const formattedDate = computed(() => {
 const formattedContent = computed(() => {
     // Replace mentions with styled spans
     return props.message.content.replace(/@\[([^\]]+)\]\((\d+)\)/g, (match, name, id) => {
-        return `<span class="mention fw-bold" data-user-id="@${id}">${name}</span>`
+        return `<span class="mention fw-bold" data-user-id="${id}">${name}</span>`
     })
 })
 </script>
 
 <style scoped lang="scss">
 img {
+    cursor: pointer;
+}
+
+.author {
     cursor: pointer;
 }
 
