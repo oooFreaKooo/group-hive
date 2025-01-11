@@ -18,6 +18,23 @@ declare global {
 
     type NavItems = NavigationItem[]
 
+    interface Task {
+        id: number
+        tag: {
+            text: string
+            type: 'copyright' | 'design' | 'illustration'
+        }
+        title: string
+        dueDate: string
+        comments: number
+        attachments: number
+    }
+
+    interface Column {
+        title: string
+        tasks: Task[]
+    }
+
     type IconAnimationType = 'pulse' | 'spin' | 'bounce'
     type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'
     type Color = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' | 'white' | 'black'
