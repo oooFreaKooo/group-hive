@@ -3,16 +3,38 @@
         <main class="project">
             <TaskHeader />
             <div class="project-tasks">
-                <TaskColumn
+                <div
                     v-for="(column, index) in columns"
                     :key="index"
-                    :title="column.title"
-                    :tasks="column.tasks"
-                    :column-index="index"
-                    @dragstart="handleDragStart"
-                    @dragend="handleDragEnd"
-                    @drop="handleDrop"
-                />
+                    class="project-column"
+                >
+                    <div class="project-column-heading">
+                        <h2 class="project-column-heading__title">
+                            {{ column.title }}
+                        </h2>
+                        <button class="project-column-heading__options">
+                            <i class="fas fa-ellipsis-h" />
+                        </button>
+                    </div>
+                    <draggable
+                        class="task-list"
+                        :list="column.tasks"
+                        v-bind="dragOptions"
+                        @change="handleChange"
+                    >
+                        <TransitionGroup
+                            name="task"
+                            type="transition"
+                            class="flip-list"
+                        >
+                            <TaskCard
+                                v-for="task in column.tasks"
+                                :key="task.id"
+                                :task="task"
+                            />
+                        </TransitionGroup>
+                    </draggable>
+                </div>
             </div>
         </main>
         <TaskSidebar />
@@ -20,12 +42,7 @@
 </template>
 
 <script setup lang="ts">
-const draggedTask = ref<HTMLElement | null>(null)
-
-interface DragEvent extends Event {
-    dataTransfer: DataTransfer | null
-    target: EventTarget | null
-}
+import { VueDraggableNext as draggable } from 'vue-draggable-next'
 
 const columns = ref<Column[]>([
     {
@@ -90,36 +107,15 @@ const columns = ref<Column[]>([
     },
 ])
 
-const handleDragStart = (event: DragEvent, task: Task) => {
-    if (!event.dataTransfer) { return }
+const dragOptions = computed(() => ({
+    animation: 200,
+    group: 'tasks',
+    disabled: false,
+    ghostClass: 'task-ghost',
+}))
 
-    draggedTask.value = event.target as HTMLElement
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/plain', JSON.stringify(task))
-}
-
-const handleDragEnd = () => {
-    if (draggedTask.value) {
-        draggedTask.value = null
-    }
-}
-
-const handleDrop = (columnIndex: number, event: DragEvent) => {
-    event.preventDefault()
-    if (!event.dataTransfer) { return }
-
-    const task = JSON.parse(event.dataTransfer.getData('text/plain'))
-
-    // Remove task from old column
-    columns.value.forEach((column) => {
-        const index = column.tasks.findIndex(t => t.id === task.id)
-        if (index !== -1) {
-            column.tasks.splice(index, 1)
-        }
-    })
-
-    // Add task to new column
-    columns.value[columnIndex].tasks.push(task)
+const handleChange = (event: any) => {
+    console.log('Task moved:', event)
 }
 </script>
 
@@ -473,5 +469,16 @@ border:3px dashed var(--light-grey)!important;
   h1 {
     font-size:25px;
   }
+}
+
+.task-ghost {
+    opacity: 0.35;
+}
+
+.flip-list-move {
+  transition: transform 0.5s;
+}
+.no-move {
+  transition: transform 0s;
 }
 </style>

@@ -1,10 +1,5 @@
 <template>
-    <div
-        class="task"
-        draggable="true"
-        @dragstart="handleDragStart"
-        @dragend="$emit('dragend')"
-    >
+    <div class="task">
         <div class="task__tags">
             <span :class="['task__tag', `task__tag--${task.tag.type}`]">{{ task.tag.text }}</span>
             <button class="task__options">
@@ -26,13 +21,8 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
     task: Task
-}>()
-
-const emit = defineEmits<{
-    dragstart: [event: DragEvent, task: Task]
-    dragend: []
 }>()
 
 const formatDate = (date: string) => {
@@ -40,10 +30,6 @@ const formatDate = (date: string) => {
         month: 'short',
         day: 'numeric',
     })
-}
-
-const handleDragStart = (event: DragEvent) => {
-    emit('dragstart', event, props.task)
 }
 </script>
 

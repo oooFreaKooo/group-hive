@@ -8743,6 +8743,7 @@ __metadata:
     typescript: "npm:^5.4.2"
     usebootstrap: "npm:^3.5.100"
     vite-svg-loader: "npm:^5.1.0"
+    vue-draggable-next: "npm:^2.2.1"
     yup: "npm:^1.6.1"
     zod: "npm:^3.22.4"
   languageName: unknown
@@ -16032,6 +16033,16 @@ __metadata:
   version: 0.1.0
   resolution: "vue-devtools-stub@npm:0.1.0"
   checksum: 10c0/527af4b887eb82b000e5f56d555618d0ef5494a10d0f701899e4e8b98773a6e4af33d282c47283fb2e8f7f640d05bced7c94b31968abf4a949bc3d92075c7ce0
+  languageName: node
+  linkType: hard
+
+"vue-draggable-next@npm:^2.2.1":
+  version: 2.2.1
+  resolution: "vue-draggable-next@npm:2.2.1"
+  peerDependencies:
+    sortablejs: ^1.14.0
+    vue: ^3.2.2
+  checksum: 10c0/926a8a8ef060ab38b438bd5c123a583fa10e7f500ffa5affa0461c1792bb0a0ade79bc74d42f9650e1ea86384070a4308810e804f4cfa57f991d8364f1dc21ac
   languageName: node
   linkType: hard
 
