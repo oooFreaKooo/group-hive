@@ -1,57 +1,28 @@
 <template>
-    <div class="project-info">
-        <h1>Homepage Design</h1>
-        <div class="project-participants">
-            <span
-                v-for="n in 3"
-                :key="n"
-            />
-            <button class="project-participants__add">
-                Add Participant
+    <div class="d-flex justify-content-between align-items-center py-3">
+        <h1 class="h3 mb-0">
+            Tasks
+        </h1>
+        <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center me-3">
+                <div
+                    v-for="n in 3"
+                    :key="n"
+                    class="rounded-circle bg-primary"
+                    style="width: 30px; height: 30px; margin-left: -8px;"
+                />
+            </div>
+            <button
+                class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 30px; height: 30px;"
+                title="Add Participant"
+            >
+                <i class="bi bi-plus small" />
             </button>
         </div>
     </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 // Component logic will be added when we implement participant management
 </script>
-
-<style scoped lang="scss">
-.project-info {
-  padding: 2rem 0;
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.project-participants {
-  display: flex;
-  align-items: center;
-
-  span,
-  &__add {
-    width: 30px;
-    height: 30px;
-    display: inline-block;
-    background: var(--purple);
-    border-radius: 100rem;
-    margin: 0 0.2rem;
-  }
-
-  &__add {
-    background: transparent;
-    border: 1px dashed rgb(150, 150, 150);
-    font-size: 0;
-    cursor: pointer;
-    position: relative;
-
-    &:after {
-      content: '+';
-      font-size: 15px;
-      color: rgb(150, 150, 150);
-    }
-  }
-}
-</style>

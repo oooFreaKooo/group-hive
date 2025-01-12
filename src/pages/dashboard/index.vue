@@ -1,38 +1,35 @@
 <template>
-    <main class="row p-4">
-        <div class="col-12 col-lg-2 pt-4">
-            <SideNavigation
-                :navigation-items="sideNavConfig.navigationItems"
-                :footer-title="sideNavConfig.footerTitle"
-                :footer-content="sideNavConfig.footerContent"
-                :active-component="activeComponent"
-                @navigate="handleNavigation"
-            />
-        </div>
-        <div class="col-12 col-lg-10 pt-4">
-            <TaskUI />
-            <div v-if="status === 'pending'">
-                <div
-                    class="spinner-border"
-                    role="status"
-                >
-                    Loading...
-                </div>
+    <main>
+        <SideNavigation
+            :navigation-items="sideNavConfig.navigationItems"
+            :footer-items="sideNavConfig.footerItems"
+            :profile-items="sideNavConfig.profileItems"
+            :active-component="activeComponent"
+            @navigate="handleNavigation"
+        />
+
+        <div v-if="status === 'pending'">
+            <div
+                class="spinner-border"
+                role="status"
+            >
+                Loading...
             </div>
-            <div v-else-if="data && status === 'success'">
-                <CreateOrJoinGroup v-if="data.profile && data.profile.ownedGroups.length == 0" />
-                <div v-else>
-                    <Transition
-                        name="fade"
-                        mode="out-in"
-                    >
-                        <component
-                            :is="currentComponent"
-                            :group="data.profile?.ownedGroups[0] as unknown as GroupWithMembers"
-                            :profile="data.profile as unknown as Profile"
-                        />
-                    </Transition>
-                </div>
+        </div>
+        <div v-else-if="data && status === 'success'">
+            <CreateOrJoinGroup v-if="data.profile && data.profile.ownedGroups.length == 0" />
+            <div v-else>
+                <Transition
+                    name="fade"
+                    mode="out-in"
+                >
+                    <component
+                        :is="currentComponent"
+                        :key="activeComponent"
+                        :group="data.profile?.ownedGroups[0] as unknown as GroupWithMembers"
+                        :profile="data.profile as unknown as Profile"
+                    />
+                </Transition>
             </div>
         </div>
     </main>
@@ -47,11 +44,36 @@ interface GroupWithMembers extends Group {
     })[]
 }
 
+interface NavigationItem {
+    label: string
+    component: string
+    icon: string
+}
+
+interface ProfileItem {
+    name: string
+    email: string
+    component: string
+    avatar: string
+}
+
+interface SideNavConfig {
+    navigationItems: NavigationItem[]
+    footerItems: NavigationItem[]
+    profileItems: ProfileItem[]
+}
+
 const { data, status } = await useFetch('/api/profile/get')
+const user = useSupabaseUser()
 const activeComponent = ref('overview')
 
-const sideNavConfig = ref({
-    navigationItems: [
+const sideNavConfig = computed<SideNavConfig>(() => {
+    const isAdminOrOwner = data.value?.profile?.ownedGroups[0]?.ownerId === data.value?.profile?.id ||
+        data.value?.profile?.ownedGroups[0]?.members.some(
+            m => m.profileId === data.value?.profile?.id && m.role === 'ADMIN',
+        )
+
+    const navigationItems: NavigationItem[] = [
         {
             label: 'Overview',
             component: 'overview',
@@ -63,23 +85,44 @@ const sideNavConfig = ref({
             icon: 'chat',
         },
         {
-            label: 'My Tasks',
+            label: 'Tasks',
             component: 'tasks',
-            icon: 'list',
+            icon: 'list-task',
         },
         {
             label: 'Leaderboard',
             component: 'leaderboard',
             icon: 'trophy',
         },
-        {
-            label: 'Account',
-            component: 'account',
-            icon: 'person',
-        },
-    ],
-    footerTitle: 'GroupHive',
-    footerContent: 'All Rights Reserved 2025',
+    ]
+
+    // Only show edit group option for admins and owners
+    if (isAdminOrOwner) {
+        navigationItems.push({
+            label: 'Edit Group',
+            component: 'edit-group',
+            icon: 'person-lock',
+        })
+    }
+
+    return {
+        navigationItems,
+        footerItems: [
+            {
+                label: 'App Settings',
+                component: 'settings',
+                icon: 'gear',
+            },
+        ],
+        profileItems: [
+            {
+                name: data.value?.profile?.displayName ?? '',
+                email: user.value?.email ?? '',
+                component: 'account',
+                avatar: data.value?.profile?.avatarUrl ?? '',
+            },
+        ],
+    }
 })
 
 const handleNavigation = (component: string) => {
@@ -89,11 +132,15 @@ const handleNavigation = (component: string) => {
 const currentComponent = computed(() => {
     switch (activeComponent.value) {
         case 'chat':
-            return resolveComponent('MembersSection')
+            return resolveComponent('ChatSection')
+        case 'tasks':
+            return resolveComponent('TasksSection')
         case 'leaderboard':
-            return resolveComponent('Leaderboard')
+            return resolveComponent('LeaderboardSection')
         case 'overview':
-            return resolveComponent('MembersSection')
+            return resolveComponent('ChatSection')
+        case 'edit-group':
+            return resolveComponent('EditGroupSection')
         default:
             return resolveComponent('MembersSection')
     }
@@ -104,7 +151,7 @@ definePageMeta({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.3s ease;

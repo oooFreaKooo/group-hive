@@ -58,9 +58,9 @@ const taskProgress = ref<Progress[]>([
 ])
 
 const activityIcons = {
-    attachment: 'fas fa-paperclip',
-    comment: 'fas fa-comment',
-    edit: 'fas fa-pencil-alt',
+    attachment: 'bi bi-paperclip',
+    comment: 'bi bi-chat-dots',
+    edit: 'bi bi-pencil-square',
 }
 
 const recentActivity = ref<Activity[]>([

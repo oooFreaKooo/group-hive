@@ -1,16 +1,21 @@
 <template>
-    <div class="container mb-5">
-        <div class="row g-4">
-            <div class="col-12 col-lg-8">
+    <div class="container">
+        <main class="row">
+            <div class="col-14 col-lg-10">
+                <h2 class="my-4">
+                    Chat
+                </h2>
+            </div>
+            <div class="col-14 col-lg-10">
                 <GroupChat :group-id="group.id" />
             </div>
-            <div class="col-12 col-lg-4">
+            <div class="col-14 col-lg-4">
                 <MemberList
                     :group="group"
                     @member-details="$emit('member-details', $event)"
                 />
             </div>
-        </div>
+        </main>
     </div>
 </template>
 

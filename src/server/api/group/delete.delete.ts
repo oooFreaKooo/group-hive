@@ -1,15 +1,31 @@
 import { PrismaClient } from '@prisma/client'
+import { serverSupabaseUser } from '#supabase/server'
 
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
     try {
-        const body = await readBody(event)
-        const { id, profileId } = body
+        const user = await serverSupabaseUser(event)
+        if (!user) {
+            throw createError({
+                statusCode: 401,
+                message: 'Unauthorized',
+            })
+        }
 
-        // Check if the group exists
+        const body = await readBody(event)
+        const { groupId, ownerId } = body
+
+        if (!groupId || !ownerId) {
+            throw createError({
+                statusCode: 400,
+                message: 'Missing required fields',
+            })
+        }
+
+        // Verify the current user is the owner
         const group = await prisma.group.findUnique({
-            where: { id: Number.parseInt(id as string) },
+            where: { id: groupId },
         })
 
         if (!group) {
@@ -19,46 +35,56 @@ export default defineEventHandler(async (event) => {
             })
         }
 
-        // Check if the user is the owner of the group
-        if (group.ownerId !== profileId) {
+        if (group.ownerId !== ownerId || ownerId !== user.id) {
             throw createError({
                 statusCode: 403,
-                message: 'Only the group owner can delete the group',
+                message: 'Only the owner can delete the group',
             })
         }
 
-        // Delete all related records first (due to foreign key constraints)
-        await prisma.$transaction([
-            // Delete point history records
-            prisma.pointHistory.deleteMany({
+        // Delete all related data in a transaction
+        await prisma.$transaction(async (tx) => {
+            // Delete message mentions
+            await tx.messageMention.deleteMany({
                 where: {
-                    groupUser: {
-                        groupId: group.id,
+                    message: {
+                        groupId,
                     },
                 },
-            }),
+            })
+
+            // Delete messages
+            await tx.message.deleteMany({
+                where: { groupId },
+            })
+
+            // Delete point history
+            await tx.pointHistory.deleteMany({
+                where: {
+                    groupUser: {
+                        groupId,
+                    },
+                },
+            })
+
             // Delete tasks
-            prisma.task.deleteMany({
-                where: {
-                    groupId: group.id,
-                },
-            }),
+            await tx.task.deleteMany({
+                where: { groupId },
+            })
+
             // Delete group members
-            prisma.groupUser.deleteMany({
-                where: {
-                    groupId: group.id,
-                },
-            }),
+            await tx.groupUser.deleteMany({
+                where: { groupId },
+            })
+
             // Finally, delete the group
-            prisma.group.delete({
-                where: {
-                    id: group.id,
-                },
-            }),
-        ])
+            await tx.group.delete({
+                where: { id: groupId },
+            })
+        })
 
         return { success: true }
-    } catch (error: unknown) {
+    } catch (error) {
         console.error('Error deleting group:', error)
         if (error && typeof error === 'object' && 'statusCode' in error) {
             throw error

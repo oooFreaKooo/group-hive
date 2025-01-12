@@ -1,7 +1,7 @@
 <template>
     <div class="container mb-5">
         <div class="row g-4">
-            <div class="col-12 col-lg-6">
+            <div class="col-14 col-lg-6">
                 <div class="card shadow p-4 h-100">
                     <h3 class="h4 text-center">
                         Welcome to GroupHive!
@@ -80,7 +80,7 @@
                     </form>
                 </div>
             </div>
-            <div class="col-12 col-lg-6">
+            <div class="col-14 col-lg-6">
                 <button
                     class="card shadow card-btn h-100 w-100 align-items-center justify-content-center p-4"
                     @click="joinGroup = true"

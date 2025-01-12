@@ -1,21 +1,39 @@
 <template>
-    <div class="task">
-        <div class="task__tags">
-            <span :class="['task__tag', `task__tag--${task.tag.type}`]">{{ task.tag.text }}</span>
-            <button class="task__options">
-                <i class="fas fa-ellipsis-h" />
+    <div class="border shadow-sm mb-3 rounded p-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="d-flex gap-2">
+                <div
+                    class="rounded-circle bg-primary"
+                    style="width: 25px; height: 25px;"
+                />
+            </span>
+            <button class="btn btn-link text-muted p-0">
+                <i class="bi bi-three-dots" />
             </button>
         </div>
-        <p>{{ task.title }}</p>
-        <div class="task__stats">
+
+        <span
+            :class="[
+                'badge mb-2',
+                {
+                    'bg-info text-dark': task.tag.type === 'copyright',
+                    'bg-primary': task.tag.type === 'design',
+                    'bg-success': task.tag.type === 'illustration',
+                },
+            ]"
+        >
+            {{ task.tag.text }}
+        </span>
+
+        <div class="d-flex justify-content-between align-items-center text-muted small text-nowrap border-top pt-2">
             <span>
-                <time :datetime="task.dueDate">
-                    <i class="fas fa-flag" />{{ formatDate(task.dueDate) }}
-                </time>
+                <i class="bi bi-star-fill me-1 text-warning" />
+                {{ task.points }}
             </span>
-            <span><i class="fas fa-comment" />{{ task.comments }}</span>
-            <span><i class="fas fa-paperclip" />{{ task.attachments }}</span>
-            <span class="task__owner" />
+            <span>
+                <i class="bi bi-chat-dots me-1" />
+                {{ task.comments }}
+            </span>
         </div>
     </div>
 </template>
@@ -24,97 +42,4 @@
 defineProps<{
     task: Task
 }>()
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-    })
-}
 </script>
-
-<style scoped lang="scss">
-.task {
-  cursor: move;
-  background-color: var(--white);
-  padding: 1rem;
-  border-radius: 8px;
-  width: 100%;
-  box-shadow: rgba(99, 99, 99, 0.1) 0px 2px 8px 0px;
-  margin-bottom: 1rem;
-  border: 3px dashed transparent;
-
-  &:hover {
-    box-shadow: rgba(99, 99, 99, 0.3) 0px 2px 8px 0px;
-    border-color: rgba(162, 179, 207, 0.2) !important;
-  }
-
-  p {
-    font-size: 15px;
-    margin: 1.2rem 0;
-  }
-
-  &__tag {
-    border-radius: 100px;
-    padding: 2px 13px;
-    font-size: 12px;
-
-    &--copyright {
-      color: var(--tag-4-text);
-      background-color: var(--tag-4);
-    }
-    &--design {
-      color: var(--tag-3-text);
-      background-color: var(--tag-3);
-    }
-    &--illustration {
-      color: var(--tag-2-text);
-      background-color: var(--tag-2);
-    }
-  }
-
-  &__tags {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  &__options {
-    background: transparent;
-    border: 0;
-    color: var(--light-grey);
-    font-size: 17px;
-  }
-
-  &__stats {
-    position: relative;
-    width: 100%;
-    color: var(--light-grey);
-    font-size: 12px;
-
-    span:not(:last-of-type) {
-      margin-right: 1rem;
-    }
-
-    i {
-      margin-right: 5px;
-    }
-  }
-
-  &__owner {
-    width: 25px;
-    height: 25px;
-    border-radius: 100rem;
-    background: var(--purple);
-    position: absolute;
-    display: inline-block;
-    right: 0;
-    bottom: 0;
-  }
-}
-
-.task-hover {
-  border: 3px dashed var(--light-grey) !important;
-}
-</style>

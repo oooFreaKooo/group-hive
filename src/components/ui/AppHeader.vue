@@ -1,71 +1,46 @@
 <template>
-    <header>
-        <nav class="navbar pt-4">
-            <div class="container-fluid px-0">
-                <!-- Logo and Brand -->
-                <NuxtLink
-                    to="/"
-                    class="logo text-decoration-none me-5"
+    <header class="app-header container">
+        <nav class="navbar h-100">
+            <!-- Navigation and Actions -->
+            <div class="d-flex align-items-center flex-grow-1">
+                <!-- Navigation Links -->
+                <div
+                    v-if="user"
                 >
-                    <NuxtImg
-                        src="/logo-icon.png"
-                        width="42"
-                        height="42"
-                        alt="Logo"
-                        class="img-fluid"
+                    <div class="tabs">
+                        <NuxtLink
+                            v-for="item in navigationItems"
+                            :key="item.label"
+                            :href="item.href"
+                            :class="{ active: item.active }"
+                            class="me-5 text-black"
+                        >
+                            {{ item.label }}
+                        </NuxtLink>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end mx-auto">
+                    <MobileButton
+                        :is-open="isMobileNavOpen"
+                        @toggle="toggleMobileNav"
                     />
-                    <h1 class="logo-title h6">
-                        <span>Group</span>
-                        <span>Hive</span>
-                    </h1>
-                </NuxtLink>
+                </div>
 
-                <!-- Navigation and Actions -->
-                <div class="d-flex align-items-center flex-lg-grow-1">
-                    <!-- Navigation Links -->
-                    <div
-                        v-if="user"
-                        class="d-lg-flex d-none"
+                <!-- Auth Actions -->
+
+                <div v-if="!user">
+                    <NuxtLink
+                        to="/auth/login"
+                        class="nav-link"
                     >
-                        <div class="tabs">
-                            <NuxtLink
-                                v-for="item in navigationItems"
-                                :key="item.label"
-                                :href="item.href"
-                                :class="{ active: item.active }"
-                                class="mx-5 text-black"
-                            >
-                                {{ item.label }}
-                            </NuxtLink>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-end mx-auto">
-                        <MobileButton
-                            :is-open="isMobileNavOpen"
-                            @toggle="toggleMobileNav"
-                        />
-                    </div>
-
-                    <!-- Auth Actions -->
-                    <div class="d-lg-flex d-none">
-                        <template v-if="user">
-                            <ProfileButton />
-                        </template>
-                        <template v-else>
-                            <NuxtLink
-                                to="/auth/login"
-                                class="nav-link"
-                            >
-                                Login
-                            </NuxtLink>
-                            <NuxtLink
-                                to="/auth/register"
-                                class="btn btn-primary"
-                            >
-                                Sign up
-                            </NuxtLink>
-                        </template>
-                    </div>
+                        Login
+                    </NuxtLink>
+                    <NuxtLink
+                        to="/auth/register"
+                        class="btn btn-primary"
+                    >
+                        Sign up
+                    </NuxtLink>
                 </div>
             </div>
         </nav>
@@ -94,61 +69,24 @@ function toggleMobileNav () {
 </script>
 
 <style scoped lang="scss">
-.app-header-actions-buttons {
-    display: flex;
-    border-left: 1px solid var(--bs-gray-400);
-    margin-left: 2rem;
-    padding-left: 2rem;
-
-    & > * + * {
-        margin-left: 1rem;
-    }
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    padding-bottom: 0.25rem;
-    padding-top: 0.25rem;
-    width: 175px;
-    border-bottom: 1px solid var(--bs-gray-400);
-    @media (max-width: 1200px) {
-        border-bottom: 0;
-    }
-}
-
-.logo-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 52px;
-    height: 42px;
-}
-
-.logo-title {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.25;
-    margin-left: 0.75rem;
-    span:first-child {
-        color: var(--bs-gray-900);
-    }
-    span:last-child {
-        color: var(--bs-gray-600);
-    }
+.app-header {
+    height: 72px;
+    border-bottom: 1px solid var(--bs-gray-200);
+    background: white;
 }
 
 .tabs {
-    color: var(--bs-gray-600);
-    border-bottom: 1px solid var(--bs-gray-400);
+    height: 100%;
 
     a {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-        text-decoration: none;
-        border-top: 2px solid transparent;
+        height: 100%;
         display: inline-flex;
+        align-items: center;
+        color: var(--bs-gray-600);
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
         transition: 0.25s ease;
+
         &.active,
         &:hover,
         &:focus {

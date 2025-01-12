@@ -1,7 +1,7 @@
 <template>
     <div class="container py-5">
         <div class="row min-vh-100 align-items-center">
-            <div class="col-12 col-lg-8 mx-auto text-center">
+            <div class="col-14 col-lg-8 mx-auto text-center">
                 <h1 class="display-4 fw-bold mb-4">
                     Manage your shared living space with ease
                 </h1>

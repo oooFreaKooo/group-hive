@@ -1,6 +1,6 @@
 <template>
-    <div class="members">
-        <div class="d-flex gap-2 align-items-center mb-3">
+    <div class="d-flex flex-column gap-2 border rounded h-100 p-3">
+        <div class="d-flex gap-2 align-items-center">
             <h6 class="mb-0">
                 MEMBERS — {{ group.members.length }}
             </h6>
@@ -13,7 +13,7 @@
                 @click.stop="setActivePopover(member.id)"
             >
                 <div
-                    class="member-details btn btn-light border w-100 text-start p-2 rounded"
+                    class="member-details btn btn-light w-100 text-start p-2 rounded"
                 >
                     <NuxtImg
                         class="rounded-circle"
@@ -23,9 +23,8 @@
                         :alt="member.profile.displayName || 'Member'"
                     />
                     <div class="member-info">
-                        <div class="member-name">
-                            {{ member.profile.displayName }}
-                        </div>
+                        {{ member.profile.displayName }}
+
                         <div class="popover-item small">
                             <i class="bi bi-star-fill text-warning" />
                             {{ member.points }} points
@@ -61,11 +60,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.members {
-    display: flex;
-    flex-direction: column;
-}
-
 .member-list {
     display: flex;
     flex-direction: column;
@@ -81,11 +75,5 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-}
-
-.member-info {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2;
 }
 </style>

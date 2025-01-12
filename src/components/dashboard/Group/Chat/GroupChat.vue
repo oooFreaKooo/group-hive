@@ -1,5 +1,5 @@
 <template>
-    <div class="chat-container bg-body text-black d-flex flex-column border rounded">
+    <div class="chat-container bg-body text-black d-flex flex-column border rounded w-100">
         <div
             ref="messagesContainer"
             class="messages flex-grow-1 overflow-auto p-2"
@@ -171,7 +171,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .chat-container {
-    max-height: 800px;
+    max-height: 75vh;
 }
 
 .messages {

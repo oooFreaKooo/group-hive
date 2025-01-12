@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="min-vh-100 d-flex align-items-center justify-content-center">
-            <div class="col-12 col-md-6 col-lg-4">
+            <div class="col-14 col-md-6 col-lg-4">
                 <div class="card shadow">
                     <div class="card-body p-4">
                         <form
@@ -10,7 +10,7 @@
                         >
                             <div class="text-center">
                                 <NuxtImg
-                                    src="/logo-icon.png"
+                                    src="/WG_SVG.svg"
                                     class="mx-auto mb-4 rounded"
                                     height="80"
                                 />

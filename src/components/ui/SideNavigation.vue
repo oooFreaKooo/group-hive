@@ -1,10 +1,31 @@
 <template>
-    <div class="app-body-navigation vh-100 d-flex flex-column justify-content-between">
-        <nav class="navigation">
+    <div class="d-none d-md-flex side-nav vh-100 position-fixed start-0 top-0 flex-column justify-content-between">
+        <!-- Logo Section -->
+        <div class="logo-section mb-2">
+            <NuxtLink
+                to="/"
+                class="text-decoration-none"
+            >
+                <NuxtImg
+                    src="/WG_SVG.svg"
+                    width="32"
+                    height="32"
+                    alt="Logo"
+                    class="img-fluid logo-icon"
+                />
+                <h1 class="logo-title h6 mb-0 ms-3">
+                    <span class="d-block">Weekly</span>
+                    <span class="d-block">Goals</span>
+                </h1>
+            </NuxtLink>
+        </div>
+
+        <!-- Navigation Section -->
+        <nav class="py-3 flex-grow-1">
             <button
                 v-for="item in navigationItems"
                 :key="item.label"
-                class="text-black d-flex align-items-center text-decoration-none transition-hover mb-4 last-mb-0 bg-transparent border-0"
+                class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-3"
                 :class="{ active: currentComponent === item.component }"
                 @click="$emit('navigate', item.component)"
             >
@@ -12,35 +33,76 @@
                     :name="item.icon"
                     size="md"
                     color="black"
-                    class="me-2 fs-5 flex-shrink-0"
+                    class="nav-icon flex-shrink-0"
                 />
-                <span>{{ item.label }}</span>
+                <span class="nav-label ms-3">{{ item.label }}</span>
             </button>
         </nav>
-        <footer class="footer">
-            <h1 class="fs-4 lh-sm d-flex align-items-start">
-                {{ footerTitle }}<small class="fs-6 ms-1">©</small>
-            </h1>
-            <div class="border-top border-gray-400 mt-4 pt-3 fs-8 text-gray-600">
-                {{ footerContent }}
-            </div>
+
+        <!-- Footer Section -->
+        <footer class="navigation">
+            <button
+                v-for="item in footerItems"
+                :key="item.label"
+                class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-3"
+                :class="{ active: currentComponent === item.component }"
+                @click="$emit('navigate', item.component)"
+            >
+                <AppIcon
+                    :name="item.icon"
+                    size="md"
+                    color="black"
+                    class="nav-icon flex-shrink-0"
+                />
+                <span class="nav-label ms-3">{{ item.label }}</span>
+            </button>
+            <button
+                v-for="item in profileItems"
+                :key="item.name"
+                :class="{ active: currentComponent === item.component }"
+                class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-2"
+                @click="$emit('navigate', item.component)"
+            >
+                <NuxtImg
+                    :src="item.avatar"
+                    width="32"
+                    height="32"
+                    alt="Avatar"
+                    class="nav-icon flex-shrink-0 rounded-circle"
+                />
+                <div class="d-flex flex-column align-items-start">
+                    <span class="nav-label ms-3 fw-bold">{{ item.name }}</span>
+                    <span class="nav-label ms-3 small">{{ item.email }}</span>
+                </div>
+            </button>
         </footer>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
 interface NavigationItem {
     label: string
     component: string
     icon: string
 }
 
+interface FooterItem {
+    label: string
+    component: string
+    icon: string
+}
+
+interface ProfileItem {
+    name: string
+    email: string
+    component: string
+    avatar: string
+}
+
 const props = defineProps<{
     navigationItems: NavigationItem[]
-    footerTitle: string
-    footerContent: string
+    footerItems: FooterItem[]
+    profileItems: ProfileItem[]
     activeComponent: string
 }>()
 
@@ -52,48 +114,96 @@ defineEmits<{
 </script>
 
 <style scoped lang="scss">
-.app-body-navigation {
-    width: 175px;
+.side-nav {
+    width: 64px;
+    background: white;
+    border-right: 1px solid var(--bs-gray-200);
+    transition: width 0.3s ease;
+    overflow: hidden;
+    z-index: 1030;
 
-    @media (max-width: 1200px) {
-        display: none;
+    &:hover {
+        width: 240px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     }
-}
 
-.navigation {
-    button {
-        width: 100%;
-        text-align: left;
+    .logo-section {
+        height: 72px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid var(--bs-gray-200);
+
+        a {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+        }
+
+        .logo-title {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+
+            span:first-child {
+                color: var(--bs-gray-900);
+            }
+            span:last-child {
+                color: var(--bs-gray-600);
+            }
+        }
+    }
+
+    &:hover .logo-title {
+        opacity: 1;
+    }
+
+    .nav-item {
         cursor: pointer;
         color: var(--bs-gray-600);
-        transition: 0.25s ease;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        height: 40px;
 
-        * {
-            transition: 0.25s ease;
+        &:hover, &.active {
+            color: var(--bs-gray-900);
+            background-color: var(--bs-gray-100);
         }
 
-        &:hover,
-        &:focus {
-            transform: translateX(4px);
-            color: var(--bs-gray-900);
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        &.active {
-            color: var(--bs-gray-900);
-            transform: translateX(4px);
+        .nav-label {
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
     }
-}
 
-.last-mb-0:last-child {
-    margin-bottom: 0 !important;
-}
+    &:hover .nav-label {
+        opacity: 1;
+    }
 
-.transition-hover {
-    transition: 0.25s ease;
-}
+    .footer {
+        font-size: 0.75rem;
+        white-space: nowrap;
+        padding: 1rem;
 
-.fs-8 {
-    font-size: 0.75rem;
+        .footer-title {
+            font-size: 0.875rem;
+        }
+
+        .footer-content {
+            font-size: 0.75rem;
+        }
+
+        .copyright {
+            font-size: 0.625rem;
+        }
+    }
 }
 </style>

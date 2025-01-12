@@ -2,7 +2,7 @@
     <div class="container">
         <div class="min-vh-100 d-flex flex-column justify-content-center py-5">
             <div class="row">
-                <div class="col-12 col-md-6 col-lg-4 mx-auto">
+                <div class="col-14 col-md-6 col-lg-4 mx-auto">
                     <div class="card shadow">
                         <div class="card-body p-4">
                             <div

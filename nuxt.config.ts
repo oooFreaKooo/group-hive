@@ -34,13 +34,25 @@ export default defineNuxtConfig({
         pageTransition: { name: 'page', mode: 'out-in' },
         layoutTransition: { name: 'layout', mode: 'out-in' },
     },
+    css: ['usebootstrap/scss/usebootstrap'],
     srcDir: 'src/',
 
     compatibilityDate: '2025-01-04',
 
     vite: {
         optimizeDeps: {
-            include: [ 'yup', '@headlessui/vue' ],
+            include: [
+                'yup', '@headlessui/vue', 'vue-draggable-next',
+            ],
+        },
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    additionalData: `
+                   @use "@/assets/css/main.scss" as *;
+                   `,
+                },
+            },
         },
     },
 

@@ -26,6 +26,7 @@ declare global {
         }
         title: string
         dueDate: string
+        points: number
         comments: number
         attachments: number
     }

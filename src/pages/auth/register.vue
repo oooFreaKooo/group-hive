@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="row min-vh-100 mt-5 justify-content-center">
-            <div class="col-12 col-md-8 col-lg-6 col-xl-4">
+            <div class="col-14 col-md-8 col-lg-6 col-xl-4">
                 <div class="card p-4">
                     <div class="card-body">
                         <form @submit.prevent="signUpWithCredential">
