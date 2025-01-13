@@ -42,7 +42,7 @@ export default defineNuxtConfig({
     vite: {
         optimizeDeps: {
             include: [
-                'yup', '@headlessui/vue', 'vue-draggable-next',
+                'yup', '@headlessui/vue', 'vue-draggable-next', 'three',
             ],
         },
         css: {

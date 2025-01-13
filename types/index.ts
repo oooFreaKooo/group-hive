@@ -31,6 +31,7 @@ declare global {
             profile: Profile
         }) | null
         tags: (TaskTag & {
+
             tag: {
                 id: number
                 title: string
@@ -42,6 +43,8 @@ declare global {
                 profile: Profile
             }
         })[]
+        dueDate: Date | null
+        taskRowId: number | null
     }
 
     interface TaskColumn {

@@ -2,14 +2,49 @@
     <div>
         <!-- Avatar and Display Name Section -->
         <div class="row mb-5">
-            <div class="col-14 d-flex justify-content-center">
+            <div class="col-7 d-flex justify-content-center">
                 <div class="bee-container border-bottom">
-                    <Bee :avatar="previewAvatar || '/default-avatar.png'" />
+                    <!--         <BeeAvatar :avatar="previewAvatar || '/default-avatar.png'" /> -->
+                    <Bee3D :avatar="previewAvatar || '/default-avatar.png'" />
                     <HexagonSimple
                         class="edit-btn position-absolute"
                         icon="pencil"
                         @click="showAvatarSection = !showAvatarSection"
                     />
+                </div>
+            </div>
+            <!-- Location Section -->
+
+            <div class="col-7">
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input
+                        v-model="form.displayName"
+                        type="text"
+                        class="form-control form-control-lg"
+                        placeholder="Enter your display name"
+                    >
+                    <div class="form-text">
+                        This is how other users will see you
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input
+                        v-model="form.city"
+                        type="text"
+                        class="form-control"
+                        placeholder="Enter your city"
+                    >
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Postal Code</label>
+                    <input
+                        v-model="form.postalCode"
+                        type="text"
+                        class="form-control"
+                        placeholder="Enter your postal code"
+                    >
                 </div>
             </div>
         </div>
@@ -76,46 +111,6 @@
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Location Section -->
-        <div class="row g-4">
-            <div class="col-14">
-                <div class="form-group">
-                    <label class="form-label">Display Name</label>
-                    <input
-                        v-model="form.displayName"
-                        type="text"
-                        class="form-control form-control-lg"
-                        placeholder="Enter your display name"
-                    >
-                    <div class="form-text">
-                        This is how other users will see you
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-7">
-                <div class="form-group">
-                    <label class="form-label">City</label>
-                    <input
-                        v-model="form.city"
-                        type="text"
-                        class="form-control"
-                        placeholder="Enter your city"
-                    >
-                </div>
-            </div>
-            <div class="col-md-7">
-                <div class="form-group">
-                    <label class="form-label">Postal Code</label>
-                    <input
-                        v-model="form.postalCode"
-                        type="text"
-                        class="form-control"
-                        placeholder="Enter your postal code"
-                    >
                 </div>
             </div>
         </div>

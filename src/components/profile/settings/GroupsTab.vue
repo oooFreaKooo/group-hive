@@ -232,7 +232,7 @@ const preferences = ref<{
     taskLimit: '3',
 })
 
-// Watch for changes and save to backend
+/* // Watch for changes and save to backend
 watch(preferences, async (newPrefs) => {
     try {
         await $fetch('/api/preferences/update', {
@@ -266,7 +266,7 @@ onMounted(async () => {
     } catch (error) {
         console.error('Failed to load preferences:', error)
     }
-})
+}) */
 </script>
 
 <style scoped>

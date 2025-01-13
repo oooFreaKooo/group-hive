@@ -19,7 +19,7 @@
                             group="tasks"
                             :animation="200"
                             ghost-class="task-ghost"
-                            @change="(e) => handleChange(e, index, column.title)"
+                            @change="handleChange($event)"
                         >
                             <TransitionGroup
                                 name="task"
@@ -29,7 +29,6 @@
                                     v-for="task in column.tasks"
                                     :key="task.id"
                                     :task="task"
-                                    @comment-added="$emit('task-updated')"
                                 />
                             </TransitionGroup>
                         </draggable>
@@ -46,37 +45,27 @@ import { VueDraggableNext as draggable } from 'vue-draggable-next'
 interface Props {
     title: string
     columns: TaskColumn[]
-    rowId?: number
 }
 
-const props = defineProps<Props>()
-const emit = defineEmits<{
-    (e: 'task-updated'): void
-    (e: 'task-moved', payload: { task: TaskWithRelations, columnIndex: number, rowId?: number }): void
-}>()
+defineProps<Props>()
 
-const handleChange = (event: any, columnIndex: number, columnTitle: string) => {
-    console.log('TaskRow - handleChange:', {
-        event,
-        columnIndex,
-        columnTitle,
-        rowId: props.rowId,
-    })
+const handleChange = async (event: any) => {
+    if (!event.added) { return }
 
-    if (event.added) {
-        if (columnTitle === 'Tasks') {
-            emit('task-moved', {
-                task: event.added.element,
-                columnIndex: 0,
-                rowId: undefined,
-            })
-        } else {
-            emit('task-moved', {
-                task: event.added.element,
-                columnIndex,
-                rowId: props.rowId,
-            })
-        }
+    const task = event.added.element as TaskWithRelations
+
+    try {
+        // Update task to be unassigned
+        await $fetch(`/api/tasks/${task.id}/update`, {
+            method: 'PUT',
+            body: {
+                dueDate: null,
+                taskRowId: null,
+            },
+        })
+    } catch (error) {
+        console.error('TaskRowUnassigned - Error:', error)
+        throw error
     }
 }
 </script>

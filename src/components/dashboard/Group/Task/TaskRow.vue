@@ -30,7 +30,7 @@
                             group="tasks"
                             :animation="200"
                             ghost-class="task-ghost"
-                            @change="(e) => handleChange(e, index, column.title)"
+                            @change="handleChange($event, index)"
                         >
                             <TransitionGroup
                                 name="task"
@@ -40,7 +40,6 @@
                                     v-for="task in column.tasks"
                                     :key="task.id"
                                     :task="task"
-                                    @comment-added="$emit('task-updated')"
                                 />
                             </TransitionGroup>
                         </draggable>
@@ -61,33 +60,45 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits<{
-    (e: 'task-updated'): void
-    (e: 'task-moved', payload: { task: TaskWithRelations, columnIndex: number, rowId?: number }): void
-}>()
+const emit = defineEmits(['refresh'])
 
-const handleChange = (event: any, columnIndex: number, columnTitle: string) => {
-    console.log('TaskRow - handleChange:', {
-        event,
-        columnIndex,
-        columnTitle,
-        rowId: props.rowId,
-    })
+const handleChange = async (event: any, columnIndex: number) => {
+    if (!event.added) { return }
 
-    if (event.added) {
-        if (columnTitle === 'Tasks') {
-            emit('task-moved', {
-                task: event.added.element,
-                columnIndex: 0,
-                rowId: undefined,
+    const task = event.added.element as TaskWithRelations
+    const targetRowId = props.rowId
+
+    try {
+        if (!targetRowId) {
+            // Move to unassigned
+            await $fetch(`/api/tasks/${task.id}/update`, {
+                method: 'PUT',
+                body: {
+                    dueDate: null,
+                    taskRowId: null,
+                },
             })
+            emit('refresh')
         } else {
-            emit('task-moved', {
-                task: event.added.element,
-                columnIndex,
-                rowId: props.rowId,
+            // Calculate the new due date
+            const weekStart = new Date(props.columns[0].tasks[0]?.dueDate ?? new Date())
+            const dueDate = new Date(weekStart)
+            dueDate.setDate(weekStart.getDate() + columnIndex)
+            dueDate.setHours(23, 59, 59, 999)
+
+            // Update task
+            await $fetch(`/api/tasks/${task.id}/update`, {
+                method: 'PUT',
+                body: {
+                    dueDate: dueDate.toISOString(),
+                    taskRowId: targetRowId,
+                },
             })
+            emit('refresh')
         }
+    } catch (error) {
+        console.error('TaskRow - Error:', error)
+        throw error
     }
 }
 </script>
