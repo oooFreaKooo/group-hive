@@ -1,37 +1,39 @@
 <template>
     <main>
-        <SideNavigation
-            :navigation-items="sideNavConfig.navigationItems"
-            :footer-items="sideNavConfig.footerItems"
-            :profile-items="sideNavConfig.profileItems"
-            :active-component="activeComponent"
-            @navigate="handleNavigation"
-        />
+        <AppSection>
+            <SideNavigation
+                :navigation-items="sideNavConfig.navigationItems"
+                :footer-items="sideNavConfig.footerItems"
+                :profile-items="sideNavConfig.profileItems"
+                :active-component="activeComponent"
+                @navigate="handleNavigation"
+            />
 
-        <div v-if="status === 'pending'">
-            <div
-                class="spinner-border"
-                role="status"
-            >
-                Loading...
-            </div>
-        </div>
-        <div v-else-if="data && status === 'success'">
-            <CreateOrJoinGroup v-if="data.profile && data.profile.ownedGroups.length == 0" />
-            <div v-else>
-                <Transition
-                    name="fade"
-                    mode="out-in"
+            <div v-if="status === 'pending'">
+                <div
+                    class="spinner-border"
+                    role="status"
                 >
-                    <component
-                        :is="currentComponent"
-                        :key="activeComponent"
-                        :group="data.profile?.ownedGroups[0] as unknown as GroupWithMembers"
-                        :profile="data.profile as unknown as Profile"
-                    />
-                </Transition>
+                    Loading...
+                </div>
             </div>
-        </div>
+            <div v-else-if="data && status === 'success'">
+                <CreateOrJoinGroup v-if="data.profile && data.profile.ownedGroups.length == 0" />
+                <div v-else>
+                    <Transition
+                        name="fade"
+                        mode="out-in"
+                    >
+                        <component
+                            :is="currentComponent"
+                            :key="activeComponent"
+                            :group="data.profile?.ownedGroups[0] as unknown as GroupWithMembers"
+                            :profile="data.profile as unknown as Profile"
+                        />
+                    </Transition>
+                </div>
+            </div>
+        </AppSection>
     </main>
 </template>
 
@@ -118,7 +120,7 @@ const sideNavConfig = computed<SideNavConfig>(() => {
             {
                 name: data.value?.profile?.displayName ?? '',
                 email: user.value?.email ?? '',
-                component: 'account',
+                component: 'profile',
                 avatar: data.value?.profile?.avatarUrl ?? '',
             },
         ],
@@ -141,6 +143,8 @@ const currentComponent = computed(() => {
             return resolveComponent('ChatSection')
         case 'edit-group':
             return resolveComponent('EditGroupSection')
+        case 'profile':
+            return resolveComponent('ProfileSettings')
         default:
             return resolveComponent('MembersSection')
     }

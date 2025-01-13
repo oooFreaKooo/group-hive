@@ -1,6 +1,7 @@
 <template>
     <aside class="task-details">
         <div class="tag-progress">
+            <slot name="unassigned" />
             <h2>Task Progress</h2>
             <div
                 v-for="progress in taskProgress"

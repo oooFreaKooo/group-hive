@@ -1,11 +1,9 @@
 <template>
-    <div class="main-body  d-flex flex-column align-items-center  ms-md-5 m-0">
-        <div class="container">
-            <AppHeader
-                :navigation-items="navigationItems"
-            />
-            <slot />
-        </div>
+    <div class="main-body ms-md-5 m-0">
+        <AppHeader
+            :navigation-items="navigationItems"
+        />
+        <slot />
     </div>
 </template>
 

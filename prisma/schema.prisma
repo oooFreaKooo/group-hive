@@ -35,6 +35,8 @@ model Group {
   owner          Profile     @relation(fields: [ownerId], references: [id])
   tasks          Task[]
   Message        Message[]
+  tags           Tag[]
+  TaskRow        TaskRow[]
 }
 
 model GroupUser {
@@ -52,26 +54,45 @@ model GroupUser {
   assignedTasks  Task[]           @relation("TaskAssignment")
   sentMessages   Message[]        @relation("AuthoredMessages")
   mentionedIn    MessageMention[]
+  taskComments   TaskComment[]
 
   @@unique([profileId, groupId])
 }
 
 model Task {
   id            Int            @id @default(autoincrement())
-  title         String
   description   String?
   dueDate       DateTime?
   completed     Boolean        @default(false)
   pointValue    Int            @default(0)
   groupId       Int
+  taskRowId     Int?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   completedBy   GroupUser?     @relation("TaskCompletion", fields: [completedById], references: [id])
   completedById Int?
   group         Group          @relation(fields: [groupId], references: [id])
+  taskRow       TaskRow?       @relation(fields: [taskRowId], references: [id])
   pointHistory  PointHistory[]
   assignedTo    GroupUser?     @relation("TaskAssignment", fields: [assignedToId], references: [id])
   assignedToId  Int?
+  tags          TaskTag[]
+  comments      TaskComment[]
+}
+
+model TaskRow {
+  id        Int      @id @default(autoincrement())
+  title     String
+  weekStart DateTime
+  weekEnd   DateTime
+  groupId   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  group     Group    @relation(fields: [groupId], references: [id])
+  tasks     Task[]
+  order     Int      @default(0)
+
+  @@unique([groupId, weekStart, weekEnd])
 }
 
 model PointHistory {
@@ -108,6 +129,39 @@ model MessageMention {
   groupUser   GroupUser @relation(fields: [groupUserId], references: [id])
 
   @@id([messageId, groupUserId])
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  title     String
+  color     String
+  groupId   Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  group     Group     @relation(fields: [groupId], references: [id])
+  tasks     TaskTag[]
+
+  @@unique([title, groupId])
+}
+
+model TaskTag {
+  taskId Int
+  tagId  Int
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+}
+
+model TaskComment {
+  id        Int       @id @default(autoincrement())
+  content   String
+  taskId    Int
+  authorId  Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    GroupUser @relation(fields: [authorId], references: [id])
 }
 
 enum UserRole {
