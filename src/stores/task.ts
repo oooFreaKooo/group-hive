@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 
 interface TaskState {
     tasks: TaskWithRelations[]
-    isLoading: boolean
 }
 
 interface UpdateTaskPayload {
@@ -13,7 +12,6 @@ interface UpdateTaskPayload {
 export const useTaskStore = defineStore('task', {
     state: (): TaskState => ({
         tasks: [],
-        isLoading: false,
     }),
 
     getters: {
@@ -24,14 +22,11 @@ export const useTaskStore = defineStore('task', {
     actions: {
         async fetchTasks (groupId: number) {
             try {
-                this.isLoading = true
                 const response = await $fetch<TaskWithRelations[]>(`/api/tasks/get?groupId=${groupId}`)
                 this.tasks = response
             } catch (error) {
                 console.error('TaskStore - Failed to fetch tasks:', error)
                 throw error
-            } finally {
-                this.isLoading = false
             }
         },
 

@@ -1,5 +1,19 @@
 <template>
     <div class="container">
+        <div
+            v-if="error"
+            class="alert alert-danger mb-4"
+            role="alert"
+        >
+            {{ error }}
+            <button
+                class="btn btn-link p-0 ms-2"
+                @click="error = null"
+            >
+                Dismiss
+            </button>
+        </div>
+
         <div class="row">
             <div class="col-14 col-lg-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -105,6 +119,7 @@ const props = defineProps<Props>()
 const showCreateTask = ref(false)
 const showCreateRow = ref(false)
 const showCreateTag = ref(false)
+const error = ref<string | null>(null)
 
 // Store initialization
 const taskStore = useTaskStore()
@@ -113,33 +128,52 @@ const tagStore = useTagStore()
 
 // Destructure store refs for better reactivity
 const { tags } = storeToRefs(tagStore)
-const { tasks, unassignedTasks } = storeToRefs(taskStore)
+const { unassignedTasks } = storeToRefs(taskStore)
 const { taskRows } = storeToRefs(taskRowStore)
-const { isLoading } = storeToRefs(taskStore)
 
 // Initialize data
 onMounted(async () => {
-    await Promise.all([
-        tagStore.fetchTags(props.group.id),
-        taskStore.fetchTasks(props.group.id),
-        taskRowStore.fetchTaskRows(props.group.id),
-    ])
+    try {
+        error.value = null
+        await Promise.all([
+            tagStore.fetchTags(props.group.id),
+            taskStore.fetchTasks(props.group.id),
+            taskRowStore.fetchTaskRows(props.group.id),
+        ])
+    } catch (e) {
+        error.value = 'Failed to load tasks. Please try refreshing the page.'
+        console.error('TasksSection - Failed to initialize:', e)
+    }
 })
 
 // Event handlers
 const handleTaskCreated = async () => {
-    await Promise.all([
-        taskStore.fetchTasks(props.group.id),
-        taskRowStore.fetchTaskRows(props.group.id),
-    ])
+    try {
+        error.value = null
+        await Promise.all([
+            taskStore.fetchTasks(props.group.id),
+            taskRowStore.fetchTaskRows(props.group.id),
+        ])
+    } catch (e) {
+        error.value = 'Failed to refresh tasks. Please try again.'
+        console.error('TasksSection - Failed to refresh after task creation:', e)
+    }
 }
 
 const handleRowCreated = () => taskRowStore.fetchTaskRows(props.group.id)
 const handleTagCreated = () => tagStore.fetchTags(props.group.id)
 
-const handleTaskMoved = async (payload: { task: TaskWithRelations, columnIndex: number, rowId?: number }) => {
+interface TaskMovedPayload {
+    task: TaskWithRelations
+    columnIndex: number
+    rowId?: number
+    onComplete?: () => void
+}
+
+const handleTaskMoved = async (payload: TaskMovedPayload) => {
     try {
-        const { task, columnIndex, rowId: targetRowId } = payload
+        error.value = null
+        const { task, columnIndex, rowId: targetRowId, onComplete } = payload
 
         if (!targetRowId) {
             await taskStore.updateTask(task.id, {
@@ -161,9 +195,11 @@ const handleTaskMoved = async (payload: { task: TaskWithRelations, columnIndex: 
             taskStore.fetchTasks(props.group.id),
             taskRowStore.fetchTaskRows(props.group.id),
         ])
-    } catch (error) {
-        console.error('TasksSection - Error:', error)
-        throw error
+
+        onComplete?.()
+    } catch (e) {
+        error.value = 'Failed to move task. Please try again.'
+        console.error('TasksSection - Error:', e)
     }
 }
 
@@ -176,25 +212,28 @@ function calculateDueDate (weekStart: Date | string, columnIndex: number): Date 
     return dueDate
 }
 
-// Week columns computation
-const getWeekColumns = (row: TaskRow & { tasks: TaskWithRelations[] }) => {
+// Week columns computation with memoization
+const getWeekColumns = computed(() => {
     const days = [
         'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
     ]
-    const weekStart = new Date(row.weekStart)
 
-    return days.map((day, index) => ({
-        title: day,
-        tasks: row.tasks.filter((task) => {
-            if (!task.taskRowId || !task.dueDate) { return false }
-            if (task.taskRowId !== row.id) { return false }
+    return (row: TaskRow & { tasks: TaskWithRelations[] }) => {
+        const weekStart = new Date(row.weekStart)
 
-            const taskDate = new Date(task.dueDate)
-            const columnDate = new Date(weekStart)
-            columnDate.setDate(weekStart.getDate() + index)
+        return days.map((day, index) => ({
+            title: day,
+            tasks: row.tasks.filter((task) => {
+                if (!task.taskRowId || !task.dueDate) { return false }
+                if (task.taskRowId !== row.id) { return false }
 
-            return taskDate.toDateString() === columnDate.toDateString()
-        }),
-    }))
-}
+                const taskDate = new Date(task.dueDate)
+                const columnDate = new Date(weekStart)
+                columnDate.setDate(weekStart.getDate() + index)
+
+                return taskDate.toDateString() === columnDate.toDateString()
+            }),
+        }))
+    }
+})
 </script>
