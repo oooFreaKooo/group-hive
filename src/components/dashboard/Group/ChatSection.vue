@@ -2,9 +2,6 @@
     <div class="container">
         <main class="row">
             <div class="col-14 col-lg-10">
-                <Hexagon />
-                <HexagonSimple />
-                <Hexagon />
                 <h2 class="my-4">
                     Chat
                 </h2>

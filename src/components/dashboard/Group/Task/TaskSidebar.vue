@@ -1,5 +1,5 @@
 <template>
-    <aside class="task-details">
+    <aside class="task-details ps-3 border-start">
         <div class="tag-progress">
             <slot name="unassigned" />
             <h2>
@@ -226,16 +226,7 @@ const shouldAnimate = computed(() => prefersReducedMotion.value !== 'reduce')
 </script>
 
 <style scoped lang="scss">
-.task-details {
-    width: 100%;
-    border-left: 1px solid #d9e0e9;
-    display: inline-block;
-    height: 100%;
-    vertical-align: top;
-}
-
 .tag-progress {
-    margin: 1.5rem 0;
 
     h2 {
         font-size: 16px;

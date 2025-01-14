@@ -191,10 +191,7 @@ const handleTaskMoved = async (payload: TaskMovedPayload) => {
             })
         }
 
-        await Promise.all([
-            taskStore.fetchTasks(props.group.id),
-            taskRowStore.fetchTaskRows(props.group.id),
-        ])
+        await Promise.all([taskRowStore.fetchTaskRows(props.group.id)])
 
         onComplete?.()
     } catch (e) {

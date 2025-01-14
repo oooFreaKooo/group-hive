@@ -1,8 +1,6 @@
 <template>
-    <b-button
-        class="border shadow-sm mb-3 rounded p-2"
-        toggle="tooltip"
-        title="Click for Details"
+    <button
+        class="border shadow-sm rounded p-2"
         @click="showDetails = true"
     >
         <div class="d-flex flex-wrap gap-1 mb-2">
@@ -57,7 +55,7 @@
             @close="showDetails = false"
             @comment-added="$emit('commentAdded')"
         />
-    </b-button>
+    </button>
 </template>
 
 <script setup lang="ts">

@@ -3,7 +3,7 @@
         class="message mb-2 border rounded shadow-sm"
         :class="{ 'is-reply': message.replyTo }"
     >
-        <div class="d-flex align-items-center justify-content-between p-2">
+        <div class="d-flex align-items-center justify-content-between p-2 pb-1">
             <div class="d-flex align-items-center position-relative">
                 <NuxtImg
                     ref="avatarRef"
@@ -71,7 +71,7 @@
                 />
                 <span
                     v-if="message.isEdited"
-                    class="m-2 badge text-muted"
+                    class="ms-2 badge text-muted"
                 >(edited)</span>
             </template>
             <template v-else>

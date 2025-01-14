@@ -1,24 +1,33 @@
 <template>
     <button
-        class="hexagon-button"
+        class="hexagon-button border-0 bg-transparent"
         :style="{
             '--icon-size': `${iconSize}px`,
         }"
+        :data-menu="isMenu"
         type="button"
-        @click="$emit('click')"
+        @click="handleClick"
     >
         <div class="hexagon-wrapper">
             <i
-                class="bi bi-hexagon-fill hexagon-shape2 text-black z-1"
+                class=""
+                :class="[
+                    'bi bi-hexagon-fill hexagon-shape2 text-black z-1',
+                    isMenu ? 'hexagon-hover' : '',
+                ]"
             />
             <i
                 class="bi bi-hexagon-fill hexagon-shape1 text-white z-2"
             />
             <div class="hexagon-content z-3">
                 <i
+                    v-if="icon"
                     :class="[
                         'hexagon-icon',
-                        `bi bi-${icon}`,
+                        isMenu ? {
+                            'bi-x-lg': isClicked,
+                            [`bi-${icon}`]: !isClicked,
+                        } : `bi-${icon}`,
                     ]"
                 />
             </div>
@@ -27,17 +36,23 @@
 </template>
 
 <script lang="ts" setup>
-defineProps({
+const isClicked = ref(false)
+
+const props = defineProps({
     icon: {
         type: String,
-        default: 'person',
+        default: undefined,
+    },
+    isMenu: {
+        type: Boolean,
+        default: false,
     },
     angle: {
         type: String,
         default: '0deg',
     },
     size: {
-        type: String as () => Size,
+        type: String as PropType<Size>,
         default: 'lg',
     },
     iconSize: {
@@ -54,35 +69,69 @@ defineProps({
     },
 })
 
-defineEmits(['click'])
+const emit = defineEmits(['click'])
+
+function handleClick () {
+    if (props.isMenu) {
+        isClicked.value = !isClicked.value
+    }
+    emit('click')
+}
 </script>
 
 <style scoped lang="scss">
 .hexagon-button {
     padding: 0;
-    transition: transform 0.2s ease;
+
+    transition: transform 0.3s ease;
 
     &.is-disabled {
         cursor: not-allowed;
         opacity: 0.6;
     }
+
+    &[data-menu="true"] {
+        &:active .hexagon-icon {
+            transform: rotate(180deg) scale(0.2);
+        }
+    }
+
+    &:hover {
+        .hexagon-icon {
+            transform: rotate(20deg);
+        }
+    }
 }
 
 .hexagon-wrapper {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.6s ease;
+    &:hover {
+        .hexagon-hover {
+            transform: scale(1.1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    }
 }
 
 .hexagon-shape1 {
     position: absolute;
-    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, transform 0.2s ease;
     font-size: 46px;
+
 }
 
 .hexagon-shape2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 48px;
 }
 
@@ -96,6 +145,16 @@ defineEmits(['click'])
 
 .hexagon-icon {
     font-size: var(--icon-size);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: rotate(0deg) scale(1);
+}
+
+.hexagon-button[data-menu="true"] {
+    .hexagon-icon {
+        &.bi-x-lg {
+            transform: rotate(180deg) scale(1);
+        }
+    }
 }
 
 // Size variants

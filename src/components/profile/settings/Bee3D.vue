@@ -1,12 +1,14 @@
 <template>
     <div
         ref="container3D"
+        class="card rounded-3 overflow-hidden"
     />
 </template>
 
 <script lang="ts" setup>
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const props = defineProps<{
     avatar?: string
@@ -18,9 +20,8 @@ let camera: THREE.PerspectiveCamera
 let scene: THREE.Scene
 let renderer: THREE.WebGLRenderer
 let mixer: THREE.AnimationMixer
+let controls: OrbitControls
 let animationFrameId: number
-let beeBody: THREE.Group
-let beeHead: THREE.Group
 let headMaterial: THREE.MeshStandardMaterial | null = null
 
 // Watch for avatar changes
@@ -31,8 +32,8 @@ watch(() => props.avatar, (newAvatar) => {
         textureLoader.load(newAvatar, (texture) => {
             texture.flipY = false
             texture.repeat.set(3, 2)
-            texture.center.set(0.18, 0.1)
-            texture.offset.set(0, -0.5)
+            texture.center.set(0.15, 0.0)
+            texture.offset.set(0.01, -0.5)
             texture.colorSpace = THREE.SRGBColorSpace
             if (headMaterial) {
                 headMaterial.map = texture
@@ -58,8 +59,9 @@ const initScene = () => {
         0.1,
         1000,
     )
-    camera.position.z = 3.5
-    camera.position.y = 0.75
+    camera.position.z = 7.5
+    camera.position.x = 0.0
+    camera.position.y = 1.5
 
     // Renderer setup
     renderer = new THREE.WebGLRenderer({
@@ -74,41 +76,58 @@ const initScene = () => {
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
     renderer.domElement.style.display = 'block'
-    renderer.domElement.style.background = 'var(--bs-light)'
+    renderer.domElement.style.background = 'var(--bs-dark-subtle)'
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xFFFFFF, 1.3)
     scene.add(ambientLight)
 
-    const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1)
+    const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 2)
     directionalLight.position.set(500, 500, 500)
     scene.add(directionalLight)
+
+    // Set up OrbitControls
+    controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.dampingFactor = 0.05
+    controls.minDistance = 5
+    controls.maxDistance = 10
+    controls.enablePan = false
+    controls.target.set(0, 1.5, 0)
 }
 
 // Load models
 const loadModels = async () => {
     const loader = new GLTFLoader()
+    const rotationY = -0.25
+    const rotationX = 0.15
 
     // Load bee body
     const bodyGLTF = await loader.loadAsync('/bee_body.glb')
-    beeBody = bodyGLTF.scene
-    beeBody.rotation.y = -0.45
-    scene.add(beeBody)
+    bodyGLTF.scene.rotation.y = rotationY
+    bodyGLTF.scene.rotation.x = rotationX
+    scene.add(bodyGLTF.scene)
 
     // Load bee head
     const headGLTF = await loader.loadAsync('/bee_head.glb')
-    beeHead = headGLTF.scene
-    beeHead.rotation.y = -0.45
-    scene.add(beeHead)
+    headGLTF.scene.rotation.y = rotationY
+    headGLTF.scene.rotation.x = rotationX
+    scene.add(headGLTF.scene)
+
+    // Load bee head
+    const antennaGLTF = await loader.loadAsync('/bee_antenna.glb')
+    antennaGLTF.scene.rotation.y = rotationY
+    antennaGLTF.scene.rotation.x = rotationX
+    scene.add(antennaGLTF.scene)
 
     // Setup head material with avatar texture
     headMaterial = new THREE.MeshStandardMaterial({
-        metalness: 0.1,
-        roughness: 0.8,
+        metalness: 0.0,
+        roughness: 0.4,
     })
 
     // Apply material to head mesh
-    beeHead.traverse((child) => {
+    headGLTF.scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
             child.material = headMaterial
         }
@@ -120,8 +139,8 @@ const loadModels = async () => {
         textureLoader.load(props.avatar, (texture) => {
             texture.flipY = false
             texture.repeat.set(3, 2)
-            texture.center.set(0.18, 0.1)
-            texture.offset.set(0, -0.5)
+            texture.center.set(0.15, 0.0)
+            texture.offset.set(0.01, -0.5)
             texture.colorSpace = THREE.SRGBColorSpace
             if (headMaterial) {
                 headMaterial.map = texture
@@ -135,6 +154,7 @@ const loadModels = async () => {
 
     mixer.clipAction(bodyGLTF.animations[0]).play()
     mixer.clipAction(headGLTF.animations[0]).play()
+    mixer.clipAction(antennaGLTF.animations[2]).play()
 }
 
 // Animation loop
@@ -145,6 +165,7 @@ const animate = () => {
         mixer.update(0.016) // ~60fps
     }
 
+    controls.update() // Update controls in animation loop
     renderer.render(scene, camera)
 }
 
