@@ -1,9 +1,9 @@
 <template>
     <div class="d-flex flex-column gap-2 border rounded h-100 p-3">
         <div class="d-flex gap-2 align-items-center">
-            <h6 class="mb-0">
+            <p class="mb-0">
                 MEMBERS — {{ group.members.length }}
-            </h6>
+            </p>
         </div>
         <div class="member-list">
             <div

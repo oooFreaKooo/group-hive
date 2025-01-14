@@ -1,45 +1,10 @@
 <template>
-    <div class="border shadow-sm mb-3 rounded p-2">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="d-flex gap-2">
-                <div
-                    v-if="task.assignedTo"
-                    class="member-avatar"
-                    :title="task.assignedTo.profile.displayName || ''"
-                >
-                    <img
-                        v-if="task.assignedTo.profile.avatarUrl"
-                        :src="task.assignedTo.profile.avatarUrl"
-                        :alt="task.assignedTo.profile.displayName || ''"
-                        class="rounded-circle"
-                        width="25"
-                        height="25"
-                    >
-                    <div
-                        v-else
-                        class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white"
-                        style="width: 25px; height: 25px;"
-                    >
-                        {{ task.assignedTo.profile.displayName?.[0] || '' }}
-                    </div>
-                </div>
-                <div
-                    v-else
-                    class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
-                    style="width: 25px; height: 25px;"
-                    title="Unassigned"
-                >
-                    <i class="bi bi-person text-white small" />
-                </div>
-            </span>
-            <button
-                class="btn btn-link text-muted p-0"
-                @click="showDetails = true"
-            >
-                <i class="bi bi-three-dots" />
-            </button>
-        </div>
-
+    <b-button
+        class="border shadow-sm mb-3 rounded p-2"
+        toggle="tooltip"
+        title="Click for Details"
+        @click="showDetails = true"
+    >
         <div class="d-flex flex-wrap gap-1 mb-2">
             <span
                 v-for="tagItem in task.tags"
@@ -52,14 +17,38 @@
         </div>
 
         <div class="d-flex justify-content-between align-items-center text-muted small text-nowrap">
-            <span>
-                <i class="bi bi-star-fill me-1 text-warning" />
-                {{ task.pointValue }}
-            </span>
-            <span>
-                <i class="bi bi-chat-dots me-1" />
-                {{ task.comments?.length || 0 }}
-            </span>
+            <div
+                v-if="task.assignedTo"
+                class="member-avatar"
+                :title="task.assignedTo.profile.displayName || ''"
+            >
+                <NuxtImg
+                    v-if="task.assignedTo.profile.avatarUrl"
+                    :src="task.assignedTo.profile.avatarUrl"
+                    :alt="task.assignedTo.profile.displayName || ''"
+                    class="rounded-circle"
+                    width="25"
+                    height="25"
+                />
+            </div>
+            <div
+                v-else
+                class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                style="width: 25px; height: 25px;"
+                title="Unassigned"
+            >
+                <i class="bi bi-person text-white small" />
+            </div>
+            <div class="d-flex gap-2">
+                <span>
+                    <i class="bi bi-star-fill me-1 text-warning" />
+                    {{ task.pointValue }}
+                </span>
+                <span>
+                    <i class="bi bi-chat-dots me-1" />
+                    {{ task.comments?.length || 0 }}
+                </span>
+            </div>
         </div>
 
         <TaskDetailsPopover
@@ -68,7 +57,7 @@
             @close="showDetails = false"
             @comment-added="$emit('commentAdded')"
         />
-    </div>
+    </b-button>
 </template>
 
 <script setup lang="ts">
