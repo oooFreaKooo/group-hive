@@ -12,6 +12,7 @@ model Profile {
   id           String      @id @unique
   displayName  String?
   avatarUrl    String?
+  bgUrl        String?
   role         UserRole    @default(USER)
   city         String?
   postalCode   String?

@@ -4,10 +4,22 @@
         <div class="row mb-5">
             <div class="col-7 d-flex justify-content-center">
                 <div class="bee-container border-bottom">
-                    <Bee3D :avatar="previewAvatar || '/default-avatar.png'" />
+                    <NuxtImg
+                        :src="previewBg || 'https://picsum.photos/300'"
+                        class="bee-avatar  rounded-4"
+                    />
+                    <Bee3D
+                        class="bee-avatar rounded-4"
+                        :avatar="previewAvatar || '/default-avatar.png'"
+                    />
+
                     <AvatarMenu
-                        class="edit-btn position-absolute"
+                        class="edit-avatar-btn position-absolute"
                         @select="handleAvatarSelect"
+                    />
+                    <BackgroundMenu
+                        class="edit-background-btn position-absolute"
+                        @select="handleBgSelect"
                     />
                 </div>
             </div>
@@ -57,11 +69,12 @@ const props = defineProps<{
         city: string
         postalCode: string
         avatarUrl: string
+        bgUrl: string
     }
 }>()
 
 const emit = defineEmits<{
-    (e: 'update:modelValue', value: { displayName: string, city: string, postalCode: string, avatarUrl: string }): void
+    (e: 'update:modelValue', value: { displayName: string, city: string, postalCode: string, avatarUrl: string, bgUrl: string }): void
     (e: 'error', value: string): void
 }>()
 
@@ -75,6 +88,16 @@ const previewAvatar = computed({
     },
 })
 
+const previewBg = computed({
+    get: () => props.modelValue.bgUrl || props.profile.bgUrl || '',
+    set: (value) => {
+        emit('update:modelValue', {
+            ...props.modelValue,
+            bgUrl: value,
+        })
+    },
+})
+
 const form = computed({
     get: () => props.modelValue,
     set: value => emit('update:modelValue', value),
@@ -83,18 +106,36 @@ const form = computed({
 const handleAvatarSelect = (avatarUrl: string) => {
     previewAvatar.value = avatarUrl
 }
+
+const handleBgSelect = (bgUrl: string) => {
+    previewBg.value = bgUrl
+}
 </script>
 
 <style scoped>
-.edit-btn {
+.edit-avatar-btn {
     bottom: -17px;
-    right: 45%;
+    right: 35%;
+}
+
+.edit-background-btn {
+    bottom: -17px;
+    right: 55%;
 }
 
 .bee-container {
     position: relative;
     width: 300px;
     height: 300px;
+}
+
+.bee-avatar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .bee-container-small {

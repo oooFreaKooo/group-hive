@@ -3,7 +3,7 @@
         ref="menuRef"
     >
         <HexagonSimple
-            icon="pencil"
+            icon="emoji-smile"
             is-menu
             @click="isOpen = !isOpen"
         />

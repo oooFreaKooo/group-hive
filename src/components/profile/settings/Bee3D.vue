@@ -77,12 +77,7 @@ const initScene = () => {
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
     renderer.domElement.style.display = 'block'
-
-    if (props.isPopover) {
-        renderer.domElement.style.background = 'transparent'
-    } else {
-        renderer.domElement.style.background = 'var(--bs-dark-subtle)'
-    }
+    renderer.domElement.style.background = 'transparent'
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xFFFFFF, 1.3)

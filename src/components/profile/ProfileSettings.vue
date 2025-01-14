@@ -112,6 +112,7 @@ const user = useSupabaseUser()
 const profileForm = ref({
     displayName: props.profile.displayName || '',
     avatarUrl: props.profile.avatarUrl || '',
+    bgUrl: props.profile.bgUrl || '',
     city: props.profile.city || '',
     postalCode: props.profile.postalCode || '',
 })
@@ -122,6 +123,7 @@ onMounted(() => {
         profileForm.value = {
             displayName: props.profile.displayName || '',
             avatarUrl: props.profile.avatarUrl || '',
+            bgUrl: props.profile.bgUrl || '',
             city: props.profile.city || '',
             postalCode: props.profile.postalCode || '',
         }
@@ -146,6 +148,7 @@ async function saveChanges () {
                 id: user.value.id,
                 displayName: profileForm.value.displayName,
                 avatarUrl: profileForm.value.avatarUrl || '',
+                bgUrl: profileForm.value.bgUrl || '',
                 city: profileForm.value.city,
                 postalCode: profileForm.value.postalCode,
             },

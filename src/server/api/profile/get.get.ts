@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
             id: true,
             displayName: true,
             avatarUrl: true,
+            bgUrl: true,
             city: true,
             postalCode: true,
             role: true,

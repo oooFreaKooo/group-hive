@@ -5,13 +5,14 @@ const prisma = new PrismaClient()
 export default defineEventHandler(async (event) => {
     try {
         const body = await readBody(event)
-        const { id, displayName, avatarUrl, city, postalCode } = body
+        const { id, displayName, avatarUrl, bgUrl, city, postalCode } = body
 
         const profile = await prisma.profile.update({
             where: { id: id as string },
             data: {
                 displayName: displayName as string,
                 avatarUrl: avatarUrl as string,
+                bgUrl: bgUrl as string,
                 city: city as string,
                 postalCode: postalCode as string,
             },
