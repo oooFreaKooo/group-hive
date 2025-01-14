@@ -14,12 +14,16 @@
                     />
 
                     <AvatarMenu
+                        ref="avatarMenuRef"
                         class="edit-avatar-btn position-absolute"
                         @select="handleAvatarSelect"
+                        @open="handleAvatarMenuOpen"
                     />
                     <BackgroundMenu
+                        ref="bgMenuRef"
                         class="edit-background-btn position-absolute"
                         @select="handleBgSelect"
+                        @open="handleBgMenuOpen"
                     />
                 </div>
             </div>
@@ -61,6 +65,8 @@
 
 <script setup lang="ts">
 import type { Profile } from '@prisma/client'
+import AvatarMenu from './AvatarMenu.vue'
+import BackgroundMenu from './BackgroundMenu.vue'
 
 const props = defineProps<{
     profile: Profile
@@ -103,12 +109,27 @@ const form = computed({
     set: value => emit('update:modelValue', value),
 })
 
+const avatarMenuRef = ref<typeof AvatarMenu | null>(null)
+const bgMenuRef = ref<typeof BackgroundMenu | null>(null)
+
 const handleAvatarSelect = (avatarUrl: string) => {
     previewAvatar.value = avatarUrl
 }
 
 const handleBgSelect = (bgUrl: string) => {
     previewBg.value = bgUrl
+}
+
+const handleAvatarMenuOpen = () => {
+    if (bgMenuRef.value?.isOpen) {
+        bgMenuRef.value.isOpen = false
+    }
+}
+
+const handleBgMenuOpen = () => {
+    if (avatarMenuRef.value?.isOpen) {
+        avatarMenuRef.value.isOpen = false
+    }
 }
 </script>
 

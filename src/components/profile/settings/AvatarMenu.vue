@@ -5,7 +5,7 @@
         <HexagonSimple
             icon="emoji-smile"
             is-menu
-            @click="isOpen = !isOpen"
+            @click="toggleMenu"
         />
 
         <Transition name="fade">
@@ -13,32 +13,34 @@
                 v-if="isOpen"
                 class="avatar-grid"
             >
+                <!-- Avatar Grid -->
                 <div
                     v-for="seed in seeds"
                     :key="seed"
-                    class="hex-item"
+                    class="avatar-item"
                     @click="selectAvatar(seed)"
                 >
-                    <div class="hex">
-                        <div class="hex-content">
-                            <NuxtImg
-                                :src="`https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${seed}`"
-                                class="avatar-preview"
-                                loading="lazy"
-                            />
-                        </div>
+                    <div class="avatar-preview">
+                        <NuxtImg
+                            :src="`https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=${seed}`"
+                            class="preview-img"
+                            loading="lazy"
+                        />
                     </div>
                 </div>
-                <div class="hex-item refresh">
+
+                <!-- Refresh Button -->
+                <div class="avatar-item refresh">
                     <div
-                        class="hex"
+                        class="avatar-preview"
                         @click.stop="regenerateAvatars"
                     >
-                        <div class="hex-content">
-                            <i class="bi bi-dice-5" />
+                        <div class="refresh-content">
+                            <i class="bi bi-arrow-clockwise" />
                         </div>
                     </div>
                 </div>
+
                 <!-- Custom Seed Input -->
                 <div class="custom-seed-section">
                     <div class="input-group">
@@ -71,7 +73,19 @@ const customSeed = ref('')
 
 const emit = defineEmits<{
     (e: 'select', value: string): void
+    (e: 'open'): void
 }>()
+
+const toggleMenu = () => {
+    isOpen.value = !isOpen.value
+    if (isOpen.value) {
+        emit('open')
+    }
+}
+
+defineExpose({
+    isOpen,
+})
 
 // Generate a random string for seed
 const generateRandomSeed = () => {
@@ -116,59 +130,51 @@ onMounted(() => {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
     padding: 1rem;
-    background: rgba(255, 255, 255, 0.281);
-    backdrop-filter: blur(1px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
     border-radius: 1rem;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
     min-width: max-content;
+    z-index: 1000;
 }
 
-.hex {
-    display:flex;
+.avatar-item {
     position: relative;
-    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
     cursor: pointer;
-    width: 80px;
-    height: 70px;
-    transform: rotate(180deg);
-    transition: all 150ms ease-in-out;
-    &:hover {
-        transform: rotate(180deg) scale(0.95);
-    }
 }
 
-.hex .hex-content {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 50%;
-    left: 50%;
-    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-    transform: translate(-50%, -50%) rotate(-180deg);
-    color: white;
-    z-index: 99;
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 150ms ease-in-out;
 
-    .avatar-preview {
+    &:hover {
+        transform: scale(0.95);
+    }
+
+    .preview-img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    .bi {
-        font-size: 1.5rem;
-        color: var(--bs-dark);
-    }
 }
 
 .refresh {
-    .hex {
+    .avatar-preview {
         background: var(--bs-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
         &:hover {
             background: var(--bs-gray-200);
+        }
+
+        .refresh-content {
+            font-size: 1.5rem;
+            color: var(--bs-dark);
         }
     }
 }

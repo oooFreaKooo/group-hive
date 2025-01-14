@@ -5,7 +5,7 @@
         <HexagonSimple
             icon="image"
             is-menu
-            @click="isOpen = !isOpen"
+            @click="toggleMenu"
         />
 
         <Transition name="fade">
@@ -123,7 +123,19 @@ const options = ref({
 
 const emit = defineEmits<{
     (e: 'select', value: string): void
+    (e: 'open'): void
 }>()
+
+const toggleMenu = () => {
+    isOpen.value = !isOpen.value
+    if (isOpen.value) {
+        emit('open')
+    }
+}
+
+defineExpose({
+    isOpen,
+})
 
 // Generate random image IDs (Picsum has images from 1 to 1000)
 const generateRandomImageId = () => {
