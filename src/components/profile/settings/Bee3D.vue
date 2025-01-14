@@ -1,7 +1,7 @@
 <template>
     <div
         ref="container3D"
-        class="card rounded-3 overflow-hidden"
+        :class="{ 'overflow-hidden': !props.isPopover }"
     />
 </template>
 
@@ -12,6 +12,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const props = defineProps<{
     avatar?: string
+    isPopover?: boolean
 }>()
 
 // Refs and state
@@ -21,7 +22,7 @@ let scene: THREE.Scene
 let renderer: THREE.WebGLRenderer
 let mixer: THREE.AnimationMixer
 let controls: OrbitControls
-let animationFrameId: number
+const animationFrameId = ref<number | null>(null)
 let headMaterial: THREE.MeshStandardMaterial | null = null
 
 // Watch for avatar changes
@@ -76,7 +77,12 @@ const initScene = () => {
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
     renderer.domElement.style.display = 'block'
-    renderer.domElement.style.background = 'var(--bs-dark-subtle)'
+
+    if (props.isPopover) {
+        renderer.domElement.style.background = 'transparent'
+    } else {
+        renderer.domElement.style.background = 'var(--bs-dark-subtle)'
+    }
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xFFFFFF, 1.3)
@@ -159,7 +165,7 @@ const loadModels = async () => {
 
 // Animation loop
 const animate = () => {
-    animationFrameId = requestAnimationFrame(animate)
+    animationFrameId.value = requestAnimationFrame(animate)
 
     if (mixer) {
         mixer.update(0.016) // ~60fps
@@ -194,20 +200,6 @@ onMounted(async () => {
     }
 
     window.addEventListener('resize', onResize)
-
-    onBeforeUnmount(() => {
-        resizeObserver.disconnect()
-        window.removeEventListener('resize', onResize)
-        cancelAnimationFrame(animationFrameId)
-
-        // Cleanup
-        if (renderer) {
-            renderer.dispose()
-        }
-        if (mixer) {
-            mixer.stopAllAction()
-        }
-    })
 })
 </script>
 

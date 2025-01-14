@@ -1,41 +1,52 @@
 <template>
     <div
-        class="custom-popover shadow-lg card rounded-5"
+        class="custom-popover rounded-4 bg-white shadow-lg"
         @click.stop
     >
-        <div class="container popover-body p-4">
-            <div class="row">
-                <div class="col-2 d-flex justify-content-center align-items-center">
-                    <NuxtImg
-                        class="rounded-5 profile-avatar border border-secondary"
-                        width="124"
-                        height="124"
-                        :src="member.profile.avatarUrl || '/default-avatar.png'"
-                        :alt="member.profile.displayName || 'Member'"
-                    />
-                </div>
-                <div class="col-10">
-                    <div class="card-title fw-bold fs-3 border-bottom">
+        <!-- Header Section -->
+        <div class="position-relative p-4">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-8 order-2 order-md-1">
+                    <h3 class="display-6 fw-bold text-dark mb-2">
                         {{ member.profile.displayName }}
+                        <b-button
+                            v-if="member.role === 'ADMIN'"
+                            toggle="tooltip"
+                            title="Admin"
+                            size="md"
+                            padding="0"
+                        >
+                            <i
+                                class="bi bi-shield-fill-check"
+                            />
+                        </b-button>
+                    </h3>
+                    <div class="d-flex flex-wrap gap-3 mb-3">
+                        <span
+                            v-if="member.profile.city"
+                            class="badge bg-light text-dark border"
+                        >
+                            <i class="bi bi-geo-alt me-1" />
+                            {{ member.profile.city }}
+                        </span>
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-calendar3 me-1" />
+                            {{ new Date(member.profile.createdAt).toLocaleDateString() }}
+                        </span>
                     </div>
-                    <div
-                        v-if="member.profile.city"
-                        class="popover-item mb-2"
-                    >
-                        <i class="bi bi-geo-alt" />
-                        {{ member.profile.city }}
-                    </div>
-                    <div class="popover-item my-2">
-                        <i class="bi bi-calendar3" />
-                        Joined {{ new Date(member.profile.createdAt).toLocaleDateString() }}
-                    </div>
-                    <div class="popover-item mt-2">
-                        <i class="bi bi-star-fill text-warning" />
-                        {{ member.points }} points
-                    </div>
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-hexagon me-1" />
+                        {{ member.points }}
+                    </span>
                 </div>
             </div>
         </div>
+
+        <Bee3D
+            class="bee-avatar"
+            :avatar="member.profile.avatarUrl || undefined"
+            is-popover
+        />
     </div>
 </template>
 
@@ -47,47 +58,58 @@ defineProps<{
 </script>
 
 <style scoped lang="scss">
-.profile-avatar {
-    position: absolute;
-    left: -4rem;
-}
-
 .custom-popover {
     position: fixed;
-    left: 55%;
+    left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    border-radius: 6px;
-    width: 90%;
-    max-width: 400px;
+    width: 100%;
+    max-width: 600px;
     z-index: 1050;
-    animation: fadeIn 0.2s ease;
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.popover-body {
-    background: var(--c-gray-800);
-    border-radius: 0 0 6px 6px;
-}
-
-.popover-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 0;
-
-    i {
-        width: 16px;
+.bee-avatar {
+    position: absolute;
+    top: -4rem;
+    left: 45%;
+    width: 200px;
+    height: 200px;
+    transition: transform 0.3s ease;
+    &:hover {
+        transform: rotate(5deg) scale(1.05);
     }
 }
 
-@keyframes fadeIn {
+.achievement-card {
+    transition: transform 0.2s ease;
+    &:hover {
+        transform: translateY(-2px);
+    }
+}
+
+.achievement-icon {
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+    &:hover {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
     from {
         opacity: 0;
-        transform: translate(-50%, -60%);
+        transform: translate(-50%, -48%);
     }
     to {
         opacity: 1;
         transform: translate(-50%, -50%);
+    }
+}
+
+@media (max-width: 768px) {
+    .custom-popover {
+        width: 95%;
     }
 }
 </style>

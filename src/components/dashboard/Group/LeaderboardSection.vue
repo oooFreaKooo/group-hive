@@ -84,6 +84,11 @@
             </TransitionGroup>
         </div>
     </div>
+    <SideNavHex
+        :items="items"
+        :rotated="true"
+        class="vh-100 h-100"
+    />
 </template>
 
 <script setup lang="ts">
@@ -96,6 +101,14 @@ interface Props {
         })[]
     }
 }
+
+const items = [
+    { link: '/', label: 'About Me' },
+    { link: '/', label: 'Experience' },
+    { link: '/', label: 'Skills' },
+    { link: '/', label: 'Projects' },
+    { link: '/', label: 'Donate' },
+]
 
 const props = defineProps<Props>()
 const periods = [

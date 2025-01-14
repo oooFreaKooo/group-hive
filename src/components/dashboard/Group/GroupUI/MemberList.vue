@@ -16,7 +16,7 @@
                     class="member-details btn btn-light w-100 text-start p-2 rounded"
                 >
                     <NuxtImg
-                        class="rounded-circle"
+                        class="rounded-circle border border-2 border-dark"
                         width="32"
                         height="32"
                         :src="member.profile.avatarUrl || '/default-avatar.png'"
@@ -24,6 +24,17 @@
                     />
                     <div class="member-info">
                         {{ member.profile.displayName }}
+                        <b-button
+                            v-if="member.role === 'ADMIN'"
+                            toggle="tooltip"
+                            title="Admin"
+                            size="sm"
+                            padding="0"
+                        >
+                            <i
+                                class="bi bi-shield-fill-check"
+                            />
+                        </b-button>
 
                         <div class="popover-item small">
                             <i class="bi bi-star-fill text-warning" />
