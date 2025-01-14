@@ -53,6 +53,11 @@
 <script setup lang="ts">
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 
+interface TaskColumn {
+    title: string
+    tasks: TaskWithRelations[]
+}
+
 interface Props {
     title: string
     columns: TaskColumn[]
@@ -60,32 +65,38 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
 const emit = defineEmits<{
     (e: 'task-updated'): void
     (e: 'task-moved', payload: { task: TaskWithRelations, columnIndex: number, rowId?: number }): void
 }>()
 
-const handleChange = (event: any, columnIndex: number, columnTitle: string) => {
-    console.log('TaskRow - handleChange:', {
-        event,
-        columnIndex,
-        columnTitle,
-        rowId: props.rowId,
-    })
-    if (event.added) {
-        if (columnTitle === 'Tasks') {
-            emit('task-moved', {
-                task: event.added.element,
-                columnIndex: 0,
-                rowId: undefined,
-            })
-        } else {
-            emit('task-moved', {
-                task: event.added.element,
-                columnIndex,
-                rowId: props.rowId,
-            })
-        }
+interface DragEvent {
+    added?: {
+        element: TaskWithRelations
+        newIndex: number
+    }
+    removed?: {
+        element: TaskWithRelations
+        oldIndex: number
+    }
+}
+
+const handleChange = (event: DragEvent, columnIndex: number, columnTitle: string) => {
+    if (!event.added) { return }
+
+    if (columnTitle === 'Tasks') {
+        emit('task-moved', {
+            task: event.added.element,
+            columnIndex: 0,
+            rowId: undefined,
+        })
+    } else {
+        emit('task-moved', {
+            task: event.added.element,
+            columnIndex,
+            rowId: props.rowId,
+        })
     }
 }
 </script>
@@ -97,13 +108,26 @@ const handleChange = (event: any, columnIndex: number, columnTitle: string) => {
 
 .task-ghost {
     opacity: 0.35;
+    background-color: var(--bs-light);
+    border: 1px dashed var(--bs-primary);
 }
 
 .flip-list-move {
-    transition: transform 0.5s;
+    transition: transform 0.5s ease;
 }
 
 .no-move {
     transition: transform 0s;
+}
+
+.task-enter-active,
+.task-leave-active {
+    transition: all 0.3s ease;
+}
+
+.task-enter-from,
+.task-leave-to {
+    opacity: 0;
+    transform: translateY(30px);
 }
 </style>
