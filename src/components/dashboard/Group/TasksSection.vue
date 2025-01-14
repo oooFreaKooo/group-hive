@@ -42,7 +42,8 @@
                     :title="row.title"
                     :columns="getWeekColumns(row)"
                     :row-id="row.id"
-                    @refresh="refresh"
+                    @task-updated="fetchTasks"
+                    @task-moved="handleTaskMoved"
                 />
             </div>
 
@@ -55,6 +56,9 @@
                         <TaskRowUnassigned
                             title="Unassigned Tasks"
                             :columns="[{ title: 'Tasks', tasks: unassignedTasks }]"
+                            :row-id="undefined"
+                            @task-updated="fetchTasks"
+                            @task-moved="handleTaskMoved"
                         />
                     </template>
                 </TaskSidebar>
@@ -65,6 +69,7 @@
             v-if="showCreateTag"
             :group-id="group.id"
             @close="showCreateTag = false"
+            @tag-created="handleTagCreated"
         />
 
         <CreateTaskPopover
@@ -73,12 +78,14 @@
             :group-members="group.members"
             :tags="tags"
             :task-rows="taskRows"
+            @task-created="handleTaskCreated"
             @close="showCreateTask = false"
         />
 
         <CreateTaskRowPopover
             v-if="showCreateRow"
             :group-id="group.id"
+            @row-created="handleRowCreated"
             @close="showCreateRow = false"
         />
     </div>
@@ -96,25 +103,94 @@ const props = defineProps<Props>()
 const showCreateTask = ref(false)
 const showCreateRow = ref(false)
 const showCreateTag = ref(false)
+const tags = ref<Tag[]>([])
+const tasks = ref<TaskWithRelations[]>([])
+const taskRows = ref<(TaskRow & { tasks: TaskWithRelations[] })[]>([])
+const isLoading = ref(true)
 
-// Use Nuxt's auto-refreshing data fetching
-const { data: tags } = await useFetch<Tag[]>(`/api/tags/get`, {
-    query: { groupId: props.group.id },
-    lazy: true,
-    key: `tags-${props.group.id}`,
-    default: () => [],
-})
+const fetchTags = async () => {
+    try {
+        const response = await $fetch<Tag[]>(`/api/tags/get?groupId=${props.group.id}`)
+        tags.value = response
+    } catch (error) {
+        console.error('Failed to fetch tags:', error)
+    }
+}
+const fetchTasks = async () => {
+    try {
+        isLoading.value = true
+        const response = await $fetch<TaskWithRelations[]>(`/api/tasks/get?groupId=${props.group.id}`)
+        tasks.value = response
+    } catch (error) {
+        console.error('Failed to fetch tasks:', error)
+    } finally {
+        isLoading.value = false
+    }
+}
+const fetchTaskRows = async () => {
+    try {
+        const response = await $fetch<(TaskRow & { tasks: TaskWithRelations[] })[]>(`/api/task-rows/get?groupId=${props.group.id}`)
+        taskRows.value = response
+    } catch (error) {
+        console.error('Failed to fetch task rows:', error)
+    }
+}
 
-const { data: tasks } = await useFetch<TaskWithRelations[]>(`/api/tasks/get`, {
-    query: { groupId: props.group.id },
-    key: `tasks-${props.group.id}`,
-    default: () => [],
-})
-
-const { data: taskRows, refresh } = await useFetch<(TaskRow & { tasks: TaskWithRelations[] })[]>(`/api/task-rows/get`, {
-    query: { groupId: props.group.id },
-    key: `task-rows-${props.group.id}`,
-    default: () => [],
+const handleTaskCreated = () => {
+    fetchTasks()
+    fetchTaskRows()
+}
+const handleRowCreated = () => {
+    fetchTaskRows()
+}
+const handleTagCreated = () => {
+    fetchTags()
+}
+const handleTaskMoved = async (payload: { task: TaskWithRelations, columnIndex: number, rowId?: number }) => {
+    try {
+        const { task, columnIndex, rowId: targetRowId } = payload
+        // If no row ID, this is an unassigned task
+        if (!targetRowId) {
+            await $fetch(`/api/tasks/${task.id}/update`, {
+                method: 'PUT',
+                body: {
+                    dueDate: null,
+                    taskRowId: null,
+                },
+            })
+        } else {
+            // Find the target row
+            const targetRow = taskRows.value.find(row => row.id === targetRowId)
+            if (!targetRow) { return }
+            // Calculate the new due date based on the target column
+            const weekStart = new Date(targetRow.weekStart)
+            const dueDate = new Date(weekStart)
+            dueDate.setDate(weekStart.getDate() + columnIndex)
+            dueDate.setHours(23, 59, 59, 999)
+            // Update the task
+            await $fetch(`/api/tasks/${task.id}/update`, {
+                method: 'PUT',
+                body: {
+                    dueDate: dueDate.toISOString(),
+                    taskRowId: targetRow.id,
+                },
+            })
+        }
+        // Refresh data
+        await Promise.all([
+            fetchTasks(),
+            fetchTaskRows(),
+        ])
+    } catch (error) {
+        console.error('TasksSection - Error:', error)
+        throw error
+    }
+}
+// Initialize data
+onMounted(() => {
+    fetchTags()
+    fetchTasks()
+    fetchTaskRows()
 })
 
 // Computed properties

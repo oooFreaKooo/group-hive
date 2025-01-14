@@ -19,11 +19,12 @@
                             group="tasks"
                             :animation="200"
                             ghost-class="task-ghost"
-                            @change="handleChange($event)"
+                            @change="(e) => handleChange(e, index, column.title)"
                         >
                             <TransitionGroup
                                 name="task"
                                 type="transition"
+                                @comment-added="$emit('task-updated')"
                             >
                                 <TaskCard
                                     v-for="task in column.tasks"
@@ -45,27 +46,36 @@ import { VueDraggableNext as draggable } from 'vue-draggable-next'
 interface Props {
     title: string
     columns: TaskColumn[]
+    rowId?: number
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+const emit = defineEmits<{
+    (e: 'task-updated'): void
+    (e: 'task-moved', payload: { task: TaskWithRelations, columnIndex: number, rowId?: number }): void
+}>()
 
-const handleChange = async (event: any) => {
-    if (!event.added) { return }
-
-    const task = event.added.element as TaskWithRelations
-
-    try {
-        // Update task to be unassigned
-        await $fetch(`/api/tasks/${task.id}/update`, {
-            method: 'PUT',
-            body: {
-                dueDate: null,
-                taskRowId: null,
-            },
-        })
-    } catch (error) {
-        console.error('TaskRowUnassigned - Error:', error)
-        throw error
+const handleChange = (event: any, columnIndex: number, columnTitle: string) => {
+    console.log('TaskRow - handleChange:', {
+        event,
+        columnIndex,
+        columnTitle,
+        rowId: props.rowId,
+    })
+    if (event.added) {
+        if (columnTitle === 'Tasks') {
+            emit('task-moved', {
+                task: event.added.element,
+                columnIndex: 0,
+                rowId: undefined,
+            })
+        } else {
+            emit('task-moved', {
+                task: event.added.element,
+                columnIndex,
+                rowId: props.rowId,
+            })
+        }
     }
 }
 </script>
