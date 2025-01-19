@@ -20,54 +20,54 @@
             </NuxtLink>
         </div>
 
-        <!-- Navigation Section -->
+        <!-- Groups Section -->
         <nav class="py-3 flex-grow-1">
             <NuxtLink
-                v-for="item in navigationItems"
-                :key="item.label"
-                :to="item.href"
+                v-for="group in userStore.profile?.ownedGroups"
+                :key="group.id"
+                :to="`/dashboard/${group.id}`"
                 class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-3"
+                :class="{ active: currentGroupId === group.id.toString() }"
             >
                 <AppIcon
-                    :name="item.icon"
+                    name="house"
                     size="md"
                     color="black"
                     class="nav-icon flex-shrink-0"
                 />
-                <span class="nav-label ms-3">{{ item.label }}</span>
+                <span class="nav-label ms-3">{{ group.name }}</span>
+            </NuxtLink>
+
+            <NuxtLink
+                to="/dashboard"
+                class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-3"
+            >
+                <AppIcon
+                    name="plus-circle"
+                    size="md"
+                    color="black"
+                    class="nav-icon flex-shrink-0"
+                />
+                <span class="nav-label ms-3">Join New Group</span>
             </NuxtLink>
         </nav>
 
         <!-- Footer Section -->
         <footer class="navigation">
             <NuxtLink
-                v-for="item in footerItems"
-                :key="item.label"
-                :to="item.href"
-                class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-3"
-            >
-                <AppIcon
-                    :name="item.icon"
-                    size="md"
-                    color="black"
-                    class="nav-icon flex-shrink-0"
-                />
-                <span class="nav-label ms-3">{{ item.label }}</span>
-            </NuxtLink>
-            <NuxtLink
-                :to="profileItems.href"
+                to="/dashboard/settings"
                 class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-2"
             >
                 <NuxtImg
-                    :src="profileItems.avatar"
+                    :src="userStore.userAvatar || '/default-avatar.png'"
                     width="32"
                     height="32"
                     alt="Avatar"
                     class="nav-icon flex-shrink-0 rounded-circle"
                 />
                 <div class="d-flex flex-column align-items-start">
-                    <span class="nav-label ms-3 fw-bold">{{ profileItems.name }}</span>
-                    <span class="nav-label ms-3 small">{{ profileItems.email }}</span>
+                    <span class="nav-label ms-3 fw-bold">{{ userStore.displayName }}</span>
+                    <span class="nav-label ms-3 small">{{ userStore.userEmail }}</span>
                 </div>
             </NuxtLink>
         </footer>
@@ -75,11 +75,9 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-    navigationItems?: NavigationItem[]
-    footerItems: NavigationItem[]
-    profileItems: ProfileItem
-}>()
+const userStore = useUserStore()
+const route = useRoute()
+const currentGroupId = computed(() => route.params.id)
 </script>
 
 <style scoped lang="scss">
@@ -155,24 +153,6 @@ defineProps<{
 
     &:hover .nav-label {
         opacity: 1;
-    }
-
-    .footer {
-        font-size: 0.75rem;
-        white-space: nowrap;
-        padding: 1rem;
-
-        .footer-title {
-            font-size: 0.875rem;
-        }
-
-        .footer-content {
-            font-size: 0.75rem;
-        }
-
-        .copyright {
-            font-size: 0.625rem;
-        }
     }
 }
 </style>

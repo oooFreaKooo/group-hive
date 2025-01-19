@@ -100,6 +100,11 @@ const props = defineProps({
         required: false,
         default: 'vertical',
     },
+    scale: {
+        type: Number,
+        required: false,
+        default: 0.75,
+    },
 })
 
 const getRows = () => {
@@ -130,7 +135,7 @@ const rows = ref(getRows())
 <style scoped lang="scss">
 .hex-wrapper {
     display: inline-block;
-    --scale: 0.75;
+    --scale: v-bind('scale');
     margin: 50px 0;
 
     &.vertical {

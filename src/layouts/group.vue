@@ -53,12 +53,10 @@ const footerItems = computed<NavigationItem[]>(() => [
     },
 ])
 
-const profileItems = computed<ProfileItem[]>(() => [
-    {
-        name: userStore.displayName ?? '',
-        email: userStore.userEmail ?? '',
-        href: `/dashboard/settings`,
-        avatar: userStore.userAvatar ?? '',
-    },
-])
+const profileItems = computed<ProfileItem>(() => ({
+    name: userStore.displayName ?? '',
+    email: userStore.userEmail ?? '',
+    href: `/dashboard/settings`,
+    avatar: userStore.userAvatar ?? '',
+}))
 </script>

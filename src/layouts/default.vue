@@ -3,42 +3,14 @@
         <AppHeader
             :navigation-items="navigationItems"
         />
-        <SideNavigation
-            :footer-items="footerItems"
-            :profile-items="profileItems"
-        />
+        <GroupSideBar />
         <slot />
     </div>
 </template>
 
 <script setup lang="ts">
-const userStore = useUserStore()
-const route = useRoute()
-
-// Initialize store on layout mount
-onMounted(async () => {
-    await userStore.init()
-})
-
 const navigationItems = [
     { label: 'Home', href: '/' },
     { label: 'Dashboard', href: '/dashboard' },
 ]
-
-const footerItems: NavigationItem[] = [
-    {
-        label: 'App Settings',
-        href: `/dashboard/${route.params.id}/settings`,
-        icon: 'gear',
-    },
-]
-
-const profileItems = computed<ProfileItem[]>(() => [
-    {
-        name: userStore.displayName ?? '',
-        email: userStore.userEmail ?? '',
-        href: `/dashboard/settings`,
-        avatar: userStore.userAvatar ?? '',
-    },
-])
 </script>

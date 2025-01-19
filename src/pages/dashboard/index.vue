@@ -1,78 +1,57 @@
 <template>
-    <main>
-        <AppSection>
-            <div v-if="userStore.loading">
+    <div class="d-flex">
+        <main class="flex-grow-1 ms-md-5 p-4">
+            <div class="container">
                 <div
-                    class="spinner-border"
-                    role="status"
+                    v-if="!hasGroups"
+                    class="text-center py-5"
                 >
-                    Loading...
-                </div>
-            </div>
-            <div v-else>
-                <CreateOrJoinGroup v-if="!hasGroups" />
-                <div
-                    v-else
-                    class="container"
-                >
-                    <h2 class="mb-4">
-                        Select a Group
+                    <div class="mb-4">
+                        <AppIcon
+                            name="people"
+                            size="xl"
+                        />
+                    </div>
+                    <h2 class="mb-3">
+                        Welcome to Weekly Goals!
                     </h2>
-                    <div class="row g-4">
-                        <div
-                            v-for="group in allGroups"
-                            :key="group.id"
-                            class="col-14 col-lg-4"
+                    <p class="text-muted mb-4">
+                        Get started by creating a new group or joining an existing one.
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center">
+                        <button
+                            class="btn btn-primary"
+                            @click="showCreateModal = true"
                         >
-                            <div class="card shadow h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        {{ group.name }}
-                                    </h5>
-                                    <p class="card-text">
-                                        {{ group.description }}
-                                    </p>
-                                    <NuxtLink
-                                        :to="`/dashboard/${group.id}`"
-                                        class="btn btn-primary"
-                                    >
-                                        Open Dashboard
-                                    </NuxtLink>
-                                </div>
-                            </div>
-                        </div>
+                            Create New Group
+                        </button>
+                        <button
+                            class="btn btn-outline-primary"
+                            @click="showJoinModal = true"
+                        >
+                            Join Existing Group
+                        </button>
                     </div>
                 </div>
             </div>
-        </AppSection>
-    </main>
+        </main>
+    </div>
 </template>
 
 <script setup lang="ts">
 const userStore = useUserStore()
 
-// Compute all groups (both owned and member of)
-const allGroups = computed(() => {
-    if (!userStore.profile) { return [] }
-    const ownedGroups = userStore.profile.ownedGroups || []
-    return [...ownedGroups]
-})
-
-const hasGroups = computed(() => allGroups.value.length > 0)
+const hasGroups = computed(() => (userStore.profile?.ownedGroups?.length ?? 0) > 0)
+const showCreateModal = ref(false)
+const showJoinModal = ref(false)
 
 definePageMeta({
     middleware: ['auth'],
 })
 </script>
 
-<style scoped lang="scss">
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
+<style scoped>
+.container {
+    max-width: 800px;
 }
 </style>

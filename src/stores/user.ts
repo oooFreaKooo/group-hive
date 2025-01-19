@@ -15,7 +15,7 @@ export const useUserStore = defineStore('user', () => {
 
     const isAuthenticated = computed(() => !!user.value)
     const displayName = computed(() => profile.value?.displayName)
-    const userEmail = computed(() => profile.value?.email)
+    const userEmail = computed(() => user.value?.email)
     const userAvatar = computed(() => profile.value?.avatarUrl)
 
     async function init () {
