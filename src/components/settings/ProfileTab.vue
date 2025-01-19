@@ -64,12 +64,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Profile } from '@prisma/client'
 import AvatarMenu from './AvatarMenu.vue'
 import BackgroundMenu from './BackgroundMenu.vue'
 
 const props = defineProps<{
-    profile: Profile
+
     modelValue: {
         displayName: string
         city: string
@@ -85,7 +84,7 @@ const emit = defineEmits<{
 }>()
 
 const previewAvatar = computed({
-    get: () => props.modelValue.avatarUrl || props.profile.avatarUrl || '',
+    get: () => props.modelValue.avatarUrl || '',
     set: (value) => {
         emit('update:modelValue', {
             ...props.modelValue,
@@ -95,7 +94,7 @@ const previewAvatar = computed({
 })
 
 const previewBg = computed({
-    get: () => props.modelValue.bgUrl || props.profile.bgUrl || '',
+    get: () => props.modelValue.bgUrl || '',
     set: (value) => {
         emit('update:modelValue', {
             ...props.modelValue,

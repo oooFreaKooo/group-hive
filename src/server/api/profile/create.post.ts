@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
+    const user = useSupabaseUser()
     try {
         const body = await readBody(event)
         const { id, displayName, city, postalCode } = body
@@ -11,6 +12,7 @@ export default defineEventHandler(async (event) => {
             data: {
                 id,
                 displayName,
+                email: user?.value?.email,
                 city,
                 postalCode,
                 role: 'USER',

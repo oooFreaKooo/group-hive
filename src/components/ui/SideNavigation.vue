@@ -22,12 +22,11 @@
 
         <!-- Navigation Section -->
         <nav class="py-3 flex-grow-1">
-            <button
+            <NuxtLink
                 v-for="item in navigationItems"
                 :key="item.label"
+                :to="item.href"
                 class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-3"
-                :class="{ active: currentComponent === item.component }"
-                @click="$emit('navigate', item.component)"
             >
                 <AppIcon
                     :name="item.icon"
@@ -36,17 +35,16 @@
                     class="nav-icon flex-shrink-0"
                 />
                 <span class="nav-label ms-3">{{ item.label }}</span>
-            </button>
+            </NuxtLink>
         </nav>
 
         <!-- Footer Section -->
         <footer class="navigation">
-            <button
+            <NuxtLink
                 v-for="item in footerItems"
                 :key="item.label"
+                :to="item.href"
                 class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-3"
-                :class="{ active: currentComponent === item.component }"
-                @click="$emit('navigate', item.component)"
             >
                 <AppIcon
                     :name="item.icon"
@@ -55,13 +53,12 @@
                     class="nav-icon flex-shrink-0"
                 />
                 <span class="nav-label ms-3">{{ item.label }}</span>
-            </button>
-            <button
+            </NuxtLink>
+            <NuxtLink
                 v-for="item in profileItems"
                 :key="item.name"
-                :class="{ active: currentComponent === item.component }"
+                :to="item.href"
                 class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-2"
-                @click="$emit('navigate', item.component)"
             >
                 <NuxtImg
                     :src="item.avatar"
@@ -74,42 +71,16 @@
                     <span class="nav-label ms-3 fw-bold">{{ item.name }}</span>
                     <span class="nav-label ms-3 small">{{ item.email }}</span>
                 </div>
-            </button>
+            </NuxtLink>
         </footer>
     </div>
 </template>
 
 <script setup lang="ts">
-interface NavigationItem {
-    label: string
-    component: string
-    icon: string
-}
-
-interface FooterItem {
-    label: string
-    component: string
-    icon: string
-}
-
-interface ProfileItem {
-    name: string
-    email: string
-    component: string
-    avatar: string
-}
-
-const props = defineProps<{
-    navigationItems: NavigationItem[]
-    footerItems: FooterItem[]
+defineProps<{
+    navigationItems?: NavigationItem[]
+    footerItems: NavigationItem[]
     profileItems: ProfileItem[]
-    activeComponent: string
-}>()
-
-const currentComponent = computed(() => props.activeComponent)
-
-defineEmits<{
-    navigate: [component: string]
 }>()
 </script>
 

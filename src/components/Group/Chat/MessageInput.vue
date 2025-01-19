@@ -56,17 +56,40 @@
 </template>
 
 <script setup lang="ts">
-import type { Message, GroupUser, MentionSuggestion } from './types'
+import type { Prisma } from '@prisma/client'
+
+type MessageWithRelations = Prisma.MessageGetPayload<{
+    include: {
+        author: {
+            include: {
+                profile: true
+            }
+        }
+        replyTo: {
+            include: {
+                author: {
+                    include: {
+                        profile: true
+                    }
+                }
+            }
+        }
+    }
+}>
 
 const props = defineProps<{
-    replyingTo: Message | null
-    members: GroupUser[]
+    replyingTo: MessageWithRelations | undefined
+    members: Prisma.GroupUserGetPayload<{
+        include: {
+            profile: true
+        }
+    }>[]
 }>()
 
 const emit = defineEmits<{
     'send': [message: string]
     'cancel-reply': []
-    'mention-suggestion': [suggestion: MentionSuggestion]
+    'mention-suggestion': [suggestion: { startPosition: number, query: string }]
 }>()
 
 const message = ref('')
@@ -109,7 +132,7 @@ const handleInput = (event: Event) => {
     mentionQuery.value = ''
 }
 
-const handleMentionSelect = (member: GroupUser) => {
+const handleMentionSelect = (member: Prisma.GroupUserGetPayload<{ include: { profile: true } }>) => {
     insertMention(member)
 }
 
@@ -119,7 +142,7 @@ const handleSend = () => {
     message.value = ''
 }
 
-const insertMention = (member: GroupUser) => {
+const insertMention = (member: Prisma.GroupUserGetPayload<{ include: { profile: true } }>) => {
     const mention = `@[${member.profile.displayName}](${member.id})`
     const textarea = textareaRef.value
 

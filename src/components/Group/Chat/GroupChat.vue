@@ -37,41 +37,62 @@
 </template>
 
 <script setup lang="ts">
-import type { Message, GroupUser, MentionSuggestion } from './types'
+import type { Prisma } from '@prisma/client'
 import MessageInput from './MessageInput.vue'
 
+type MessageWithRelations = Prisma.MessageGetPayload<{
+    include: {
+        author: {
+            include: {
+                profile: true
+            }
+        }
+        replyTo: {
+            include: {
+                author: {
+                    include: {
+                        profile: true
+                    }
+                }
+            }
+        }
+    }
+}>
+
+const convertDates = (obj: any): any => {
+    if (!obj) { return null }
+    return Object.entries(obj).reduce((acc, [ key, value ]) => {
+        if (key === 'createdAt' || key === 'updatedAt') {
+            acc[key] = new Date(value as string)
+        } else if (typeof value === 'object') {
+            acc[key] = convertDates(value)
+        } else {
+            acc[key] = value
+        }
+        return acc
+    }, {} as any)
+}
+
 const props = defineProps<{
-    groupId: number
+    groupId: string
+    messages: MessageWithRelations[]
+    members: Prisma.GroupUserGetPayload<{
+        include: {
+            profile: true
+        }
+    }>[]
 }>()
 
-const messages = ref<Message[]>([])
+const messages = ref<MessageWithRelations[]>(props.messages)
 const messagesContainer = ref<HTMLElement>()
-const editingMessage = ref<Message | null>(null)
-const replyingTo = ref<Message | null>(null)
-const activeMember = ref<GroupUser | null>(null)
+const editingMessage = ref<MessageWithRelations | null>(null)
+const replyingTo = ref<MessageWithRelations | undefined>()
+const activeMember = ref<Prisma.GroupUserGetPayload<{ include: { profile: true } }> | null>(null)
 const popoverStyle = ref('')
 
 const { activePopover, setActivePopover, handleClickOutside, handleEscKey } = usePopoverState()
 
 const messageInputRef = ref<InstanceType<typeof MessageInput> | null>(null)
-
-// Fetch initial messages
-const { data: groupMessages } = await useFetch<Message[]>(`/api/chat/${props.groupId}`)
-messages.value = groupMessages.value || []
-
-// Fetch group members
-const { data: groupData } = await useFetch('/api/group/get', {
-    transform: (data) => {
-        return {
-            ...data,
-            members: data.members[0]?.members.map((member: any) => ({
-                ...member,
-                profile: member.profile || { displayName: 'Unknown', id: member.profileId },
-            })),
-        }
-    },
-})
-const members = ref<GroupUser[]>(groupData.value?.members || [])
 
 const scrollToBottom = () => {
     if (messagesContainer.value) {
@@ -91,14 +112,14 @@ const sendMessage = async (content: string) => {
     })
 
     if (response) {
-        messages.value.push(response as unknown as Message)
-        replyingTo.value = null
+        messages.value.push(convertDates(response) as MessageWithRelations)
+        replyingTo.value = undefined
         await nextTick()
         scrollToBottom()
     }
 }
 
-const editMessage = (message: Message) => {
+const editMessage = (message: MessageWithRelations) => {
     editingMessage.value = message
 }
 
@@ -113,7 +134,7 @@ const saveEdit = async (content: string) => {
     if (response) {
         const index = messages.value.findIndex(m => m.id === editingMessage.value?.id)
         if (index !== -1) {
-            messages.value[index] = response as unknown as Message
+            messages.value[index] = convertDates(response) as MessageWithRelations
         }
         editingMessage.value = null
     }
@@ -123,7 +144,7 @@ const cancelEdit = () => {
     editingMessage.value = null
 }
 
-const deleteMessage = async (message: Message) => {
+const deleteMessage = async (message: MessageWithRelations) => {
     if (!confirm('Are you sure you want to delete this message?')) { return }
 
     await $fetch(`/api/chat/${props.groupId}/${message.id}`, {
@@ -136,25 +157,26 @@ const deleteMessage = async (message: Message) => {
     }
 }
 
-const replyTo = (message: Message) => {
+const replyTo = (message: MessageWithRelations) => {
     replyingTo.value = message
 }
 
 const cancelReply = () => {
-    replyingTo.value = null
+    replyingTo.value = undefined
 }
 
-const handleAvatarClick = (author: GroupUser) => {
+const handleAvatarClick = (author: Prisma.GroupUserGetPayload<{ include: { profile: true } }>) => {
     activeMember.value = author
     setActivePopover(author.id)
 }
 
-const mentionUser = (member: GroupUser) => {
+const mentionUser = (member: Prisma.GroupUserGetPayload<{ include: { profile: true } }>) => {
     messageInputRef.value?.insertMention(member)
 }
 
-const handleMentionSuggestion = (_suggestion: MentionSuggestion) => {
-    // We don't need to handle this in the parent as it's handled in MessageInput
+const handleMentionSuggestion = (_suggestion: { startPosition: number, query: string }) => {
+    // This function is just a pass-through for the mention suggestion event
+    // The actual handling is done in the MessageInput component
 }
 
 onMounted(() => {

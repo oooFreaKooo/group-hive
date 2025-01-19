@@ -1,15 +1,7 @@
 <template>
     <main>
         <AppSection>
-            <SideNavigation
-                :navigation-items="sideNavConfig.navigationItems"
-                :footer-items="sideNavConfig.footerItems"
-                :profile-items="sideNavConfig.profileItems"
-                :active-component="activeComponent"
-                @navigate="handleNavigation"
-            />
-
-            <div v-if="status === 'pending'">
+            <div v-if="userStore.loading">
                 <div
                     class="spinner-border"
                     role="status"
@@ -17,20 +9,39 @@
                     Loading...
                 </div>
             </div>
-            <div v-else-if="data && status === 'success'">
-                <CreateOrJoinGroup v-if="data.profile && data.profile.ownedGroups.length == 0" />
-                <div v-else>
-                    <Transition
-                        name="fade"
-                        mode="out-in"
-                    >
-                        <component
-                            :is="currentComponent"
-                            :key="activeComponent"
-                            :group="data.profile?.ownedGroups[0] as unknown as GroupWithMembers"
-                            :profile="data.profile as unknown as Profile"
-                        />
-                    </Transition>
+            <div v-else>
+                <CreateOrJoinGroup v-if="!hasGroups" />
+                <div
+                    v-else
+                    class="container"
+                >
+                    <h2 class="mb-4">
+                        Select a Group
+                    </h2>
+                    <div class="row g-4">
+                        <div
+                            v-for="group in allGroups"
+                            :key="group.id"
+                            class="col-14 col-lg-4"
+                        >
+                            <div class="card shadow h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        {{ group.name }}
+                                    </h5>
+                                    <p class="card-text">
+                                        {{ group.description }}
+                                    </p>
+                                    <NuxtLink
+                                        :to="`/dashboard/${group.id}`"
+                                        class="btn btn-primary"
+                                    >
+                                        Open Dashboard
+                                    </NuxtLink>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </AppSection>
@@ -38,117 +49,16 @@
 </template>
 
 <script setup lang="ts">
-import type { Group, GroupUser, Profile } from '@prisma/client'
+const userStore = useUserStore()
 
-interface GroupWithMembers extends Group {
-    members: (GroupUser & {
-        profile: Profile
-    })[]
-}
-
-interface NavigationItem {
-    label: string
-    component: string
-    icon: string
-}
-
-interface ProfileItem {
-    name: string
-    email: string
-    component: string
-    avatar: string
-}
-
-interface SideNavConfig {
-    navigationItems: NavigationItem[]
-    footerItems: NavigationItem[]
-    profileItems: ProfileItem[]
-}
-
-const { data, status } = await useFetch('/api/profile/get')
-const user = useSupabaseUser()
-const activeComponent = ref('overview')
-
-const sideNavConfig = computed<SideNavConfig>(() => {
-    const isAdminOrOwner = data.value?.profile?.ownedGroups[0]?.ownerId === data.value?.profile?.id ||
-        data.value?.profile?.ownedGroups[0]?.members.some(
-            m => m.profileId === data.value?.profile?.id && m.role === 'ADMIN',
-        )
-
-    const navigationItems: NavigationItem[] = [
-        {
-            label: 'Overview',
-            component: 'overview',
-            icon: 'house',
-        },
-        {
-            label: 'Chat',
-            component: 'chat',
-            icon: 'chat',
-        },
-        {
-            label: 'Tasks',
-            component: 'tasks',
-            icon: 'list-task',
-        },
-        {
-            label: 'Leaderboard',
-            component: 'leaderboard',
-            icon: 'trophy',
-        },
-    ]
-
-    // Only show edit group option for admins and owners
-    if (isAdminOrOwner) {
-        navigationItems.push({
-            label: 'Edit Group',
-            component: 'edit-group',
-            icon: 'person-lock',
-        })
-    }
-
-    return {
-        navigationItems,
-        footerItems: [
-            {
-                label: 'App Settings',
-                component: 'settings',
-                icon: 'gear',
-            },
-        ],
-        profileItems: [
-            {
-                name: data.value?.profile?.displayName ?? '',
-                email: user.value?.email ?? '',
-                component: 'profile',
-                avatar: data.value?.profile?.avatarUrl ?? '',
-            },
-        ],
-    }
+// Compute all groups (both owned and member of)
+const allGroups = computed(() => {
+    if (!userStore.profile) { return [] }
+    const ownedGroups = userStore.profile.ownedGroups || []
+    return [...ownedGroups]
 })
 
-const handleNavigation = (component: string) => {
-    activeComponent.value = component
-}
-
-const currentComponent = computed(() => {
-    switch (activeComponent.value) {
-        case 'chat':
-            return resolveComponent('ChatSection')
-        case 'tasks':
-            return resolveComponent('TasksSection')
-        case 'leaderboard':
-            return resolveComponent('LeaderboardSection')
-        case 'overview':
-            return resolveComponent('ChatSection')
-        case 'edit-group':
-            return resolveComponent('EditGroupSection')
-        case 'profile':
-            return resolveComponent('ProfileSettings')
-        default:
-            return resolveComponent('MembersSection')
-    }
-})
+const hasGroups = computed(() => allGroups.value.length > 0)
 
 definePageMeta({
     middleware: ['auth'],

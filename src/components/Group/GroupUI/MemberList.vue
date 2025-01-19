@@ -2,12 +2,12 @@
     <div class="d-flex flex-column gap-2 border rounded h-100 p-3">
         <div class="d-flex gap-2 align-items-center">
             <p class="mb-0">
-                MEMBERS — {{ group.members.length }}
+                MEMBERS — {{ members.length }}
             </p>
         </div>
         <div class="member-list">
             <div
-                v-for="member in group.members"
+                v-for="member in members"
                 :key="member.id"
                 class="member position-relative"
                 @click.stop="setActivePopover(member.id)"
@@ -53,8 +53,14 @@
 </template>
 
 <script setup lang="ts">
+import type { Prisma } from '@prisma/client'
+
 defineProps<{
-    group: GroupWithMembers
+    members: Prisma.GroupUserGetPayload<{
+        include: {
+            profile: true
+        }
+    }>[]
 }>()
 
 const { activePopover, setActivePopover, handleClickOutside, handleEscKey } = usePopoverState()

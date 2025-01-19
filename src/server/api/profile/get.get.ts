@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
         },
         select: {
             id: true,
+            email: true,
             displayName: true,
             avatarUrl: true,
             bgUrl: true,

@@ -124,6 +124,7 @@ definePageMeta({
 
 const user = useSupabaseUser()
 const client = useSupabaseClient()
+const userStore = useUserStore()
 const { errorHandler } = useErrorHandler()
 
 const isLoading = ref(false)
@@ -151,20 +152,13 @@ const saveProfile = async () => {
         // Validate form
         await profileValidation.validate(profileForm, { abortEarly: false })
 
-        // Create profile using API
-        const response = await $fetch('/api/profile/create', {
-            method: 'POST',
-            body: {
-                id: user.value.id,
-                displayName: profileForm.displayName,
-                city: profileForm.city,
-                postalCode: profileForm.postalCode,
-            },
+        // Update profile using store
+        await userStore.updateProfile({
+            id: user.value.id,
+            displayName: profileForm.displayName,
+            city: profileForm.city,
+            postalCode: profileForm.postalCode,
         })
-
-        if (!response) {
-            throw new Error('Failed to create profile')
-        }
 
         // Redirect to dashboard
         navigateTo('/dashboard')

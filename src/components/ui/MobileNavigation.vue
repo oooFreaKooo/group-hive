@@ -38,7 +38,7 @@ defineProps({
         default: false,
     },
     navItems: {
-        type: Array as PropType<NavItems>,
+        type: Array as PropType<HeaderItem[]>,
         required: true,
     },
 })

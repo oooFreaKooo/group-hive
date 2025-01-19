@@ -12,7 +12,6 @@
                             v-for="item in navigationItems"
                             :key="item.label"
                             :href="item.href"
-                            :class="{ active: item.active }"
                             class="me-5 text-black"
                         >
                             {{ item.label }}
@@ -56,7 +55,7 @@
 
 <script setup lang="ts">
 defineProps<{
-    navigationItems: NavItems
+    navigationItems: HeaderItem[]
 }>()
 
 const user = useSupabaseUser()

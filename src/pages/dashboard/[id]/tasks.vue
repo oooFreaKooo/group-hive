@@ -115,6 +115,10 @@ interface Props {
 
 const props = defineProps<Props>()
 
+definePageMeta({
+    layout: 'group',
+})
+
 // UI state
 const showCreateTask = ref(false)
 const showCreateRow = ref(false)

@@ -106,19 +106,38 @@
 </template>
 
 <script setup lang="ts">
-import type { Message, GroupUser } from './types'
+import type { Prisma } from '@prisma/client'
+
+type MessageWithRelations = Prisma.MessageGetPayload<{
+    include: {
+        author: {
+            include: {
+                profile: true
+            }
+        }
+        replyTo: {
+            include: {
+                author: {
+                    include: {
+                        profile: true
+                    }
+                }
+            }
+        }
+    }
+}>
 
 const props = defineProps<{
-    message: Message
+    message: MessageWithRelations
     isEditing: boolean
 }>()
 
 defineEmits<{
-    'avatar-click': [author: GroupUser]
-    'mention-user': [author: GroupUser]
-    'reply': [message: Message]
-    'edit': [message: Message]
-    'delete': [message: Message]
+    'avatar-click': [author: Prisma.GroupUserGetPayload<{ include: { profile: true } }>]
+    'mention-user': [author: Prisma.GroupUserGetPayload<{ include: { profile: true } }>]
+    'reply': [message: MessageWithRelations]
+    'edit': [message: MessageWithRelations]
+    'delete': [message: MessageWithRelations]
     'save-edit': [content: string]
     'cancel-edit': []
 }>()

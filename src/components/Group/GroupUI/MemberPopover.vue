@@ -53,8 +53,14 @@
 </template>
 
 <script lang="ts" setup>
+import type { Prisma } from '@prisma/client'
+
 defineProps<{
-    member: GroupWithMembers['members'][number]
+    member: Prisma.GroupUserGetPayload<{
+        include: {
+            profile: true
+        }
+    }>
     style?: string
 }>()
 </script>

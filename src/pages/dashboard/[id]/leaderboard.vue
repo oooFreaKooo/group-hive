@@ -91,8 +91,12 @@
     />
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import type { GroupUser, Profile } from '@prisma/client'
+
+definePageMeta({
+    layout: 'group',
+})
 
 interface Props {
     group: {

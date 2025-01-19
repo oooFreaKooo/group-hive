@@ -35,7 +35,6 @@
                         <ProfileTab
                             v-if="currentTab === 'profile'"
                             v-model="profileForm"
-                            :profile="props.profile"
                             @error="error = $event"
                         />
 
@@ -87,11 +86,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Profile } from '@prisma/client'
-
-const props = defineProps<{
-    profile: Profile
-}>()
+const userStore = useUserStore()
+const user = useSupabaseUser()
 
 const tabs = [
     { name: 'profile', label: 'Profile', icon: 'person' },
@@ -107,31 +103,16 @@ const currentTabLabel = computed(() => {
     return tabs.find(tab => tab.name === currentTab.value)?.label || ''
 })
 
-const user = useSupabaseUser()
-
 const profileForm = ref({
-    displayName: props.profile.displayName || '',
-    avatarUrl: props.profile.avatarUrl || '',
-    bgUrl: props.profile.bgUrl || '',
-    city: props.profile.city || '',
-    postalCode: props.profile.postalCode || '',
-})
-
-// Initialize form with profile data
-onMounted(() => {
-    if (props.profile) {
-        profileForm.value = {
-            displayName: props.profile.displayName || '',
-            avatarUrl: props.profile.avatarUrl || '',
-            bgUrl: props.profile.bgUrl || '',
-            city: props.profile.city || '',
-            postalCode: props.profile.postalCode || '',
-        }
-    }
+    displayName: userStore.displayName || '',
+    avatarUrl: userStore.userAvatar || '',
+    bgUrl: userStore.profile?.bgUrl || '',
+    city: userStore.profile?.city || '',
+    postalCode: userStore.profile?.postalCode || '',
 })
 
 const accountForm = ref({
-    email: user.value?.email || '',
+    email: userStore.userEmail || '',
 })
 
 async function saveChanges () {
@@ -141,17 +122,13 @@ async function saveChanges () {
     error.value = ''
 
     try {
-        // Update profile in database
-        await $fetch('/api/profile/update', {
-            method: 'PUT',
-            body: {
-                id: user.value.id,
-                displayName: profileForm.value.displayName,
-                avatarUrl: profileForm.value.avatarUrl || '',
-                bgUrl: profileForm.value.bgUrl || '',
-                city: profileForm.value.city,
-                postalCode: profileForm.value.postalCode,
-            },
+        await userStore.updateProfile({
+            id: user.value.id,
+            displayName: profileForm.value.displayName,
+            avatarUrl: profileForm.value.avatarUrl || '',
+            bgUrl: profileForm.value.bgUrl || '',
+            city: profileForm.value.city,
+            postalCode: profileForm.value.postalCode,
         })
     } catch (err: any) {
         error.value = err.message || 'Failed to update profile'
@@ -163,23 +140,23 @@ async function saveChanges () {
 
 <style scoped>
 .profile-settings {
-    max-width: 1200px;
-    margin: 0 auto;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .list-group-item {
-    border-left: 3px solid transparent;
-    padding: 1rem 1.5rem;
+  border-left: 3px solid transparent;
+  padding: 1rem 1.5rem;
 }
 
 .list-group-item.active {
-    background-color: var(--bs-primary-bg-subtle);
-    border-left-color: var(--bs-primary);
-    color: var(--bs-primary);
+  background-color: var(--bs-primary-bg-subtle);
+  border-left-color: var(--bs-primary);
+  color: var(--bs-primary);
 }
 
 .card {
-    border: none;
-    border-radius: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
 }
 </style>

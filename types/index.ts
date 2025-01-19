@@ -7,13 +7,25 @@ declare global {
     interface NavigationItem {
         label: string
         href: string
-        active?: boolean
+        icon: string
+    }
+
+    interface ProfileItem {
+        name: string
+        email: string
+        href: string
+        avatar: string
     }
 
     interface GroupWithMembers extends Group {
         members: (GroupUser & {
             profile: Profile
         })[]
+    }
+
+    interface HeaderItem {
+        label: string
+        href: string
     }
 
     type NavItems = NavigationItem[]
