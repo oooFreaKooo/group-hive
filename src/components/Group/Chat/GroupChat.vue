@@ -1,22 +1,24 @@
 <template>
-    <div class="chat-container bg-body text-black d-flex flex-column border rounded w-100">
+    <div class="chat-container d-flex flex-column">
         <div
             ref="messagesContainer"
-            class="messages flex-grow-1 overflow-auto p-2"
+            class="messages flex-grow-1 overflow-auto"
         >
-            <Message
-                v-for="message in messages"
-                :key="message.id"
-                :message="message"
-                :is-editing="editingMessage?.id === message.id"
-                @avatar-click="handleAvatarClick"
-                @mention-user="mentionUser"
-                @reply="replyTo"
-                @edit="editMessage"
-                @delete="deleteMessage"
-                @save-edit="saveEdit"
-                @cancel-edit="cancelEdit"
-            />
+            <div class="messages-wrapper">
+                <Message
+                    v-for="message in messages"
+                    :key="message.id"
+                    :message="message"
+                    :is-editing="editingMessage?.id === message.id"
+                    @avatar-click="handleAvatarClick"
+                    @mention-user="mentionUser"
+                    @reply="replyTo"
+                    @edit="editMessage"
+                    @delete="deleteMessage"
+                    @save-edit="saveEdit"
+                    @cancel-edit="cancelEdit"
+                />
+            </div>
         </div>
 
         <MessageInput
@@ -193,11 +195,53 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .chat-container {
-    max-height: 75vh;
+    height: 75vh;
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(var(--bs-dark-rgb), 0.08);
+    overflow: hidden;
+    position: relative;
 }
 
 .messages {
-    scrollbar-color: var(--bs-secondary-900) var(--bs-secondary-800);
-    scrollbar-width: thin;
+    position: relative;
+    background: linear-gradient(to bottom,
+        rgba(var(--bs-primary-rgb), 0.02),
+        rgba(var(--bs-light-rgb), 0.5)
+    );
+
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--bs-gray-300);
+        border-radius: 3px;
+
+        &:hover {
+            background: var(--bs-gray-400);
+        }
+    }
+
+    .messages-wrapper {
+        padding: 1.5rem;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+}
+
+@supports (scrollbar-color: auto) {
+    .messages {
+        scrollbar-color: var(--bs-gray-300) transparent;
+        scrollbar-width: thin;
+    }
 }
 </style>

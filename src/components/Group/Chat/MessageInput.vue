@@ -1,16 +1,19 @@
 <template>
-    <div class="d-flex gap-2 position-relative pt-4 my-2 p-2 border-top">
+    <div class="input-container">
         <div
             v-if="replyingTo"
-            class="reply-info position-absolute top-0 start-0 end-0 p-2 bg-body-tertiary border-bottom"
+            class="reply-info position-absolute top-0 start-0 end-0"
         >
-            <div class="d-flex align-items-center justify-content-between small text-muted">
-                <span>Replying to {{ replyingTo.author.profile.displayName }}</span>
+            <div class="d-flex align-items-center justify-content-between">
+                <span class="text-primary">
+                    <i class="bi bi-reply me-2" />
+                    Replying to {{ replyingTo.author.profile.displayName }}
+                </span>
                 <button
-                    class="btn btn-link btn-sm p-1 text-muted"
+                    class="btn btn-link btn-sm p-1"
                     @click="$emit('cancel-reply')"
                 >
-                    <i class="bi bi-x" />
+                    <i class="bi bi-x-lg" />
                 </button>
             </div>
         </div>
@@ -19,7 +22,7 @@
             <textarea
                 ref="textareaRef"
                 v-model="message"
-                class="form-control bg-transparent border-secondary"
+                class="form-control"
                 :placeholder="replyingTo ? 'Write your reply...' : 'Type a message...'"
                 @keydown.enter.prevent="handleSend"
                 @input="handleInput"
@@ -31,13 +34,13 @@
                 <div
                     v-for="member in filteredMembers"
                     :key="member.id"
-                    class="mention-item d-flex align-items-center p-2"
+                    class="mention-item d-flex align-items-center"
                     @click="handleMentionSelect(member)"
                 >
                     <NuxtImg
                         class="rounded-circle me-2"
-                        width="20"
-                        height="20"
+                        width="24"
+                        height="24"
                         :src="member.profile.avatarUrl || '/default-avatar.png'"
                         :alt="member.profile.displayName || 'User'"
                     />
@@ -46,11 +49,11 @@
             </div>
         </div>
         <button
-            class="btn btn-secondary align-self-end"
+            class="btn btn-send"
             :disabled="!message.trim()"
             @click="handleSend"
         >
-            <i class="bi bi-send" />
+            <i class="bi bi-send-fill" />
         </button>
     </div>
 </template>
@@ -178,36 +181,131 @@ defineExpose({
 
 <style scoped lang="scss">
 .reply-info {
-    background-color: var(--bs-gray-100);
+    background-color: rgba(var(--bs-primary-rgb), 0.03);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(var(--bs-primary-rgb), 0.1);
+    padding: 0.75rem 1rem;
+    margin: -0.5rem -0.5rem 0.5rem;
+    border-radius: 1rem 1rem 0 0;
+
+    .btn-link {
+        color: var(--bs-gray-600);
+        transition: all 0.2s;
+
+        &:hover {
+            color: var(--bs-danger);
+            transform: rotate(90deg);
+        }
+    }
 }
 
 textarea {
-    min-height: 40px;
-    max-height: 120px;
+    min-height: 44px;
+    max-height: 150px;
     resize: vertical;
+    border-radius: 1.25rem !important;
+    padding: 0.75rem 1.25rem !important;
+    border-width: 1px !important;
+    line-height: 1.5;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: var(--bs-gray-100) !important;
+    border-color: transparent !important;
+
+    &:focus {
+        background-color: white !important;
+        border-color: var(--bs-primary) !important;
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1);
+    }
+
+    &::placeholder {
+        color: var(--bs-gray-500);
+        font-size: 0.95rem;
+    }
 }
 
 .mention-suggestions {
     position: absolute;
     bottom: 100%;
-    left: 0;
-    right: 0;
-    margin-bottom: 4px;
+    left: 0.5rem;
+    right: 0.5rem;
+    margin-bottom: 0.5rem;
     background: white;
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.375rem;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.1);
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     max-height: 200px;
     overflow-y: auto;
     z-index: 1000;
+    backdrop-filter: blur(8px);
 }
 
 .mention-item {
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
+    border-radius: 0.75rem;
+    margin: 0.25rem;
+    padding: 0.5rem 0.75rem !important;
+
+    img {
+        border: 1px solid var(--bs-gray-200);
+        transition: transform 0.2s;
+    }
 
     &:hover {
-        background-color: var(--bs-gray-100);
+        background-color: rgba(var(--bs-primary-rgb), 0.05);
+
+        img {
+            transform: scale(1.1);
+        }
     }
+}
+
+.btn-send {
+    --size: 44px;
+    min-width: var(--size);
+    width: var(--size);
+    height: var(--size);
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bs-primary);
+    border: none;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), 0.2);
+    margin-bottom: 0.25rem;
+
+    &:hover:not(:disabled) {
+        transform: scale(1.1);
+        background: var(--bs-primary);
+        box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.3);
+    }
+
+    &:disabled {
+        background: var(--bs-gray-300);
+        opacity: 0.7;
+    }
+
+    i {
+        font-size: 1.1rem;
+        transform: translateX(1px) rotate(-30deg);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    &:hover:not(:disabled) i {
+        transform: translateX(2px) rotate(-25deg);
+    }
+}
+
+.input-container {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-top: 1px solid rgba(var(--bs-dark-rgb), 0.08);
+    background: white;
+    position: relative;
+    margin-top: 0.5rem;
 }
 </style>

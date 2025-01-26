@@ -9,8 +9,16 @@
 </template>
 
 <script setup lang="ts">
-const navigationItems = [
-    { label: 'Home', href: '/' },
-    { label: 'Dashboard', href: '/dashboard' },
-]
+const navigationItems = computed<NavigationItem[]>(() => [
+    {
+        label: 'Home',
+        href: '/',
+        icon: 'house',
+    },
+    {
+        label: 'Dashboard',
+        href: '/dashboard',
+        icon: 'dashboard',
+    },
+])
 </script>

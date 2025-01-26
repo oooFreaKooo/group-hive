@@ -85,6 +85,7 @@ defineProps<{
 <style scoped lang="scss">
 .side-nav {
     width: 64px;
+    left: 64px;
     background: white;
     border-right: 1px solid var(--bs-gray-200);
     transition: width 0.3s ease;

@@ -1,76 +1,64 @@
 <template>
     <div class="d-none d-md-flex side-nav vh-100 position-fixed start-0 top-0 flex-column justify-content-between">
-        <!-- Logo Section -->
-        <div class="logo-section mb-2">
-            <NuxtLink
-                to="/"
-                class="text-decoration-none"
-            >
-                <NuxtImg
-                    src="/WG_SVG.svg"
-                    width="32"
-                    height="32"
-                    alt="Logo"
-                    class="img-fluid logo-icon"
-                />
-                <h1 class="logo-title h6 mb-0 ms-3">
-                    <span class="d-block">Weekly</span>
-                    <span class="d-block">Goals</span>
-                </h1>
-            </NuxtLink>
-        </div>
+        <NuxtLink
+            to="/"
+            class="text-decoration-none position-absolute top-0 start-0 m-2 ms-4"
+        >
+            <NuxtImg
+                src="/logo-icon.png"
+                width="32"
+                height="32"
+                alt="Logo"
+                class="img-fluid"
+            />
 
+        </NuxtLink>
         <!-- Groups Section -->
-        <nav class="py-3 flex-grow-1">
+        <nav class="py-3 flex-grow-1 d-flex flex-column align-items-center">
             <NuxtLink
                 v-for="group in userStore.profile?.ownedGroups"
                 :key="group.id"
                 :to="`/dashboard/${group.id}`"
-                class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-3"
+                class="nav-item d-flex align-items-center justify-content-center position-relative mb-3  text-decoration-none"
                 :class="{ active: currentGroupId === group.id.toString() }"
+                :title="group.name"
             >
                 <AppIcon
                     name="house"
                     size="md"
-                    color="black"
-                    class="nav-icon flex-shrink-0"
+                    class="nav-icon"
                 />
-                <span class="nav-label ms-3">{{ group.name }}</span>
             </NuxtLink>
 
             <NuxtLink
                 to="/dashboard"
-                class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-3"
+                class="nav-item d-flex align-items-center justify-content-center position-relative text-decoration-none"
+                title="Join New Group"
             >
                 <AppIcon
                     name="plus-circle"
                     size="md"
-                    color="black"
-                    class="nav-icon flex-shrink-0"
+                    class="nav-icon"
                 />
-                <span class="nav-label ms-3">Join New Group</span>
             </NuxtLink>
         </nav>
 
         <!-- Footer Section -->
-        <footer class="navigation">
+        <div class="pb-5 d-flex flex-column align-items-center">
             <NuxtLink
                 to="/dashboard/settings"
-                class="nav-item d-flex align-items-center text-decoration-none w-100 bg-transparent border-0 px-3 mb-2"
+                class="nav-item d-flex align-items-center justify-content-center position-relative"
+                :title="userStore.displayName"
             >
                 <NuxtImg
                     :src="userStore.userAvatar || '/default-avatar.png'"
                     width="32"
                     height="32"
                     alt="Avatar"
-                    class="nav-icon flex-shrink-0 rounded-circle"
+                    class="nav-icon rounded-circle"
                 />
-                <div class="d-flex flex-column align-items-start">
-                    <span class="nav-label ms-3 fw-bold">{{ userStore.displayName }}</span>
-                    <span class="nav-label ms-3 small">{{ userStore.userEmail }}</span>
-                </div>
             </NuxtLink>
-        </footer>
+        </div>
     </div>
 </template>
 
@@ -82,77 +70,56 @@ const currentGroupId = computed(() => route.params.id)
 
 <style scoped lang="scss">
 .side-nav {
-    width: 64px;
-    background: white;
-    border-right: 1px solid var(--bs-gray-200);
-    transition: width 0.3s ease;
-    overflow: hidden;
-    z-index: 1030;
-
-    &:hover {
-        width: 240px;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .logo-section {
-        height: 72px;
-        display: flex;
-        align-items: center;
-        border-bottom: 1px solid var(--bs-gray-200);
-
-        a {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            padding: 0 1rem;
-        }
-
-        .logo-title {
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            white-space: nowrap;
-
-            span:first-child {
-                color: var(--bs-gray-900);
-            }
-            span:last-child {
-                color: var(--bs-gray-600);
-            }
-        }
-    }
-
-    &:hover .logo-title {
-        opacity: 1;
-    }
+    width: 72px;
+    padding-top: 5rem;
+    z-index: 1020;
+    padding-bottom: calc(46px + 1rem);
+    position: relative;
 
     .nav-item {
+        width: 48px;
+        height: 48px;
         cursor: pointer;
-        color: var(--bs-gray-600);
-        transition: all 0.2s ease;
-        white-space: nowrap;
-        height: 40px;
+        transition: all 0.35s ease;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+
+        &::before {
+            content: attr(title);
+            position: absolute;
+            left: 120%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        &:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
 
         &:hover, &.active {
-            color: var(--bs-gray-900);
-            background-color: var(--bs-gray-100);
+            background: var(--bs-dark);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.5);
         }
 
         .nav-icon {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: all 0.35s ease;
         }
-
-        .nav-label {
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-    }
-
-    &:hover .nav-label {
-        opacity: 1;
     }
 }
 </style>

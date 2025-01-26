@@ -1,25 +1,17 @@
 <template>
-    <div class="main-body ms-md-5 m-0">
-        <AppHeader
-            :navigation-items="headerItems"
-        />
-        <SideNavigation
+    <div class="main-body bg-light vh-100">
+        <GroupSideBar />
+        <AnimatedNavigation
             :navigation-items="navigationItems"
-            :footer-items="footerItems"
-            :profile-items="profileItems"
         />
-        <slot />
+        <div class="container p-5">
+            <slot />
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-const userStore = useUserStore()
 const route = useRoute()
-
-const headerItems: HeaderItem[] = [
-    { label: 'Home', href: '/' },
-    { label: 'Dashboard', href: '/dashboard' },
-]
 
 // Make navigation items reactive to route changes
 const navigationItems = computed<NavigationItem[]>(() => [
@@ -44,19 +36,4 @@ const navigationItems = computed<NavigationItem[]>(() => [
         icon: 'trophy',
     },
 ])
-
-const footerItems = computed<NavigationItem[]>(() => [
-    {
-        label: 'App Settings',
-        href: `/dashboard/${route.params.id}/settings`,
-        icon: 'gear',
-    },
-])
-
-const profileItems = computed<ProfileItem>(() => ({
-    name: userStore.displayName ?? '',
-    email: userStore.userEmail ?? '',
-    href: `/dashboard/settings`,
-    avatar: userStore.userAvatar ?? '',
-}))
 </script>
