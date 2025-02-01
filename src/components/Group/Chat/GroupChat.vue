@@ -1,8 +1,14 @@
 <template>
-    <div class="chat-container d-flex flex-column">
+    <div class="chat-container d-flex flex-column rounded-5 shadow">
+        <div class="p-3 bg-gradient bg-dark">
+            <span class="fw-semibold text-light ">
+                <i class="bi bi-chat-dots-fill mx-2" />
+                Group Chat
+            </span>
+        </div>
         <div
             ref="messagesContainer"
-            class="messages flex-grow-1 overflow-auto"
+            class="messages flex-grow-1 overflow-auto bg-light"
         >
             <div class="messages-wrapper">
                 <Message
@@ -196,20 +202,12 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .chat-container {
     height: 75vh;
-    background: white;
-    border-radius: 1.5rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(var(--bs-dark-rgb), 0.08);
     overflow: hidden;
     position: relative;
 }
 
 .messages {
     position: relative;
-    background: linear-gradient(to bottom,
-        rgba(var(--bs-primary-rgb), 0.02),
-        rgba(var(--bs-light-rgb), 0.5)
-    );
 
     &::-webkit-scrollbar {
         width: 6px;

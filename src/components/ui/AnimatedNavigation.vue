@@ -1,6 +1,6 @@
 <template>
     <div
-        class="navigation position-fixed bg-dark start-50 translate-middle-x"
+        class="navigation position-fixed bg-dark bg-gradient start-50 translate-middle-x z-3"
         :class="smallerThanLg ? 'bottom-0 sm rounded-top-5 w-75' : 'top-0 lg w-100'"
     >
         <div class="nav-container">
@@ -24,7 +24,7 @@
                 <div
                     class="position-absolute"
                     :class="smallerThanLg ? 'indicator-sm' : 'indicator-lg'"
-                    :style="{ transform: `translateX(calc(90px * ${$route.path.split('/').length - 3})) scale(0.8)` }"
+                    :style="{ transform: `translateX(calc(90px * ${activeIndex})) scale(0.8)` }"
                 />
             </ul>
         </div>
@@ -34,13 +34,19 @@
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core'
 
-defineProps<{
+const route = useRoute()
+
+const props = defineProps<{
     navigationItems: NavigationItem[]
 }>()
 
 const breakpoints = useBreakpoints(breakpointsBootstrapV5)
-
 const smallerThanLg = breakpoints.smaller('lg')
+
+// Calculate active index based on current route
+const activeIndex = computed(() => {
+    return props.navigationItems.findIndex((item: NavigationItem) => item.href === route.path)
+})
 </script>
 
 <style scoped lang="scss">
@@ -71,14 +77,12 @@ $transition-duration: 0.35s;
   line-height: 56px;
   font-size: 1.15em;
   text-align: center;
-  color: var(--bs-light);
   transform: translateY(0);
   transition: all $transition-duration ease;
 }
 
 @mixin nav-text {
   position: absolute;
-  color: var(--bs-light);
   font-weight: 400;
   font-size: 0.7em;
   letter-spacing: 0.05em;
@@ -189,6 +193,7 @@ $transition-duration: 0.35s;
 
         a {
             position: relative;
+            color: var(--bs-light);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -240,10 +245,10 @@ $transition-duration: 0.35s;
         left: 0;
         width: $indicator-size;
         height: $indicator-size;
-        background: var(--bs-primary);
+        background: var(--bs-dark);
         border: 6px solid var(--bs-light);
         border-radius: 50%;
-        transition: all $transition-duration ease;
+        transition: transform $transition-duration ease;
         transform: scale(0.9);
 
         &::before,

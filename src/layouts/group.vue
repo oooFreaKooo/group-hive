@@ -1,5 +1,17 @@
 <template>
     <div class="main-body bg-light vh-100">
+        <NuxtLink
+            to="/"
+            class="text-decoration-none position-fixed top-0 start-0 m-2 ms-4 logo-icon"
+        >
+            <NuxtImg
+                src="/logo-icon.png"
+                width="36"
+                height="36"
+                alt="Logo"
+                class="img-fluid"
+            />
+        </NuxtLink>
         <GroupSideBar />
         <AnimatedNavigation
             :navigation-items="navigationItems"
@@ -17,7 +29,7 @@ const route = useRoute()
 const navigationItems = computed<NavigationItem[]>(() => [
     {
         label: 'Overview',
-        href: `/dashboard/${route.params.id}`,
+        href: `/dashboard/${route.params.id}/overview`,
         icon: 'house',
     },
     {
@@ -37,3 +49,9 @@ const navigationItems = computed<NavigationItem[]>(() => [
     },
 ])
 </script>
+
+<style scoped>
+.logo-icon {
+    z-index: 1000;
+}
+</style>

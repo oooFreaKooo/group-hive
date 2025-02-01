@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface TaskState {
     tasks: TaskWithRelations[]
@@ -22,7 +23,20 @@ export const useTaskStore = defineStore('task', {
     actions: {
         async fetchTasks (groupId: number) {
             try {
-                const response = await $fetch<TaskWithRelations[]>(`/api/tasks/get?groupId=${groupId}`)
+                const { $supabase } = useNuxtApp()
+                const { data: { session } } = await ($supabase as SupabaseClient).auth.getSession()
+                if (!session) {
+                    throw new Error('No auth session')
+                }
+
+                const response = await $fetch<TaskWithRelations[]>(
+                    `/api/tasks/get?groupId=${groupId}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                        },
+                    },
+                )
                 this.tasks = response
             } catch (error) {
                 console.error('TaskStore - Failed to fetch tasks:', error)
@@ -32,9 +46,18 @@ export const useTaskStore = defineStore('task', {
 
         async updateTask (taskId: number, payload: UpdateTaskPayload) {
             try {
+                const { $supabase } = useNuxtApp()
+                const { data: { session } } = await ($supabase as SupabaseClient).auth.getSession()
+                if (!session) {
+                    throw new Error('No auth session')
+                }
+
                 await $fetch(`/api/tasks/${taskId}/update`, {
                     method: 'PUT',
                     body: payload,
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
                 })
             } catch (error) {
                 console.error('TaskStore - Failed to update task:', error)

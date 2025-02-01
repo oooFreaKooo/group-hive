@@ -28,7 +28,7 @@
             @click="handleClick"
         >
             <BootstrapIcon
-                v-if="name in bootstrapIcons"
+                v-if="name in bootstrapIcons && !svg"
                 :name="name as BootstrapIcons"
                 :class="[
                     'icon d-flex align-items-center justify-content-center',
@@ -39,11 +39,21 @@
             />
             <component
                 :is="dynamicSvgComponent"
-                v-else
+                v-else-if="name && !svg"
                 :style="{
-                    fill: `var(--bs-${props.color})`,
+                    fill: `var(--bs-${props.bg})`,
                     ...customStyle,
                 }"
+                class="icon"
+                :class="[
+                    sizeClasses,
+                    animationClass,
+                ]"
+            />
+            <NuxtImg
+                v-else
+                :src="svg"
+                class="icon"
                 :class="[
                     sizeClasses,
                     animationClass,
@@ -61,7 +71,11 @@ const emit = defineEmits(['click'])
 const props = defineProps({
     name: {
         type: String,
-        required: true,
+        default: '',
+    },
+    svg: {
+        type: String,
+        default: '',
     },
     alt: {
         type: String,
@@ -186,45 +200,46 @@ const handleClick = (event: Event) => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .cursor-pointer {
   cursor: pointer;
 }
 
 .icon {
     line-height: 0;
+    transition: width 0.3s ease, height 0.3s ease;
 }
 
 /* Size classes */
 .icon-xs {
-    width: 16px;
-    height: 16px;
+    width: 8px;
+    height: 8px;
     font-size: 8px;
 }
 .icon-sm {
-    width: 20px;
-    height: 20px;
-    font-size: 10px;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
 }
 .icon-md {
     width: 24px;
     height: 24px;
-    font-size: 18px;
-}
-.icon-lg {
-    width: 48px;
-    height: 48px;
     font-size: 24px;
 }
-.icon-xl {
-    width: 64px;
-    height: 64px;
+.icon-lg {
+    width: 32px;
+    height: 32px;
     font-size: 32px;
 }
-.icon-xxl {
-    width: 96px;
-    height: 96px;
+.icon-xl {
+    width: 48px;
+    height: 48px;
     font-size: 48px;
+}
+.icon-xxl {
+    width: 64px;
+    height: 64px;
+    font-size: 64px;
 }
 
 /* Animations */

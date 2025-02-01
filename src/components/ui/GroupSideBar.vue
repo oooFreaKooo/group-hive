@@ -1,53 +1,79 @@
 <template>
-    <div class="d-none d-md-flex side-nav vh-100 position-fixed start-0 top-0 flex-column justify-content-between">
-        <NuxtLink
-            to="/"
-            class="text-decoration-none position-absolute top-0 start-0 m-2 ms-4"
-        >
-            <NuxtImg
-                src="/logo-icon.png"
-                width="32"
-                height="32"
-                alt="Logo"
-                class="img-fluid"
-            />
-
-        </NuxtLink>
+    <div class="d-none d-md-flex side-nav position-fixed start-0 top-50 flex-column rounded-5 m-2 translate-middle-y bg-dark bg-gradient shadow">
         <!-- Groups Section -->
-        <nav class="py-3 flex-grow-1 d-flex flex-column align-items-center">
-            <NuxtLink
-                v-for="group in userStore.profile?.ownedGroups"
-                :key="group.id"
-                :to="`/dashboard/${group.id}`"
-                class="nav-item d-flex align-items-center justify-content-center position-relative mb-3  text-decoration-none"
-                :class="{ active: currentGroupId === group.id.toString() }"
-                :title="group.name"
-            >
-                <AppIcon
-                    name="house"
-                    size="md"
-                    class="nav-icon"
-                />
-            </NuxtLink>
+        <div class="p-3 bg-gradient bg-dark rounded-top-5">
+            <span class="fw-semibold text-light">
+                <i class="bi bi-chat-dots-fill mx-2" />
+            </span>
+        </div>
 
-            <NuxtLink
-                to="/dashboard"
-                class="nav-item d-flex align-items-center justify-content-center position-relative text-decoration-none"
-                title="Join New Group"
-            >
-                <AppIcon
-                    name="plus-circle"
-                    size="md"
-                    class="nav-icon"
-                />
-            </NuxtLink>
-        </nav>
+        <!-- Main Navigation Section -->
+        <div class="d-flex flex-column flex-grow-1">
+            <nav class="py-2 d-flex flex-column align-items-center">
+                <NuxtLink
+                    v-for="group in userStore.profile?.ownedGroups"
+                    :key="group.id"
+                    :to="`/dashboard/${group.id}/overview`"
+                    :class="{ active: currentGroupId === group.id.toString() }"
+                    :title="group.name"
+                >
+                    <AppIcon
+                        name="house"
+                        size="lg"
+                        btn
+                        circle
+                        bg="light"
+                        color="dark"
+                        class="my-2 p-2"
+                    />
+                </NuxtLink>
+
+                <NuxtLink
+                    to="/dashboard"
+                    title="Join New Group"
+                >
+                    <AppIcon
+                        name="plus-circle"
+                        size="md"
+                        btn
+                        circle
+                        color="light"
+                        class="my-2 opacity-75"
+                    />
+                </NuxtLink>
+            </nav>
+        </div>
 
         <!-- Footer Section -->
-        <div class="pb-5 d-flex flex-column align-items-center">
+        <div class="mt-auto pb-2 d-flex flex-column align-items-center">
+            <div class="d-flex flex-column align-items-center py-4">
+                <div
+                    class="theme-switch d-flex justify-content-center bg-light"
+                    :class="{ dark: isDarkMode }"
+                    @click="toggleTheme"
+                >
+                    <div class="switch-handle">
+                        <AppIcon
+                            name="sun-fill"
+                            size="sm"
+                            class="icon-sun rounded-circle"
+                            color="dark"
+                            :class="{ active: !isDarkMode }"
+                        />
+                        <AppIcon
+                            name="moon-fill"
+                            size="sm"
+                            class="icon-moon rounded-circle"
+                            color="dark"
+                            :class="{ active: isDarkMode }"
+                        />
+                    </div>
+                </div>
+            </div>
+
             <NuxtLink
                 to="/dashboard/settings"
-                class="nav-item d-flex align-items-center justify-content-center position-relative"
+                class="btn btn-dark rounded-circle p-2"
                 :title="userStore.displayName"
             >
                 <NuxtImg
@@ -66,60 +92,71 @@
 const userStore = useUserStore()
 const route = useRoute()
 const currentGroupId = computed(() => route.params.id)
+const isDarkMode = ref(false)
+
+const toggleTheme = () => {
+    currentTheme.value = currentTheme.value === 'dark' ? 'light' : 'dark'
+    setStoredTheme(currentTheme.value)
+    setTheme(currentTheme.value)
+    isDarkMode.value = !isDarkMode.value
+}
+
+const currentTheme = ref(getPreferredTheme())
+
+onMounted(() => {
+    setTheme(currentTheme.value)
+})
 </script>
 
 <style scoped lang="scss">
+.transition-all {
+    transition: all 0.35s ease;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+// Required custom styles that can't be replaced with Bootstrap
 .side-nav {
-    width: 72px;
-    padding-top: 5rem;
+    height: 75vh;
+    width: 64px;
     z-index: 1020;
-    padding-bottom: calc(46px + 1rem);
+    display: flex;
+    flex-direction: column;
+}
+
+// Theme switch specific styles
+.theme-switch {
+    border-radius: 20px;
+    width: 32px;
+    height: 56px;
     position: relative;
+    cursor: pointer;
+    padding: 2px;
+}
 
-    .nav-item {
-        width: 48px;
-        height: 48px;
-        cursor: pointer;
-        transition: all 0.35s ease;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(5px);
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        position: relative;
+.switch-handle {
+    width: 24px;
+    height: 24px;
+    background: rgba(var(--bs-light-rgb), 1);
+    border-radius: 50%;
+    position: absolute;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-        &::before {
-            content: attr(title);
-            position: absolute;
-            left: 120%;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
-            pointer-events: none;
-        }
+.theme-switch.dark .switch-handle {
+    transform: translateY(28px) rotate(360deg);
+}
 
-        &:hover::before {
-            opacity: 1;
-            visibility: visible;
-        }
+.icon-sun,
+.icon-moon {
+    position: absolute;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 
-        &:hover, &.active {
-            background: var(--bs-dark);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.5);
-        }
-
-        .nav-icon {
-            transition: all 0.35s ease;
-        }
+    &.active {
+        opacity: 1;
     }
 }
 </style>

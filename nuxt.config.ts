@@ -23,6 +23,7 @@ export default defineNuxtConfig({
     devtools: { enabled: false },
 
     app: {
+        pageTransition: { name: 'page', mode: 'out-in' },
         head: {
             title: 'GroupHive App',
             meta: [
@@ -31,10 +32,8 @@ export default defineNuxtConfig({
                 { name: 'description', content: 'Collaborative task management for flatmates' },
             ],
         },
-        pageTransition: { name: 'page', mode: 'out-in' },
-        layoutTransition: { name: 'layout', mode: 'out-in' },
     },
-    css: ['usebootstrap/scss/usebootstrap'],
+    css: [ 'usebootstrap/scss/usebootstrap', '~/assets/css/main.scss' ],
     srcDir: 'src/',
 
     compatibilityDate: '2025-01-04',
@@ -44,15 +43,6 @@ export default defineNuxtConfig({
             include: [
                 'yup', '@headlessui/vue', 'vue-draggable-next', 'three',
             ],
-        },
-        css: {
-            preprocessorOptions: {
-                scss: {
-                    additionalData: `
-                   @use "@/assets/css/main.scss" as *;
-                   `,
-                },
-            },
         },
     },
 

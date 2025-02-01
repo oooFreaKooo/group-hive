@@ -11,18 +11,14 @@
         </div>
     </div>
 
-    <div class="chat-page">
+    <AppSection
+        v-else
+        :padding="3"
+        class="chat-page"
+    >
         <div class="chat-content">
             <div class="container h-100">
                 <div class="row h-100 g-4 justify-content-center mt-2">
-                    <div class="chat-header col-12 col-lg-12">
-                        <div class="d-flex align-items-center gap-3">
-                            <i class="bi bi-chat-dots-fill text-primary" />
-                            <h2 class="mb-0">
-                                Group Chat
-                            </h2>
-                        </div>
-                    </div>
                     <div class="col-lg-8">
                         <GroupChat
                             v-if="data && status === 'success'"
@@ -41,7 +37,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </AppSection>
 </template>
 
 <script lang="ts" setup>
@@ -93,14 +89,17 @@ defineEmits<{
 <style scoped lang="scss">
 .loading-overlay {
     position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
+    inset: 0 0 0 0;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: 0.3s ease;
+}
+
+.chat-wrapper {
+    min-height: calc(100vh - var(--header-height, 60px));
+    display: flex;
+    flex-direction: column;
 }
 
 .loading-content {

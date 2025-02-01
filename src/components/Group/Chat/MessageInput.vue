@@ -1,8 +1,8 @@
 <template>
-    <div class="input-container">
+    <div class="d-flex flex-column border-top bg-gradient bg-dark position-relative mt-2 p-3">
         <div
             v-if="replyingTo"
-            class="reply-info position-absolute top-0 start-0 end-0"
+            class="position-absolute top-0 start-0 end-0  bg-gradient bg-dark backdrop-blur px-3 py-2 border-bottom border-primary rounded-top-3"
         >
             <div class="d-flex align-items-center justify-content-between">
                 <span class="text-primary">
@@ -10,7 +10,7 @@
                     Replying to {{ replyingTo.author.profile.displayName }}
                 </span>
                 <button
-                    class="btn btn-link btn-sm p-1"
+                    class="btn btn-link btn-sm p-1 text-body-tertiary hover-danger transition-rotate"
                     @click="$emit('cancel-reply')"
                 >
                     <i class="bi bi-x-lg" />
@@ -18,43 +18,51 @@
             </div>
         </div>
 
-        <div class="flex-grow-1 position-relative">
-            <textarea
-                ref="textareaRef"
-                v-model="message"
-                class="form-control"
-                :placeholder="replyingTo ? 'Write your reply...' : 'Type a message...'"
-                @keydown.enter.prevent="handleSend"
-                @input="handleInput"
-            />
-            <div
-                v-if="showMentionSuggestions && filteredMembers.length > 0"
-                class="mention-suggestions"
-            >
+        <div class="d-flex gap-3">
+            <div class="flex-grow-1 position-relative">
+                <textarea
+                    ref="textareaRef"
+                    v-model="message"
+                    class="form-control rounded-4 border-2 border-dark py-2 px-3"
+                    :class="{ 'focus-primary': message }"
+                    :placeholder="replyingTo ? 'Write your reply...' : 'Type a message...'"
+                    @keydown.enter.prevent="handleSend"
+                    @input="handleInput"
+                />
                 <div
-                    v-for="member in filteredMembers"
-                    :key="member.id"
-                    class="mention-item d-flex align-items-center"
-                    @click="handleMentionSelect(member)"
+                    v-if="showMentionSuggestions && filteredMembers.length > 0"
+                    class="position-absolute bottom-100 start-2 end-2 mb-2 border border-primary-subtle rounded-3 shadow-sm overflow-auto max-h-200 backdrop-blur z-3"
                 >
-                    <NuxtImg
-                        class="rounded-circle me-2"
-                        width="24"
-                        height="24"
-                        :src="member.profile.avatarUrl || '/default-avatar.png'"
-                        :alt="member.profile.displayName || 'User'"
-                    />
-                    <span>{{ member.profile.displayName }}</span>
+                    <div
+                        v-for="member in filteredMembers"
+                        :key="member.id"
+                        class="d-flex align-items-center px-3 py-2 cursor-pointer rounded-2 mx-1 my-1 hover-primary-soft transition"
+                        @click="handleMentionSelect(member)"
+                    >
+                        <NuxtImg
+                            class="rounded-circle me-2 border border-gray-200 transition-transform"
+                            width="24"
+                            height="24"
+                            :src="member.profile.avatarUrl || '/default-avatar.png'"
+                            :alt="member.profile.displayName || 'User'"
+                        />
+                        <span>{{ member.profile.displayName }}</span>
+                    </div>
                 </div>
             </div>
+            <div class="d-flex align-items-center">
+                <AppIcon
+                    class="transition-transform p-2 border"
+                    name="send-fill"
+                    :btn="message.trim() ? true : false"
+                    size="md"
+                    circle
+                    :class="{ 'opacity-70': !message.trim(), 'hover-scale shadow-primary ': message.trim() }"
+                    :disabled="!message.trim()"
+                    @click="handleSend"
+                />
+            </div>
         </div>
-        <button
-            class="btn btn-send"
-            :disabled="!message.trim()"
-            @click="handleSend"
-        >
-            <i class="bi bi-send-fill" />
-        </button>
     </div>
 </template>
 
@@ -180,22 +188,65 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-.reply-info {
-    background-color: rgba(var(--bs-primary-rgb), 0.03);
+.transition {
+    transition: all 0.2s ease;
+}
+
+.transition-transform {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.transition-rotate {
+    &:hover {
+        transform: rotate(90deg);
+    }
+}
+
+.backdrop-blur {
     backdrop-filter: blur(8px);
-    border-bottom: 1px solid rgba(var(--bs-primary-rgb), 0.1);
-    padding: 0.75rem 1rem;
-    margin: -0.5rem -0.5rem 0.5rem;
-    border-radius: 1rem 1rem 0 0;
+}
 
-    .btn-link {
-        color: var(--bs-gray-600);
-        transition: all 0.2s;
+.hover-danger:hover {
+    color: var(--bs-danger) !important;
+}
 
-        &:hover {
-            color: var(--bs-danger);
-            transform: rotate(90deg);
-        }
+.hover-primary-soft:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+
+    img {
+        transform: scale(1.1);
+    }
+}
+
+.hover-scale:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+
+.focus-primary:focus {
+    box-shadow: 0 0 0.15rem 0.15rem rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.shadow-primary {
+    box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), 0.2);
+
+    &:hover:not(:disabled) {
+        box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.3);
+    }
+}
+
+.max-h-200 {
+    max-height: 200px;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.send-icon {
+    transform: translateX(1px) rotate(-30deg);
+
+    .btn:hover:not(:disabled) & {
+        transform: translateX(2px) rotate(-25deg);
     }
 }
 
@@ -203,109 +254,12 @@ textarea {
     min-height: 44px;
     max-height: 150px;
     resize: vertical;
-    border-radius: 1.25rem !important;
-    padding: 0.75rem 1.25rem !important;
-    border-width: 1px !important;
     line-height: 1.5;
     font-size: 0.95rem;
-    transition: all 0.2s ease;
-    background-color: var(--bs-gray-100) !important;
-    border-color: transparent !important;
-
-    &:focus {
-        background-color: white !important;
-        border-color: var(--bs-primary) !important;
-        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1);
-    }
 
     &::placeholder {
         color: var(--bs-gray-500);
         font-size: 0.95rem;
     }
-}
-
-.mention-suggestions {
-    position: absolute;
-    bottom: 100%;
-    left: 0.5rem;
-    right: 0.5rem;
-    margin-bottom: 0.5rem;
-    background: white;
-    border: 1px solid rgba(var(--bs-primary-rgb), 0.1);
-    border-radius: 1rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 1000;
-    backdrop-filter: blur(8px);
-}
-
-.mention-item {
-    cursor: pointer;
-    transition: all 0.2s;
-    border-radius: 0.75rem;
-    margin: 0.25rem;
-    padding: 0.5rem 0.75rem !important;
-
-    img {
-        border: 1px solid var(--bs-gray-200);
-        transition: transform 0.2s;
-    }
-
-    &:hover {
-        background-color: rgba(var(--bs-primary-rgb), 0.05);
-
-        img {
-            transform: scale(1.1);
-        }
-    }
-}
-
-.btn-send {
-    --size: 44px;
-    min-width: var(--size);
-    width: var(--size);
-    height: var(--size);
-    padding: 0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bs-primary);
-    border: none;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), 0.2);
-    margin-bottom: 0.25rem;
-
-    &:hover:not(:disabled) {
-        transform: scale(1.1);
-        background: var(--bs-primary);
-        box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.3);
-    }
-
-    &:disabled {
-        background: var(--bs-gray-300);
-        opacity: 0.7;
-    }
-
-    i {
-        font-size: 1.1rem;
-        transform: translateX(1px) rotate(-30deg);
-        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    &:hover:not(:disabled) i {
-        transform: translateX(2px) rotate(-25deg);
-    }
-}
-
-.input-container {
-    display: flex;
-    gap: 0.75rem;
-    padding: 0.5rem;
-    border-top: 1px solid rgba(var(--bs-dark-rgb), 0.08);
-    background: white;
-    position: relative;
-    margin-top: 0.5rem;
 }
 </style>
