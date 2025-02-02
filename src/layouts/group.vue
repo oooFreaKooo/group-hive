@@ -16,6 +16,9 @@
         <AnimatedNavigation
             :navigation-items="navigationItems"
         />
+        <NuxtLoadingIndicator
+            :throttle="100"
+        />
         <div class="container p-5">
             <slot />
         </div>

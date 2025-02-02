@@ -23,7 +23,7 @@
     "@nuxtjs/supabase": "^1.1.7",
     "@pinia/nuxt": "^0.5.1",
     "@vueuse/nuxt": "^10.9.0",
-    "nuxt": "^3.13.0",
+    "nuxt": "^3.15.4",
     "nuxt-bootstrap-icons": "^2.1.0",
     "three": "^0.172.0",
     "usebootstrap": "^3.5.100",

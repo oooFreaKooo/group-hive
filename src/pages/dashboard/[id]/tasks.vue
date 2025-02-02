@@ -1,90 +1,83 @@
 <template>
-    <AppSection :padding="3">
-        <div
-            v-if="error"
-            class="alert alert-danger mb-4"
-            role="alert"
-        >
-            {{ error }}
-            <button
-                class="btn btn-link p-0 ms-2"
-                @click="error = null"
-            >
-                Dismiss
-            </button>
-        </div>
-
-        <div
-            v-if="isLoading"
-            class="d-flex justify-content-center align-items-center py-5"
-        >
-            <div
-                class="spinner-border text-primary"
-                role="status"
-            >
-                <span class="visually-hidden">Loading...</span>
-            </div>
-        </div>
-
-        <template v-else>
-            <div class="row">
-                <div class="col-14 col-lg-14">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2 class="my-4">
-                            Tasks
-                        </h2>
-                        <div class="d-flex gap-2">
-                            <button
-                                class="btn btn-outline-primary"
-                                @click="showCreateTag = true"
-                            >
-                                <i class="bi bi-tag me-2" />
-                                Add Tag
-                            </button>
-                            <button
-                                class="btn btn-outline-primary"
-                                @click="showCreateRow = true"
-                            >
-                                <i class="bi bi-plus-lg me-2" />
-                                Add Week
-                            </button>
-                            <button
-                                class="btn btn-primary"
-                                @click="showCreateTask = true"
-                            >
-                                <i class="bi bi-plus-lg me-2" />
-                                Add Task
-                            </button>
-                        </div>
+    <AppSection :padding="4">
+        <div class="task-container d-flex flex-column rounded-5 shadow mt-4">
+            <div class="p-3 bg-gradient bg-dark rounded-top-5">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold text-light">
+                        <i class="bi bi-list-task mx-2" />
+                        Tasks
+                    </span>
+                    <div class="d-flex gap-2">
+                        <button
+                            class="btn btn-light btn-sm rounded-pill"
+                            :title="areAllRowsExpanded ? 'Collapse all weeks' : 'Expand all weeks'"
+                            @click="toggleAllRows"
+                        >
+                            <i
+                                class="bi me-2"
+                                :class="areAllRowsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"
+                            />
+                            {{ areAllRowsExpanded ? 'Collapse All' : 'Expand All' }}
+                        </button>
+                        <button
+                            class="btn btn-light btn-sm rounded-pill"
+                            @click="showCreateTag = true"
+                        >
+                            <i class="bi bi-tag me-2" />
+                            Add Tag
+                        </button>
+                        <button
+                            class="btn btn-light btn-sm rounded-pill"
+                            @click="showCreateRow = true"
+                        >
+                            <i class="bi bi-plus-lg me-2" />
+                            Add Week
+                        </button>
+                        <button
+                            class="btn btn-primary btn-sm rounded-pill"
+                            @click="showCreateTask = true"
+                        >
+                            <i class="bi bi-plus-lg me-2" />
+                            Add Task
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Task Rows -->
+            <div class="task-content bg-light">
                 <div
-                    v-for="row in taskRows"
-                    :key="row.id"
-                    class="col-14 col-lg-11"
+                    v-if="error"
+                    class="alert alert-danger mb-4"
+                    role="alert"
                 >
-                    <TaskRow
-                        v-if="isDataReady"
-                        :title="row.title"
-                        :columns="getWeekColumns(row)"
-                        :row-id="row.id"
-                        :status="status"
-                        @task-updated="refreshTasks"
-                        @task-moved="handleTaskMoved"
-                    />
-                    <div
-                        v-else
-                        class="border rounded p-3 mb-3 bg-light"
+                    {{ error }}
+                    <button
+                        class="btn btn-link p-0 ms-2"
+                        @click="error = null"
                     >
-                        <div class="placeholder-glow">
-                            <span class="placeholder col-6" />
-                        </div>
+                        Dismiss
+                    </button>
+                </div>
+
+                <div class="row g-3">
+                    <div
+                        v-for="row in taskRows"
+                        :key="row.id"
+                        class="col-14 col-lg-14"
+                    >
+                        <TaskRow
+                            :title="row.title"
+                            :columns="getWeekColumns(row)"
+                            :row-id="row.id"
+                            :is-expanded="expandedRows[row.id]"
+                            @update:expanded="(value) => handleRowExpanded(row.id, value)"
+                            @task-updated="refreshTasks"
+                            @task-moved="handleTaskMoved"
+                        />
                     </div>
                 </div>
             </div>
-        </template>
+        </div>
 
         <CreateTagPopover
             v-if="showCreateTag && data?.id"
@@ -127,8 +120,7 @@ const showCreateTask = ref(false)
 const showCreateRow = ref(false)
 const showCreateTag = ref(false)
 const error = ref<string | null>(null)
-const isLoading = ref(true)
-const isDataReady = ref(false)
+const expandedRows = ref<Record<number, boolean>>({})
 
 // Store initialization
 const taskStore = useTaskStore()
@@ -140,8 +132,15 @@ const { tags } = storeToRefs(tagStore)
 // const { unassignedTasks } = storeToRefs(taskStore)
 const { taskRows } = storeToRefs(taskRowStore)
 
+// Computed
+const areAllRowsExpanded = computed(() => {
+    const rows = taskRows.value
+    if (!rows?.length) { return false }
+    return rows.every(row => expandedRows.value[row.id])
+})
+
 // Fetch group data
-const { data, status } = await useLazyFetch<Prisma.GroupGetPayload<{
+const { data } = await useFetch<Prisma.GroupGetPayload<{
     select: {
         id: true
         name: true
@@ -176,8 +175,8 @@ const { data, status } = await useLazyFetch<Prisma.GroupGetPayload<{
         }
         Tag: true
     }
-}> | null>(`/api/group/:${route.params.id}`, {
-    key: 'group',
+}> | null>(`/api/group/${route.params.id}`, {
+    key: route.fullPath,
     default: () => null,
 })
 
@@ -186,48 +185,17 @@ onMounted(async () => {
     if (!data.value?.id) { return }
 
     try {
-        isLoading.value = true
         error.value = null
         await Promise.all([
             tagStore.fetchTags(Number(data.value.id)),
             taskStore.fetchTasks(Number(data.value.id)),
             taskRowStore.fetchTaskRows(Number(data.value.id)),
         ])
-        isDataReady.value = true
     } catch (e) {
         console.error('Failed to initialize task data:', e)
         error.value = 'Failed to load task data. Please try refreshing the page.'
-    } finally {
-        isLoading.value = false
     }
 })
-
-// Clean up on unmount
-onUnmounted(() => {
-    isDataReady.value = false
-})
-
-// Watch for route changes to refresh data
-watch(() => route.params.id, async (newId, oldId) => {
-    if (!newId || !data.value?.id || newId === oldId) { return }
-
-    try {
-        isLoading.value = true
-        error.value = null
-        isDataReady.value = false
-        await Promise.all([
-            tagStore.fetchTags(Number(data.value.id)),
-            taskStore.fetchTasks(Number(data.value.id)),
-            taskRowStore.fetchTaskRows(Number(data.value.id)),
-        ])
-        isDataReady.value = true
-    } catch (e) {
-        console.error('Failed to refresh task data:', e)
-        error.value = 'Failed to load task data. Please try refreshing the page.'
-    } finally {
-        isLoading.value = false
-    }
-}, { immediate: true })
 
 // Event handlers
 const refreshTasks = async () => {
@@ -235,7 +203,6 @@ const refreshTasks = async () => {
 
     try {
         error.value = null
-        isLoading.value = true
         await Promise.all([
             taskStore.fetchTasks(Number(data.value.id)),
             taskRowStore.fetchTaskRows(Number(data.value.id)),
@@ -243,8 +210,6 @@ const refreshTasks = async () => {
     } catch (e) {
         error.value = 'Failed to refresh tasks. Please try again.'
         console.error('TasksSection - Failed to refresh tasks:', e)
-    } finally {
-        isLoading.value = false
     }
 }
 
@@ -330,9 +295,69 @@ const getWeekColumns = computed(() => {
         }))
     }
 })
+
+// Methods
+function handleRowExpanded (rowId: number, value: boolean) {
+    expandedRows.value[rowId] = value
+}
+
+function toggleAllRows () {
+    const newValue = !areAllRowsExpanded.value
+    taskRows.value?.forEach((row) => {
+        expandedRows.value[row.id] = newValue
+    })
+}
+
+// Initialize expanded state when rows are loaded
+watch(taskRows, (newRows) => {
+    if (!newRows?.length) { return }
+    newRows.forEach((row) => {
+        if (expandedRows.value[row.id] === undefined) {
+            expandedRows.value[row.id] = true
+        }
+    })
+}, { immediate: true })
 </script>
 
 <style scoped lang="scss">
+.task-container {
+    min-height: 75vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.task-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--bs-gray-300);
+        border-radius: 3px;
+
+        &:hover {
+            background: var(--bs-gray-400);
+        }
+    }
+}
+
+@supports (scrollbar-color: auto) {
+    .task-content {
+        scrollbar-color: var(--bs-gray-300) transparent;
+        scrollbar-width: thin;
+    }
+}
+
 .loading-overlay {
     position: fixed;
     inset: 0;

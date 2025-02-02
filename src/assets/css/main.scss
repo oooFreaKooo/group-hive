@@ -1,22 +1,22 @@
-$primary: #222222;
-$secondary: #7B7B7B;
-$tertiary: #F8F8F8;
-$success: #4CAF50;
-$info: #64B5F6;
-$warning: #FFB74D;
-$danger: #E57373;
-$light: #F8F8F8;
-$dark: #474747;
+$primary: #FF6B6B;
+$secondary: #4ECDC4;
+$tertiary: #FFD93D;
+$success: #77DD77;
+$info: #6C9BCF;
+$warning: #FFB347;
+$danger: #FF4447;
+$light: #F8F9FA;
+$dark: #2D3436;
 
-$primary-dark: invert($primary);
-$secondary-dark: invert($secondary);
-$tertiary-dark: invert($tertiary);
-$success-dark: invert($success);
-$info-dark: invert($info);
-$warning-dark: invert($warning);
-$danger-dark: invert($danger);
-$light-dark: invert($light);
-$dark-dark: invert($dark);
+$primary-dark: #FF8A8A;
+$secondary-dark: #3AA39E;
+$tertiary-dark: #FFE082;
+$success-dark: #5CB85C;
+$info-dark: #4A90E2;
+$warning-dark: #FF9F43;
+$danger-dark: #FF5252;
+$light-dark: #2D2D2D;
+$dark-dark: darken(#E0E0E0, 10%);
 
 // Initial color definitions
 $primary-text-emphasis: shade-color($primary, 60%);
@@ -28,6 +28,18 @@ $warning-text-emphasis: shade-color($warning, 60%);
 $danger-text-emphasis: shade-color($danger, 60%);
 $light-text-emphasis: $dark;
 $dark-text-emphasis: $light;
+
+// Shadow variables for light mode
+$box-shadow: 0 .5rem 1rem rgba($dark, .15);
+$box-shadow-sm: 0 .125rem .25rem rgba($dark, .075);
+$box-shadow-lg: 0 1rem 3rem rgba($dark, .175);
+$box-shadow-inset: inset 0 1px 2px rgba($dark, .075);
+
+// Shadow variables for dark mode
+$box-shadow-dark: 0 .5rem 1rem rgba($light, .15);
+$box-shadow-sm-dark: 0 .125rem .25rem rgba($light, .075);
+$box-shadow-lg-dark: 0 1rem 3rem rgba($light, .175);
+$box-shadow-inset-dark: inset 0 1px 2px rgba($light, .075);
 
 // Dark mode text emphasis colors
 $primary-text-emphasis-dark: tint-color($primary-dark, 40%);
@@ -98,6 +110,9 @@ $color-mode-type: data-bs-theme;
         #{green($value)},
         #{blue($value)};
 
+        // Direct subtle color variants
+        --bs-#{$color}-subtle: #{if(map-get($theme-colors, "light") == $light, rgba($value, 0.1), rgba($value, 0.2))};
+
         // Border colors for each theme color
         --bs-border-color-#{$color}: #{$value};
         --bs-border-color-#{$color}-rgb: #{red($value)},
@@ -105,6 +120,11 @@ $color-mode-type: data-bs-theme;
         #{blue($value)};
         --bs-border-color-#{$color}-subtle: #{rgba($value, 0.1)};
         --bs-border-color-#{$color}-translucent: #{rgba($value, 0.175)};
+
+        // Subtle background variants
+        --bs-#{$color}-bg-subtle: var(--bs-#{$color}-subtle);
+        --bs-#{$color}-border-subtle: #{if(map-get($theme-colors, "light") == $light, rgba($value, 0.2), rgba($value, 0.3))};
+        --bs-#{$color}-text-emphasis: #{if(map-get($theme-colors, "light") == $light, rgba($value, 0.75), rgba($value, 0.9))};
 
         // Button variants
         .btn-#{$color} {
@@ -114,65 +134,72 @@ $color-mode-type: data-bs-theme;
         .btn-outline-#{$color} {
             @include button-outline-variant($value, $theme-colors);
         }
+
+        // Add subtle background utilities
+        .bg-#{$color}-subtle {
+            background-color: var(--bs-#{$color}-bg-subtle) !important;
+        }
+
+        .border-#{$color}-subtle {
+            border-color: var(--bs-#{$color}-border-subtle) !important;
+        }
+
+        .text-#{$color}-emphasis {
+            color: var(--bs-#{$color}-text-emphasis) !important;
+        }
     }
 
     // Theme-specific variables
     --bs-body-bg: #{map-get($theme-colors, "light")};
-    --bs-body-color: #{if(map-get($theme-colors, "light") == $light, 
- $primary-text-emphasis,
-    $primary-text-emphasis-dark)
-}
+    --bs-body-color: #{if(map-get($theme-colors, "light") == $light, $primary-text-emphasis, $primary-text-emphasis-dark)};
+    --bs-heading-color: #{if(map-get($theme-colors, "light") == $light, $primary-text-emphasis, $primary-text-emphasis-dark)};
 
-;
+    // Shadow variables based on theme
+    --bs-box-shadow: #{if(map-get($theme-colors, "light") == $light, $box-shadow, $box-shadow-dark)};
+    --bs-box-shadow-sm: #{if(map-get($theme-colors, "light") == $light, $box-shadow-sm, $box-shadow-sm-dark)};
+    --bs-box-shadow-lg: #{if(map-get($theme-colors, "light") == $light, $box-shadow-lg, $box-shadow-lg-dark)};
+    --bs-box-shadow-inset: #{if(map-get($theme-colors, "light") == $light, $box-shadow-inset, $box-shadow-inset-dark)};
 
-// Update heading color to use emphasis colors
---bs-heading-color: #{if(map-get($theme-colors, "light") == $light, 
- $primary-text-emphasis,
-$primary-text-emphasis-dark)
-}
-
-;
-
-// Fix for border utilities
-.border {
-    border-color: var(--bs-border-color) !important;
-}
-
-@each $color, $value in $theme-colors {
-    .border-#{$color} {
-        border-color: #{$value} !important;
+    // Fix for border utilities
+    .border {
+        border-color: var(--bs-border-color) !important;
     }
-}
 
-// Background utilities
-@each $color, $value in $theme-colors {
-    .bg-#{$color} {
-        background-color: #{$value} !important;
+    @each $color, $value in $theme-colors {
+        .border-#{$color} {
+            border-color: #{$value} !important;
+        }
     }
-}
 
-// Fix for bg-body
-.bg-body {
-    background-color: var(--bs-body-bg) !important;
-}
-
-// Add text color utilities
-@each $color, $value in $theme-colors {
-    .text-#{$color} {
-        color: #{$value} !important;
+    // Background utilities
+    @each $color, $value in $theme-colors {
+        .bg-#{$color} {
+            background-color: #{$value} !important;
+        }
     }
-}
 
-// Add heading color utilities
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p {
-    color: var(--bs-heading-color) !important;
-}
+    // Fix for bg-body
+    .bg-body {
+        background-color: var(--bs-body-bg) !important;
+    }
+
+    // Add text color utilities
+    @each $color, $value in $theme-colors {
+        .text-#{$color} {
+            color: #{$value} !important;
+        }
+    }
+
+    // Add heading color utilities
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p {
+        color: var(--bs-heading-color) !important;
+    }
 }
 
 // Color mode mixin definition

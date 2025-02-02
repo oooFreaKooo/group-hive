@@ -3,25 +3,21 @@
         :padding="3"
         class="chat-page"
     >
-        <div class="chat-content">
-            <div class="container h-100">
-                <div class="row h-100 g-4 justify-content-center mt-2">
-                    <div class="col-lg-8">
-                        <GroupChat
-                            :messages="data?.Message ?? []"
-                            :members="data?.members ?? []"
-                            :group-id="data?.id.toString() ?? ''"
-                            :status="status"
-                        />
-                    </div>
-                    <div class="col-lg-4">
-                        <MemberList
-                            :members="data?.members ?? []"
-                            :status="status"
-                            @member-details="$emit('member-details', $event)"
-                        />
-                    </div>
-                </div>
+        <div class="row g-4 justify-content-center mt-2">
+            <div class="col-lg-8">
+                <GroupChat
+                    :messages="data?.Message ?? []"
+                    :members="data?.members ?? []"
+                    :group-id="data?.id.toString() ?? ''"
+                    :status="status"
+                />
+            </div>
+            <div class="col-lg-4">
+                <MemberList
+                    :members="data?.members ?? []"
+                    :status="status"
+                    @member-details="$emit('member-details', $event)"
+                />
             </div>
         </div>
     </AppSection>
@@ -36,7 +32,7 @@ definePageMeta({
     layout: 'group',
 })
 
-const { data, status } = useFetch<Prisma.GroupGetPayload<{
+const { data, status } = await useFetch<Prisma.GroupGetPayload<{
     select: {
         id: true
         name: true
@@ -64,8 +60,8 @@ const { data, status } = useFetch<Prisma.GroupGetPayload<{
             }
         }
     }
-}> | null>(`/api/group/:${route.params.id}`, {
-    key: 'group',
+}> | null>(`/api/group/${route.params.id}`, {
+    key: route.fullPath,
     default: () => null,
 })
 
@@ -75,21 +71,9 @@ defineEmits<{
 </script>
 
 <style scoped lang="scss">
-.chat-wrapper {
-    min-height: calc(100vh - var(--header-height, 60px));
-    display: flex;
-    flex-direction: column;
-}
-
 .chat-page {
-    min-height: calc(100vh - var(--header-height, 60px));
     display: flex;
     flex-direction: column;
-}
-
-.chat-content {
-    flex: 1;
-    padding-bottom: 2rem;
 }
 
 @media (max-width: 991.98px) {

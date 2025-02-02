@@ -1,17 +1,27 @@
 <template>
-    <div class="d-none d-md-flex side-nav position-fixed start-0 top-50 flex-column rounded-5 m-2 translate-middle-y bg-dark bg-gradient shadow">
+    <div
+        class="d-none d-md-flex side-nav rounded-end-5 bg-dark bg-gradient shadow"
+        :class="{ collapsed: isCollapsed }"
+    >
         <!-- Groups Section -->
-        <div class="p-3 bg-gradient bg-dark rounded-top-5">
+
+        <!-- Tab element for collapse/expand -->
+        <div
+            class="collapse-tab"
+            role="button"
+            :title="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+            @click="toggleCollapse"
+        >
             <AppIcon
-                name="chevron-compact-up"
+                :name="isCollapsed ? 'chevron-right' : 'chevron-left'"
+                size="sm"
                 color="light"
-                size="md"
             />
         </div>
 
         <!-- Main Navigation Section -->
         <div class="d-flex flex-column flex-grow-1">
-            <nav class="py-2 d-flex flex-column align-items-center">
+            <nav class="py-2 d-flex flex-column align-items-center my-2">
                 <NuxtLink
                     v-for="group in userStore.profile?.ownedGroups"
                     :key="group.id"
@@ -21,7 +31,6 @@
                 >
                     <AppIcon
                         name="house"
-                        size="lg"
                         btn
                         circle
                         bg="light"
@@ -36,7 +45,6 @@
                 >
                     <AppIcon
                         name="plus-circle"
-                        size="md"
                         btn
                         circle
                         color="light"
@@ -48,7 +56,7 @@
 
         <!-- Footer Section -->
         <div class="mt-auto pb-2 d-flex flex-column align-items-center">
-            <div class="d-flex flex-column align-items-center py-4">
+            <div class="d-flex flex-column align-items-center my-2">
                 <div
                     class="theme-switch d-flex justify-content-center bg-light"
                     :class="{ dark: isDarkMode }"
@@ -73,17 +81,23 @@
                 </div>
             </div>
 
+            <AppIcon
+                name="gear"
+                color="light"
+                class="my-2"
+            />
+
             <NuxtLink
                 to="/dashboard/settings"
-                class="btn btn-dark rounded-circle p-2"
                 :title="userStore.displayName"
+                class="border border-2 border-light rounded-circle my-2"
             >
                 <NuxtImg
                     :src="userStore.userAvatar || '/default-avatar.png'"
                     width="32"
                     height="32"
                     alt="Avatar"
-                    class="nav-icon rounded-circle"
+                    class="rounded-circle"
                 />
             </NuxtLink>
         </div>
@@ -108,6 +122,12 @@ const currentTheme = ref(getPreferredTheme())
 onMounted(() => {
     setTheme(currentTheme.value)
 })
+
+// Add collapse functionality
+const isCollapsed = ref(false)
+const toggleCollapse = () => {
+    isCollapsed.value = !isCollapsed.value
+}
 </script>
 
 <style scoped lang="scss">
@@ -122,10 +142,41 @@ onMounted(() => {
 // Required custom styles that can't be replaced with Bootstrap
 .side-nav {
     height: 75vh;
-    width: 64px;
+    width: 56px;
     z-index: 1020;
     display: flex;
     flex-direction: column;
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
+
+    &.collapsed {
+        transform: translate(-100%, -50%);
+    }
+}
+
+.collapse-tab {
+    position: absolute;
+    right: -24px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bs-primary);
+    width: 24px;
+    height: 64px;
+    border: 1px solid var(--bs-light);
+    border-radius: 0 16px 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    z-index: 1;  // Ensure tab stays above sidebar
+
+    &:hover {
+        background: var(--bs-dark);
+    }
 }
 
 // Theme switch specific styles

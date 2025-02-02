@@ -202,6 +202,18 @@ const handleMentionSuggestion = (_suggestion: { startPosition: number, query: st
     // The actual handling is done in the MessageInput component
 }
 
+onMounted(() => {
+    nextTick(() => {
+        scrollToBottom()
+    })
+})
+
+watch(() => props.messages, () => {
+    nextTick(() => {
+        scrollToBottom()
+    })
+}, { immediate: true })
+
 onUpdated(() => {
     scrollToBottom()
     document.addEventListener('click', handleClickOutside)

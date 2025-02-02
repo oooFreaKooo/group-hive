@@ -1,12 +1,12 @@
 <template>
     <div
-        class="mb-4"
+        class="task-row shadow-sm bg-light overflow-hidden"
         role="region"
         :aria-label="title"
     >
         <div
             v-if="error"
-            class="alert alert-danger mb-3"
+            class="alert alert-danger mb-0 rounded-0 border-0"
             role="alert"
             aria-live="polite"
         >
@@ -20,8 +20,19 @@
             </button>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0 d-flex align-items-center">
+        <div
+            class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center cursor-pointer"
+            role="button"
+            :aria-expanded="isExpanded"
+            :aria-controls="'row-content-' + rowId"
+            @click="toggleExpanded"
+        >
+            <h5 class="mb-0 d-flex align-items-center fw-semibold">
+                <i
+                    class="bi me-2"
+                    :class="isExpanded ? 'bi-chevron-down' : 'bi-chevron-right'"
+                    aria-hidden="true"
+                />
                 {{ title }}
                 <div
                     v-if="isLoading"
@@ -32,82 +43,80 @@
                     <div class="spinner-border spinner-border-sm text-primary opacity-50" />
                     <span class="visually-hidden">Syncing changes...</span>
                 </div>
-            </h3>
-            <button
-                class="btn btn-link text-muted p-0"
-                aria-label="More options"
-            >
-                <i
-                    class="bi bi-three-dots"
-                    aria-hidden="true"
-                />
-            </button>
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary rounded-pill">
+                    {{ totalTasks }} tasks
+                </span>
+                <button
+                    class="btn btn-link text-muted p-0"
+                    aria-label="More options"
+                    @click.stop
+                >
+                    <i
+                        class="bi bi-three-dots"
+                        aria-hidden="true"
+                    />
+                </button>
+            </div>
         </div>
 
-        <div class="row g-2 w-100 position-relative">
+        <Transition
+            name="accordion"
+            @enter="onEnter"
+            @leave="onLeave"
+        >
             <div
-                v-if="status === 'pending'"
-                class="loading-overlay"
-                role="status"
-                aria-label="Loading tasks"
-            >
-                <div class="spinner-border text-primary" />
-                <span class="visually-hidden">Loading tasks...</span>
-            </div>
-
-            <div
-                v-for="(column, index) in columns"
-                :key="index"
-                :class="columnClasses"
+                v-show="isExpanded"
+                :id="'row-content-' + rowId"
+                class="row g-0 w-100 position-relative p-3"
             >
                 <div
-                    class="border rounded h-100 w-100 shadow-sm"
-                    :class="getColumnStyle(index)"
+                    v-for="(column, index) in columns"
+                    :key="index"
+                    :class="columnClasses"
                 >
-                    <div class="p-2 bg-transparent border-0 d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">
-                            {{ column.title }}
-                        </h5>
-                        <button
-                            class="btn btn-link text-muted p-0"
-                            aria-label="Column options"
-                        >
-                            <i
-                                class="bi bi-three-dots"
-                                aria-hidden="true"
-                            />
-                        </button>
-                    </div>
-                    <div class="card-body p-2 position-relative">
-                        <draggable
-                            class="list-group task-list"
-                            :list="column.tasks"
-                            group="tasks"
-                            :animation="200"
-                            ghost-class="ghost"
-                            :data-column-index="index"
-                            :aria-label="`${column.title} tasks`"
-                            role="list"
-                            @change="(e) => handleChange(e, index, column.title)"
-                            @start="handleDragStart"
-                            @end="handleDragEnd"
-                            @enter="() => handleDragEnter(index)"
-                        >
-                            <TransitionGroup
-                                name="task"
-                                type="transition"
+                    <div
+                        class="h-100 w-100 px-2"
+                        :class="getColumnStyle(index)"
+                    >
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0 text-muted small fw-semibold">
+                                {{ column.title }}
+                            </h6>
+                        </div>
+                        <div class="position-relative">
+                            <draggable
+                                class="list-group task-list rounded-3 bg-light"
+                                :list="column.tasks"
+                                group="tasks"
+                                :animation="200"
+                                ghost-class="ghost"
+                                :data-column-index="index"
+                                :aria-label="`${column.title} tasks`"
+                                role="list"
+                                @change="(e) => handleChange(e, index, column.title)"
+                                @start="handleDragStart"
+                                @end="handleDragEnd"
+                                @enter="() => handleDragEnter(index)"
                             >
-                                <TaskCard
-                                    v-for="task in column.tasks"
-                                    :key="task.id"
-                                    :task="task"
-                                />
-                            </TransitionGroup>
-                        </draggable>
+                                <TransitionGroup
+                                    name="task"
+                                    type="transition"
+                                >
+                                    <TaskCard
+                                        v-for="task in column.tasks"
+                                        :key="task.id"
+                                        :task="task"
+                                        class="task-card"
+                                    />
+                                </TransitionGroup>
+                            </draggable>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Transition>
     </div>
 </template>
 
@@ -132,16 +141,16 @@ const props = defineProps({
         type: Number,
         required: false,
     },
-    status: {
-        type: String,
+    isExpanded: {
+        type: Boolean,
         required: false,
-        default: 'pending',
+        default: true,
     },
 })
 
 const emit = defineEmits<{
     (e: 'task-updated'): void
-
+    (e: 'update:expanded', value: boolean): void
     (e: 'task-moved', payload: {
         task: TaskWithRelations
         columnIndex: number
@@ -162,6 +171,10 @@ const columnClasses = computed(() => ({
     'col-2 col-xl-2 col-lg-3 col-md-3 col-sm-3': true,
     'is-dragging': isDragging.value,
 }))
+
+const totalTasks = computed(() =>
+    props.columns.reduce((sum, column) => sum + column.tasks.length, 0),
+)
 
 const getColumnStyle = (index: number) => ({
     'is-source': dragSourceColumn.value === index,
@@ -221,16 +234,49 @@ const handleChange = async (event: DragEvent, columnIndex: number, columnTitle: 
         }, 500)
     }
 }
+
+// Methods
+function toggleExpanded () {
+    emit('update:expanded', !props.isExpanded)
+}
+
+function onEnter (el: Element) {
+    const height = el.scrollHeight
+    const animation = el.animate([
+        { height: '0', opacity: 0, overflow: 'hidden' },
+        { height: `${height}px`, opacity: 1, overflow: 'hidden' },
+    ], {
+        duration: 300,
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    })
+
+    animation.onfinish = () => {
+        (el as HTMLElement).style.height = ''
+        ;(el as HTMLElement).style.overflow = ''
+    }
+}
+
+function onLeave (el: Element) {
+    const height = el.scrollHeight
+    const _animation = el.animate([
+        { height: `${height}px`, opacity: 1, overflow: 'hidden' },
+        { height: '0', opacity: 0, overflow: 'hidden' },
+    ], {
+        duration: 300,
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    })
+}
 </script>
 
 <style scoped lang="scss">
 .task-list {
     min-height: 75px;
     transition: background-color 0.3s ease, border-color 0.3s ease;
+    background-color: var(--bs-gray-100);
 
     &:empty {
         background-color: var(--bs-light);
-        border: 2px dashed var(--bs-gray-300);
+        border: 2px dashed var(--bs-dark-subtle);
     }
 
     &:focus-within {
@@ -286,7 +332,7 @@ const handleChange = async (event: DragEvent, columnIndex: number, columnTitle: 
 }
 
 .is-dragging {
-    .card {
+    .ghost {
         border: 2px dashed var(--bs-primary);
         background-color: var(--bs-light);
     }
@@ -338,5 +384,34 @@ const handleChange = async (event: DragEvent, columnIndex: number, columnTitle: 
     backdrop-filter: blur(2px);
     border-radius: 0.5rem;
     z-index: 10;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        background-color: var(--bs-gray-100);
+    }
+}
+
+.bi-chevron-right,
+.bi-chevron-down {
+    transition: transform 0.3s ease;
+}
+
+.bi-chevron-down {
+    transform: rotate(0deg);
+}
+
+.bi-chevron-right {
+    transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bi-chevron-right,
+    .bi-chevron-down {
+        transition: none;
+    }
 }
 </style>

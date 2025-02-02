@@ -3,10 +3,16 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
-    const groupId = getRouterParam(event, 'id')?.split(':')[1]
+    const groupId = getRouterParam(event, 'id')
+    if (!groupId) {
+        throw createError({
+            statusCode: 400,
+            message: 'Group ID is required',
+        })
+    }
 
     const group = await prisma.group.findUnique({
-        where: { id: Number.parseInt(groupId!) },
+        where: { id: Number.parseInt(groupId) },
         select: {
             id: true,
             name: true,
@@ -36,12 +42,19 @@ export default defineEventHandler(async (event) => {
         },
     })
 
-    if (group) {
-        group.members = group.members.map(member => ({
+    if (!group) {
+        throw createError({
+            statusCode: 404,
+            message: 'Group not found',
+        })
+    }
+
+    return {
+        ...group,
+        members: group.members.map(member => ({
             ...member,
             createdAt: new Date(member.createdAt),
             updatedAt: new Date(member.updatedAt),
-        }))
+        })),
     }
-    return group
 })

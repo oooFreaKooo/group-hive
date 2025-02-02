@@ -14,6 +14,7 @@
                     <NuxtLink
                         :to="item.href"
                         class="d-flex flex-column align-items-center text-decoration-none position-relative"
+                        @click="handleNavClick(index)"
                     >
                         <span
                             :class="`bi bi-${item.icon} icon-${smallerThanLg ? 'sm' : 'lg'}`"
@@ -33,6 +34,7 @@
 
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core'
+import { ref, computed, watch } from 'vue'
 
 const route = useRoute()
 
@@ -43,10 +45,28 @@ const props = defineProps<{
 const breakpoints = useBreakpoints(breakpointsBootstrapV5)
 const smallerThanLg = breakpoints.smaller('lg')
 
-// Calculate active index based on current route
+// Track clicked index separately from route for immediate feedback
+const clickedIndex = ref(-1)
+
+// Calculate active index based on clicked index or current route
 const activeIndex = computed(() => {
+    // Use clicked index if set, otherwise fall back to route-based index
+    if (clickedIndex.value !== -1) { return clickedIndex.value }
     return props.navigationItems.findIndex((item: NavigationItem) => item.href === route.path)
 })
+
+// Watch route changes to reset clicked index
+watch(
+    () => route.path,
+    () => {
+        clickedIndex.value = -1
+    },
+)
+
+// Handle navigation item clicks
+function handleNavClick (index: number) {
+    clickedIndex.value = index
+}
 </script>
 
 <style scoped lang="scss">
