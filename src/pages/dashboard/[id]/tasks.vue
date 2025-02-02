@@ -1,37 +1,34 @@
 <template>
-    <div
-        v-if="status === 'pending'"
-        class="loading-overlay"
-    >
-        <div class="loading-content">
-            <div class="spinner" />
-            <p class="loading-text">
-                Loading tasks...
-            </p>
+    <AppSection :padding="3">
+        <div
+            v-if="error"
+            class="alert alert-danger mb-4"
+            role="alert"
+        >
+            {{ error }}
+            <button
+                class="btn btn-link p-0 ms-2"
+                @click="error = null"
+            >
+                Dismiss
+            </button>
         </div>
-    </div>
 
-    <div class="tasks-page">
-        <div class="container">
+        <div
+            v-if="isLoading"
+            class="d-flex justify-content-center align-items-center py-5"
+        >
             <div
-                v-if="error"
-                class="alert alert-danger mb-4"
-                role="alert"
+                class="spinner-border text-primary"
+                role="status"
             >
-                {{ error }}
-                <button
-                    class="btn btn-link p-0 ms-2"
-                    @click="error = null"
-                >
-                    Dismiss
-                </button>
+                <span class="visually-hidden">Loading...</span>
             </div>
+        </div>
 
-            <div
-                v-if="data && status === 'success'"
-                class="row"
-            >
-                <div class="col-14 col-lg-12">
+        <template v-else>
+            <div class="row">
+                <div class="col-14 col-lg-14">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2 class="my-4">
                             Tasks
@@ -69,57 +66,50 @@
                     class="col-14 col-lg-11"
                 >
                     <TaskRow
+                        v-if="isDataReady"
                         :title="row.title"
                         :columns="getWeekColumns(row)"
                         :row-id="row.id"
+                        :status="status"
                         @task-updated="refreshTasks"
                         @task-moved="handleTaskMoved"
                     />
-                </div>
-
-                <div class="col-14 col-lg-3">
-                    <TaskSidebar class="mt-4 mt-lg-0">
-                        <template
-                            v-if="unassignedTasks.length > 0"
-                            #unassigned
-                        >
-                            <TaskRowUnassigned
-                                title="Unassigned Tasks"
-                                :columns="[{ title: 'Tasks', tasks: unassignedTasks }]"
-                                :row-id="undefined"
-                                @task-updated="refreshTasks"
-                                @task-moved="handleTaskMoved"
-                            />
-                        </template>
-                    </TaskSidebar>
+                    <div
+                        v-else
+                        class="border rounded p-3 mb-3 bg-light"
+                    >
+                        <div class="placeholder-glow">
+                            <span class="placeholder col-6" />
+                        </div>
+                    </div>
                 </div>
             </div>
+        </template>
 
-            <CreateTagPopover
-                v-if="showCreateTag && data?.id"
-                :group-id="Number(data.id)"
-                @close="showCreateTag = false"
-                @tag-created="handleTagCreated"
-            />
+        <CreateTagPopover
+            v-if="showCreateTag && data?.id"
+            :group-id="Number(data.id)"
+            @close="showCreateTag = false"
+            @tag-created="handleTagCreated"
+        />
 
-            <CreateTaskPopover
-                v-if="showCreateTask && data?.id"
-                :group-id="Number(data.id)"
-                :group-members="data.members"
-                :tags="tags"
-                :task-rows="taskRows"
-                @task-created="handleTaskCreated"
-                @close="showCreateTask = false"
-            />
+        <CreateTaskPopover
+            v-if="showCreateTask && data?.id"
+            :group-id="Number(data.id)"
+            :group-members="data.members"
+            :tags="tags"
+            :task-rows="taskRows"
+            @task-created="handleTaskCreated"
+            @close="showCreateTask = false"
+        />
 
-            <CreateTaskRowPopover
-                v-if="showCreateRow && data?.id"
-                :group-id="Number(data.id)"
-                @row-created="handleRowCreated"
-                @close="showCreateRow = false"
-            />
-        </div>
-    </div>
+        <CreateTaskRowPopover
+            v-if="showCreateRow && data?.id"
+            :group-id="Number(data.id)"
+            @row-created="handleRowCreated"
+            @close="showCreateRow = false"
+        />
+    </AppSection>
 </template>
 
 <script setup lang="ts">
@@ -137,6 +127,8 @@ const showCreateTask = ref(false)
 const showCreateRow = ref(false)
 const showCreateTag = ref(false)
 const error = ref<string | null>(null)
+const isLoading = ref(true)
+const isDataReady = ref(false)
 
 // Store initialization
 const taskStore = useTaskStore()
@@ -145,7 +137,7 @@ const tagStore = useTagStore()
 
 // Destructure store refs for better reactivity
 const { tags } = storeToRefs(tagStore)
-const { unassignedTasks } = storeToRefs(taskStore)
+// const { unassignedTasks } = storeToRefs(taskStore)
 const { taskRows } = storeToRefs(taskRowStore)
 
 // Fetch group data
@@ -186,30 +178,64 @@ const { data, status } = await useLazyFetch<Prisma.GroupGetPayload<{
     }
 }> | null>(`/api/group/:${route.params.id}`, {
     key: 'group',
+    default: () => null,
 })
 
-// Initialize data
-watch(() => data.value, async (newData) => {
-    if (newData?.id) {
-        try {
-            error.value = null
-            await Promise.all([
-                tagStore.fetchTags(Number(newData.id)),
-                taskStore.fetchTasks(Number(newData.id)),
-                taskRowStore.fetchTaskRows(Number(newData.id)),
-            ])
-        } catch (e) {
-            error.value = 'Failed to load tasks. Please try refreshing the page.'
-            console.error('TasksSection - Failed to initialize:', e)
-        }
+// Initialize data on component mount
+onMounted(async () => {
+    if (!data.value?.id) { return }
+
+    try {
+        isLoading.value = true
+        error.value = null
+        await Promise.all([
+            tagStore.fetchTags(Number(data.value.id)),
+            taskStore.fetchTasks(Number(data.value.id)),
+            taskRowStore.fetchTaskRows(Number(data.value.id)),
+        ])
+        isDataReady.value = true
+    } catch (e) {
+        console.error('Failed to initialize task data:', e)
+        error.value = 'Failed to load task data. Please try refreshing the page.'
+    } finally {
+        isLoading.value = false
+    }
+})
+
+// Clean up on unmount
+onUnmounted(() => {
+    isDataReady.value = false
+})
+
+// Watch for route changes to refresh data
+watch(() => route.params.id, async (newId, oldId) => {
+    if (!newId || !data.value?.id || newId === oldId) { return }
+
+    try {
+        isLoading.value = true
+        error.value = null
+        isDataReady.value = false
+        await Promise.all([
+            tagStore.fetchTags(Number(data.value.id)),
+            taskStore.fetchTasks(Number(data.value.id)),
+            taskRowStore.fetchTaskRows(Number(data.value.id)),
+        ])
+        isDataReady.value = true
+    } catch (e) {
+        console.error('Failed to refresh task data:', e)
+        error.value = 'Failed to load task data. Please try refreshing the page.'
+    } finally {
+        isLoading.value = false
     }
 }, { immediate: true })
 
 // Event handlers
 const refreshTasks = async () => {
     if (!data.value?.id) { return }
+
     try {
         error.value = null
+        isLoading.value = true
         await Promise.all([
             taskStore.fetchTasks(Number(data.value.id)),
             taskRowStore.fetchTaskRows(Number(data.value.id)),
@@ -217,6 +243,8 @@ const refreshTasks = async () => {
     } catch (e) {
         error.value = 'Failed to refresh tasks. Please try again.'
         console.error('TasksSection - Failed to refresh tasks:', e)
+    } finally {
+        isLoading.value = false
     }
 }
 
@@ -338,18 +366,6 @@ const getWeekColumns = computed(() => {
     color: var(--bs-gray-600);
     margin: 0;
     font-weight: 500;
-}
-
-.tasks-page {
-    min-height: calc(100vh - var(--header-height, 60px));
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(
-        135deg,
-        rgba(var(--bs-primary-rgb), 0.03) 0%,
-        rgba(var(--bs-light-rgb), 0.5) 100%
-    );
-    padding: 2rem 0;
 }
 
 @keyframes spin {

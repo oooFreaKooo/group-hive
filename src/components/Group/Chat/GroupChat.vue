@@ -8,9 +8,23 @@
         </div>
         <div
             ref="messagesContainer"
-            class="messages flex-grow-1 overflow-auto bg-light"
+            class="messages flex-grow-1 overflow-auto bg-light position-relative"
         >
-            <div class="messages-wrapper">
+            <div
+                v-if="status === 'pending'"
+                class="loading-overlay"
+            >
+                <div
+                    class="spinner-border text-primary"
+                    role="status"
+                >
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div
+                v-else
+                class="messages-wrapper"
+            >
                 <Message
                     v-for="message in messages"
                     :key="message.id"
@@ -89,6 +103,7 @@ const props = defineProps<{
             profile: true
         }
     }>[]
+    status: string
 }>()
 
 const messages = ref<MessageWithRelations[]>(props.messages)
@@ -187,7 +202,7 @@ const handleMentionSuggestion = (_suggestion: { startPosition: number, query: st
     // The actual handling is done in the MessageInput component
 }
 
-onMounted(() => {
+onUpdated(() => {
     scrollToBottom()
     document.addEventListener('click', handleClickOutside)
     document.addEventListener('keydown', handleEscKey)
@@ -241,5 +256,15 @@ onUnmounted(() => {
         scrollbar-color: var(--bs-gray-300) transparent;
         scrollbar-width: thin;
     }
+}
+
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(2px);
 }
 </style>

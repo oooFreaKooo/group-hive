@@ -82,11 +82,12 @@ interface TaskWithRelations extends Task {
     })[]
 }
 
-interface Props {
-    task: TaskWithRelations
-}
-
-defineProps<Props>()
+defineProps({
+    task: {
+        type: Object as PropType<TaskWithRelations>,
+        required: true,
+    },
+})
 defineEmits<{
     (e: 'commentAdded'): void
 }>()

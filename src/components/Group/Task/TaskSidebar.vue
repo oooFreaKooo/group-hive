@@ -98,17 +98,28 @@
                 v-else
                 class="activity-list"
             >
-                <li
-                    v-for="activity in recentActivity"
-                    :key="activity.id"
+                <template
+                    v-for="(activities, date) in groupedActivities"
+                    :key="date"
                 >
-                    <span :class="['task-icon', `task-icon--${activity.type}`]">
-                        <i :class="activityIcons[activity.type]" />
-                    </span>
-                    <b>{{ activity.user }}</b>
-                    {{ activity.action }}
-                    <time :datetime="activity.date">{{ formatDate(activity.date) }}</time>
-                </li>
+                    <li class="activity-date">
+                        {{ formatDate(activities[0].date) }}
+                    </li>
+                    <li
+                        v-for="activity in activities"
+                        :key="activity.id"
+                        class="activity-item"
+                    >
+                        <span :class="['task-icon', `task-icon--${activity.type}`]">
+                            <i :class="activityIcons[activity.type]" />
+                        </span>
+                        <div class="activity-content">
+                            <strong>{{ activity.user }}</strong>
+                            {{ activity.action }}
+                            <time :datetime="activity.date">{{ formatDate(activity.date) }}</time>
+                        </div>
+                    </li>
+                </template>
             </ul>
         </div>
     </aside>

@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import type { Tag } from '@prisma/client'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface TagState {
     tags: Tag[]
@@ -14,10 +13,13 @@ export const useTagStore = defineStore('tag', {
     actions: {
         async fetchTags (groupId: number) {
             try {
-                const { $supabase } = useNuxtApp()
-                const { data: { session } } = await ($supabase as SupabaseClient).auth.getSession()
+                const supabase = useSupabaseClient()
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+                if (sessionError) {
+                    throw new Error(`Auth session error: ${sessionError.message}`)
+                }
                 if (!session) {
-                    throw new Error('No auth session')
+                    throw new Error('No active session found')
                 }
 
                 const response = await $fetch<Tag[]>(

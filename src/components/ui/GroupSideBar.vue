@@ -2,9 +2,11 @@
     <div class="d-none d-md-flex side-nav position-fixed start-0 top-50 flex-column rounded-5 m-2 translate-middle-y bg-dark bg-gradient shadow">
         <!-- Groups Section -->
         <div class="p-3 bg-gradient bg-dark rounded-top-5">
-            <span class="fw-semibold text-light">
-                <i class="bi bi-chat-dots-fill mx-2" />
-            </span>
+            <AppIcon
+                name="chevron-compact-up"
+                color="light"
+                size="md"
+            />
         </div>
 
         <!-- Main Navigation Section -->

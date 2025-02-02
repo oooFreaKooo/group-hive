@@ -44,7 +44,17 @@
             </button>
         </div>
 
-        <div class="row g-2 w-100">
+        <div class="row g-2 w-100 position-relative">
+            <div
+                v-if="status === 'pending'"
+                class="loading-overlay"
+                role="status"
+                aria-label="Loading tasks"
+            >
+                <div class="spinner-border text-primary" />
+                <span class="visually-hidden">Loading tasks...</span>
+            </div>
+
             <div
                 v-for="(column, index) in columns"
                 :key="index"
@@ -109,16 +119,29 @@ interface TaskColumn {
     tasks: TaskWithRelations[]
 }
 
-interface Props {
-    title: string
-    columns: TaskColumn[]
-    rowId?: number
-}
-
-const props = defineProps<Props>()
+const props = defineProps({
+    title: {
+        type: String,
+        required: true,
+    },
+    columns: {
+        type: Array as PropType<TaskColumn[]>,
+        required: true,
+    },
+    rowId: {
+        type: Number,
+        required: false,
+    },
+    status: {
+        type: String,
+        required: false,
+        default: 'pending',
+    },
+})
 
 const emit = defineEmits<{
     (e: 'task-updated'): void
+
     (e: 'task-moved', payload: {
         task: TaskWithRelations
         columnIndex: number
@@ -303,5 +326,17 @@ const handleChange = async (event: DragEvent, columnIndex: number, columnTitle: 
     .card:hover:not(.is-loading) {
         transform: none;
     }
+}
+
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(2px);
+    border-radius: 0.5rem;
+    z-index: 10;
 }
 </style>

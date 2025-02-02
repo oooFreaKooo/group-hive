@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface TaskState {
     tasks: TaskWithRelations[]
+    isLoading: boolean
+    error: string | null
 }
 
 interface UpdateTaskPayload {
@@ -13,6 +14,8 @@ interface UpdateTaskPayload {
 export const useTaskStore = defineStore('task', {
     state: (): TaskState => ({
         tasks: [],
+        isLoading: false,
+        error: null,
     }),
 
     getters: {
@@ -22,11 +25,19 @@ export const useTaskStore = defineStore('task', {
 
     actions: {
         async fetchTasks (groupId: number) {
+            this.isLoading = true
+            this.error = null
+
             try {
-                const { $supabase } = useNuxtApp()
-                const { data: { session } } = await ($supabase as SupabaseClient).auth.getSession()
+                const supabase = useSupabaseClient()
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+                if (sessionError) {
+                    throw new Error(`Authentication error: ${sessionError.message}`)
+                }
+
                 if (!session) {
-                    throw new Error('No auth session')
+                    throw new Error('No active session found. Please log in again.')
                 }
 
                 const response = await $fetch<TaskWithRelations[]>(
@@ -37,19 +48,36 @@ export const useTaskStore = defineStore('task', {
                         },
                     },
                 )
+
+                if (!Array.isArray(response)) {
+                    throw new TypeError('Invalid response format from server')
+                }
+
                 this.tasks = response
             } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Failed to fetch tasks'
+                this.error = errorMessage
                 console.error('TaskStore - Failed to fetch tasks:', error)
-                throw error
+                throw new Error(errorMessage)
+            } finally {
+                this.isLoading = false
             }
         },
 
         async updateTask (taskId: number, payload: UpdateTaskPayload) {
+            this.isLoading = true
+            this.error = null
+
             try {
-                const { $supabase } = useNuxtApp()
-                const { data: { session } } = await ($supabase as SupabaseClient).auth.getSession()
+                const supabase = useSupabaseClient()
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+                if (sessionError) {
+                    throw new Error(`Authentication error: ${sessionError.message}`)
+                }
+
                 if (!session) {
-                    throw new Error('No auth session')
+                    throw new Error('No active session found. Please log in again.')
                 }
 
                 await $fetch(`/api/tasks/${taskId}/update`, {
@@ -60,8 +88,12 @@ export const useTaskStore = defineStore('task', {
                     },
                 })
             } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Failed to update task'
+                this.error = errorMessage
                 console.error('TaskStore - Failed to update task:', error)
-                throw error
+                throw new Error(errorMessage)
+            } finally {
+                this.isLoading = false
             }
         },
     },

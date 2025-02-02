@@ -1,5 +1,5 @@
 <template>
-    <div class="chat-container d-flex flex-column rounded-5 border border-2">
+    <div class="chat-container d-flex flex-column rounded-5 shadow">
         <div class="p-3 bg-gradient bg-dark">
             <span class="fw-semibold text-light d-flex align-items-center justify-content-between w-100">
                 <div class="d-flex align-items-center">
@@ -10,46 +10,59 @@
             </span>
         </div>
 
-        <div class="flex-grow-1 overflow-auto p-3 member-list">
+        <div class="flex-grow-1 overflow-auto p-3 member-list position-relative">
             <div
-                v-for="member in members"
-                :key="member.id"
-                class="position-relative cursor-pointer mb-2"
-                @click.stop="setActivePopover(member.id)"
+                v-if="status === 'pending'"
+                class="loading-overlay"
             >
-                <div class="d-flex align-items-center gap-3 p-2 member-card border-bottom">
-                    <div class="position-relative flex-shrink-0">
-                        <NuxtImg
-                            class="rounded-circle member-avatar"
-                            width="40"
-                            height="40"
-                            :src="member.profile.avatarUrl || '/default-avatar.png'"
-                            :alt="member.profile.displayName || 'Member'"
-                        />
-                    </div>
-                    <div class="flex-grow-1 min-w-0">
-                        <div class="fw-semibold text-truncate">
-                            {{ member.profile.displayName }}
-                            <span
-                                v-if="member.role === 'ADMIN'"
-                                title="Admin"
-                            >
-                                <i class="bi bi-shield-fill-check small" />
-                            </span>
-                        </div>
-
-                        <div class="fs-7 text-gray-600 d-flex align-items-center gap-2">
-                            <i class="bi bi-star-fill text-warning" />
-                            {{ member.points }}
-                        </div>
-                    </div>
+                <div
+                    class="spinner-border text-primary"
+                    role="status"
+                >
+                    <span class="visually-hidden">Loading...</span>
                 </div>
-
-                <MemberPopover
-                    v-if="activePopover === member.id"
-                    :member="member"
-                />
             </div>
+            <template v-else>
+                <div
+                    v-for="member in members"
+                    :key="member.id"
+                    class="position-relative cursor-pointer mb-2"
+                    @click.stop="setActivePopover(member.id)"
+                >
+                    <div class="d-flex align-items-center gap-3 p-2 member-card border-bottom">
+                        <div class="position-relative flex-shrink-0">
+                            <NuxtImg
+                                class="rounded-circle member-avatar"
+                                width="40"
+                                height="40"
+                                :src="member.profile.avatarUrl || '/default-avatar.png'"
+                                :alt="member.profile.displayName || 'Member'"
+                            />
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-semibold text-truncate">
+                                {{ member.profile.displayName }}
+                                <span
+                                    v-if="member.role === 'ADMIN'"
+                                    title="Admin"
+                                >
+                                    <i class="bi bi-shield-fill-check small" />
+                                </span>
+                            </div>
+
+                            <div class="fs-7 text-gray-600 d-flex align-items-center gap-2">
+                                <i class="bi bi-star-fill text-warning" />
+                                {{ member.points }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <MemberPopover
+                        v-if="activePopover === member.id"
+                        :member="member"
+                    />
+                </div>
+            </template>
         </div>
     </div>
 </template>
@@ -63,6 +76,7 @@ defineProps<{
             profile: true
         }
     }>[]
+    status: string
 }>()
 
 const { activePopover, setActivePopover, handleClickOutside, handleEscKey } = usePopoverState()
@@ -140,5 +154,15 @@ onUnmounted(() => {
         scrollbar-color: var(--bs-gray-300) transparent;
         scrollbar-width: thin;
     }
+}
+
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(2px);
 }
 </style>

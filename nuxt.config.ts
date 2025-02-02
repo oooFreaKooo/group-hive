@@ -44,6 +44,13 @@ export default defineNuxtConfig({
                 'yup', '@headlessui/vue', 'vue-draggable-next', 'three',
             ],
         },
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    additionalData: '@import "@/assets/css/_grid.scss";',
+                },
+            },
+        },
     },
 
     googleFonts: {
