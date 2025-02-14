@@ -19,43 +19,36 @@
                             />
                             {{ areAllRowsExpanded ? 'Collapse All' : 'Expand All' }}
                         </button>
-                        <button
-                            class="btn btn-light btn-sm rounded-pill"
-                            @click="showCreateTag = true"
-                        >
-                            <i class="bi bi-tag me-2" />
-                            Add Tag
-                        </button>
-                        <button
-                            class="btn btn-light btn-sm rounded-pill"
-                            @click="showCreateRow = true"
-                        >
-                            <i class="bi bi-plus-lg me-2" />
-                            Add Week
-                        </button>
-                        <button
-                            class="btn btn-primary btn-sm rounded-pill"
-                            @click="showCreateTask = true"
-                        >
-                            <i class="bi bi-plus-lg me-2" />
-                            Add Task
-                        </button>
+                        <CreateTagPopover
+                            :group-id="route.params.id[0]"
+                            @tag-created="refresh"
+                        />
+                        <CreateTaskRowPopover
+                            :group-id="route.params.id[0]"
+                            @row-created="refresh"
+                        />
+                        <CreateTaskPopover
+                            v-if="taskRows"
+                            :group-id="route.params.id[0]"
+                            :task-rows="taskRows"
+                            @task-created="refresh"
+                        />
                     </div>
                 </div>
             </div>
 
-            <div class="task-content bg-light">
+            <div class="task-content bg-light p-4">
                 <div
-                    v-if="error"
+                    v-if="status === 'error'"
                     class="alert alert-danger mb-4"
                     role="alert"
                 >
-                    {{ error }}
+                    Failed to load tasks
                     <button
                         class="btn btn-link p-0 ms-2"
-                        @click="error = null"
+                        @click="refresh()"
                     >
-                        Dismiss
+                        Retry
                     </button>
                 </div>
 
@@ -71,43 +64,17 @@
                             :row-id="row.id"
                             :is-expanded="expandedRows[row.id]"
                             @update:expanded="(value) => handleRowExpanded(row.id, value)"
-                            @task-updated="refreshTasks"
                             @task-moved="handleTaskMoved"
                         />
                     </div>
                 </div>
             </div>
         </div>
-
-        <CreateTagPopover
-            v-if="showCreateTag && data?.id"
-            :group-id="Number(data.id)"
-            @close="showCreateTag = false"
-            @tag-created="handleTagCreated"
-        />
-
-        <CreateTaskPopover
-            v-if="showCreateTask && data?.id"
-            :group-id="Number(data.id)"
-            :group-members="data.members"
-            :tags="tags"
-            :task-rows="taskRows"
-            @task-created="handleTaskCreated"
-            @close="showCreateTask = false"
-        />
-
-        <CreateTaskRowPopover
-            v-if="showCreateRow && data?.id"
-            :group-id="Number(data.id)"
-            @row-created="handleRowCreated"
-            @close="showCreateRow = false"
-        />
     </AppSection>
 </template>
 
 <script setup lang="ts">
-import type { Prisma } from '@prisma/client'
-import { storeToRefs } from 'pinia'
+import type { Task, TaskRow } from '@prisma/client'
 
 definePageMeta({
     layout: 'group',
@@ -115,150 +82,65 @@ definePageMeta({
 
 const route = useRoute()
 
-// UI state
-const showCreateTask = ref(false)
-const showCreateRow = ref(false)
-const showCreateTag = ref(false)
-const error = ref<string | null>(null)
-const expandedRows = ref<Record<number, boolean>>({})
-
-// Store initialization
-const taskStore = useTaskStore()
-const taskRowStore = useTaskRowStore()
-const tagStore = useTagStore()
-
-// Destructure store refs for better reactivity
-const { tags } = storeToRefs(tagStore)
-// const { unassignedTasks } = storeToRefs(taskStore)
-const { taskRows } = storeToRefs(taskRowStore)
-
-// Computed
-const areAllRowsExpanded = computed(() => {
-    const rows = taskRows.value
-    if (!rows?.length) { return false }
-    return rows.every(row => expandedRows.value[row.id])
-})
-
-// Fetch group data
-const { data } = await useFetch<Prisma.GroupGetPayload<{
-    select: {
-        id: true
-        name: true
-        members: {
-            include: {
-                profile: true
-            }
-        }
-        TaskRow: {
-            include: {
-                tasks: {
-                    include: {
-                        assignee: {
-                            include: {
-                                profile: true
-                            }
-                        }
-                        tags: true
-                    }
-                }
-            }
-        }
-        Task: {
-            include: {
-                assignee: {
-                    include: {
-                        profile: true
-                    }
-                }
-                tags: true
-            }
-        }
-        Tag: true
-    }
-}> | null>(`/api/group/${route.params.id}`, {
-    key: route.fullPath,
-    default: () => null,
-})
-
-// Initialize data on component mount
-onMounted(async () => {
-    if (!data.value?.id) { return }
-
-    try {
-        error.value = null
-        await Promise.all([
-            tagStore.fetchTags(Number(data.value.id)),
-            taskStore.fetchTasks(Number(data.value.id)),
-            taskRowStore.fetchTaskRows(Number(data.value.id)),
-        ])
-    } catch (e) {
-        console.error('Failed to initialize task data:', e)
-        error.value = 'Failed to load task data. Please try refreshing the page.'
-    }
-})
-
-// Event handlers
-const refreshTasks = async () => {
-    if (!data.value?.id) { return }
-
-    try {
-        error.value = null
-        await Promise.all([
-            taskStore.fetchTasks(Number(data.value.id)),
-            taskRowStore.fetchTaskRows(Number(data.value.id)),
-        ])
-    } catch (e) {
-        error.value = 'Failed to refresh tasks. Please try again.'
-        console.error('TasksSection - Failed to refresh tasks:', e)
+interface TaskTag {
+    tagId: string
+    tag: {
+        id: string
+        title: string
+        color: string
     }
 }
 
-const handleTaskCreated = () => refreshTasks()
-const handleRowCreated = () => {
-    if (data.value?.id) {
-        taskRowStore.fetchTaskRows(Number(data.value.id))
-    }
+interface TaskWithRelations extends Task {
+    tags: TaskTag[]
 }
-const handleTagCreated = () => {
-    if (data.value?.id) {
-        tagStore.fetchTags(Number(data.value.id))
-    }
+
+interface TaskRowWithTasks extends TaskRow {
+    tasks: TaskWithRelations[]
 }
+
+const { data: taskRows, status, refresh } = await useLazyFetch<TaskRowWithTasks[]>(() => `/api/group/${route.params.id[0]}/taskRow`, {
+    key: 'taskRows',
+})
 
 interface TaskMovedPayload {
     task: TaskWithRelations
     columnIndex: number
-    rowId?: number
+    rowId?: string
     onComplete?: () => void
 }
 
 const handleTaskMoved = async (payload: TaskMovedPayload) => {
-    if (!data.value?.id) { return }
+    if (!taskRows.value) { return }
     try {
-        error.value = null
         const { task, columnIndex, rowId: targetRowId, onComplete } = payload
 
         if (!targetRowId) {
-            await taskStore.updateTask(task.id, {
-                dueDate: null,
-                taskRowId: null,
+            await $fetch(`/api/group/${route.params.id[0]}/task/${task.id}`, {
+                method: 'PUT',
+                body: {
+                    dueDate: null,
+                    taskRowId: null,
+                },
             })
         } else {
             const targetRow = taskRows.value.find(row => row.id === targetRowId)
             if (!targetRow) { return }
 
             const dueDate = calculateDueDate(targetRow.weekStart, columnIndex)
-            await taskStore.updateTask(task.id, {
-                dueDate: dueDate.toISOString(),
-                taskRowId: targetRow.id,
+            await $fetch(`/api/group/${route.params.id[0]}/task/${task.id}`, {
+                method: 'PUT',
+                body: {
+                    dueDate: dueDate.toISOString(),
+                    taskRowId: targetRow.id,
+                },
             })
         }
 
-        await taskRowStore.fetchTaskRows(data.value.id)
+        refresh()
         onComplete?.()
     } catch (e) {
-        error.value = 'Failed to move task. Please try again.'
-        console.error('TasksSection - Error:', e)
+        console.error('Error moving task:', e)
     }
 }
 
@@ -277,12 +159,12 @@ const getWeekColumns = computed(() => {
         'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
     ]
 
-    return (row: { weekStart: Date | string, id: number, tasks: TaskWithRelations[] }) => {
+    return (row: TaskRowWithTasks) => {
         const weekStart = new Date(row.weekStart)
 
         return days.map((day, index) => ({
             title: day,
-            tasks: row.tasks.filter((task: TaskWithRelations) => {
+            tasks: row.tasks?.filter((task) => {
                 if (!task.taskRowId || !task.dueDate) { return false }
                 if (task.taskRowId !== row.id) { return false }
 
@@ -291,20 +173,22 @@ const getWeekColumns = computed(() => {
                 columnDate.setDate(weekStart.getDate() + index)
 
                 return taskDate.toDateString() === columnDate.toDateString()
-            }),
+            }) || [],
         }))
     }
 })
 
-// Methods
-function handleRowExpanded (rowId: number, value: boolean) {
+const expandedRows = ref<Record<string, boolean>>({})
+const areAllRowsExpanded = ref(false)
+
+function handleRowExpanded (rowId: string, value: boolean) {
     expandedRows.value[rowId] = value
 }
 
 function toggleAllRows () {
-    const newValue = !areAllRowsExpanded.value
+    areAllRowsExpanded.value = !areAllRowsExpanded.value
     taskRows.value?.forEach((row) => {
-        expandedRows.value[row.id] = newValue
+        expandedRows.value[row.id] = areAllRowsExpanded.value
     })
 }
 

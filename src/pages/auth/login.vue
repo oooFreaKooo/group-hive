@@ -100,7 +100,6 @@
 import { ValidationError } from 'yup'
 import { signInValidation } from '~/utils/formValidation'
 import { BaseError, useErrorHandler } from '~/composables/useErrorHandler'
-import { useUserStore } from '~/stores/user'
 
 definePageMeta({
     middleware: ['guest'],
@@ -112,7 +111,7 @@ useSeoMeta({
 
 const { auth } = useSupabaseClient()
 const { errorHandler } = useErrorHandler()
-const userStore = useUserStore()
+const { data: profile } = await useFetch('/api/profile')
 
 const form = reactive({
     email: undefined,
@@ -134,9 +133,27 @@ const signInWithCredential = async () => {
             throw new BaseError(signIn.error.status, signIn.error.message)
         }
 
-        // Initialize user store with profile data
-        await userStore.setUser(signIn.data.user)
-        await userStore.fetchProfile()
+        // Initialize user store with user data
+        await $fetch('/api/profile', {
+            method: 'POST',
+            body: {
+                id: signIn.data.user.id,
+            },
+        })
+
+        // Fetch profile data
+        await $fetch('/api/profile', {
+            method: 'GET',
+            body: {
+                id: signIn.data.user.id,
+            },
+        })
+
+        // Check if profile exists, if not redirect to confirm page
+        if (!profile.value) {
+            navigateTo('/auth/confirm')
+            return
+        }
 
         navigateTo('/dashboard')
         isLoading.value = false

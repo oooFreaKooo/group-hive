@@ -1,94 +1,108 @@
 <template>
-    <AppPopover
-        title="Create Task Row"
-        @close="$emit('close')"
-    >
-        <form @submit.prevent="handleSubmit">
-            <div class="mb-3">
-                <label
-                    for="rowTitle"
-                    class="form-label"
-                >Title*</label>
-                <input
-                    id="rowTitle"
-                    v-model="form.title"
-                    type="text"
-                    class="form-control"
-                    required
-                    placeholder="e.g., Sprint 1, Week 23, etc."
-                >
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Week*</label>
-                <div class="d-flex gap-2">
-                    <select
-                        v-model="selectedWeek"
-                        class="form-select"
+    <div>
+        <button
+            class="btn btn-light btn-sm rounded-pill"
+            @click="isOpen = true"
+        >
+            <i class="bi bi-plus-lg me-2" />
+            Add Week
+        </button>
+
+        <AppPopover
+            v-if="isOpen"
+            title="Create Task Row"
+            @close="isOpen = false"
+        >
+            <form @submit.prevent="handleSubmit">
+                <div class="mb-3">
+                    <label
+                        for="rowTitle"
+                        class="form-label"
+                    >Title*</label>
+                    <input
+                        id="rowTitle"
+                        v-model="form.title"
+                        type="text"
+                        class="form-control"
                         required
+                        placeholder="e.g., Sprint 1, Week 23, etc."
                     >
-                        <option value="">
-                            Select a week
-                        </option>
-                        <option
-                            v-for="week in availableWeeks"
-                            :key="week.start.toISOString()"
-                            :value="week"
-                        >
-                            {{ formatWeekOption(week) }}
-                        </option>
-                    </select>
                 </div>
-            </div>
-            <div
-                v-if="error"
-                class="alert alert-danger"
-                role="alert"
-            >
-                {{ error }}
-            </div>
-            <div class="d-flex justify-content-end gap-2">
-                <button
-                    type="button"
-                    class="btn btn-secondary"
-                    @click="$emit('close')"
+                <div class="mb-3">
+                    <label class="form-label">Week*</label>
+                    <div class="d-flex gap-2">
+                        <select
+                            v-model="selectedWeek"
+                            class="form-select"
+                            required
+                        >
+                            <option value="">
+                                Select a week
+                            </option>
+                            <option
+                                v-for="week in availableWeeks"
+                                :key="week.start.toISOString()"
+                                :value="week"
+                            >
+                                {{ formatWeekOption(week) }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div
+                    v-if="error"
+                    class="alert alert-danger"
+                    role="alert"
                 >
-                    Cancel
-                </button>
-                <button
-                    type="submit"
-                    class="btn btn-primary"
-                    :disabled="isSubmitting"
-                >
-                    {{ isSubmitting ? 'Creating...' : 'Create Row' }}
-                </button>
-            </div>
-        </form>
-    </AppPopover>
+                    {{ error }}
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        @click="isOpen = false"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                        :disabled="isSubmitting"
+                    >
+                        {{ isSubmitting ? 'Creating...' : 'Create Row' }}
+                    </button>
+                </div>
+            </form>
+        </AppPopover>
+    </div>
 </template>
 
 <script setup lang="ts">
-interface Props {
-    groupId: number
-}
+const props = defineProps({
+    groupId: {
+        type: String,
+        required: true,
+    },
+})
 
-const props = defineProps<Props>()
 const emit = defineEmits<{
-    (e: 'rowCreated'): void
-    (e: 'close'): void
+    (e: 'row-created'): void
 }>()
+
+const isOpen = ref(false)
+const error = ref('')
+const isSubmitting = ref(false)
+
+const form = ref({
+    title: '',
+})
 
 interface WeekOption {
     start: Date
     end: Date
 }
 
-const form = ref({
-    title: '',
-})
-
 const selectedWeek = ref<WeekOption | ''>('')
-const error = ref('')
-const isSubmitting = ref(false)
 
 // Generate next 12 weeks as options
 const availableWeeks = computed(() => {
@@ -136,8 +150,7 @@ const handleSubmit = async () => {
     try {
         isSubmitting.value = true
         error.value = ''
-
-        const response = await $fetch('/api/task-rows/create', {
+        await $fetch(`/api/group/${props.groupId}/taskRow`, {
             method: 'POST',
             body: {
                 ...form.value,
@@ -147,10 +160,10 @@ const handleSubmit = async () => {
             },
         })
 
-        if (response) {
-            emit('rowCreated')
-            emit('close')
-        }
+        emit('row-created')
+        isOpen.value = false
+        form.value.title = ''
+        selectedWeek.value = ''
     } catch (e: any) {
         error.value = e.message || 'Failed to create task row'
     } finally {

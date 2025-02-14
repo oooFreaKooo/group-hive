@@ -9,161 +9,114 @@ generator client {
 }
 
 model Profile {
-  id           String      @id @unique
-  displayName  String?
-  email        String?
-  avatarUrl    String?
-  bgUrl        String?
-  role         UserRole    @default(USER)
-  city         String?
-  postalCode   String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  groupMembers GroupUser[]
-  ownedGroups  Group[]
+  id          String    @id @db.VarChar(36) // Supabase Auth UUID
+  displayName String?   @db.Text
+  email       String?   @db.Text
+  avatarUrl   String?   @db.Text
+  bgUrl       String?   @db.Text
+  role        UserRole  @default(USER)
+  city        String?   @db.Text
+  postalCode  String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  groupIds    String[] // References to groups the user is part of
+  messages    Message[] @relation("MessageAuthor")
 }
 
 model Group {
-  id             Int         @id @default(autoincrement())
-  name           String
-  description    String?
-  invitationCode String      @unique
-  ownerId        String
-  city           String?
-  postalCode     String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  members        GroupUser[]
-  owner          Profile     @relation(fields: [ownerId], references: [id])
-  tasks          Task[]
-  Message        Message[]
-  tags           Tag[]
-  TaskRow        TaskRow[]
-}
-
-model GroupUser {
-  id             Int              @id @default(autoincrement())
-  profileId      String
-  groupId        Int
-  role           GroupRole        @default(MEMBER)
-  points         Int              @default(0)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  group          Group            @relation(fields: [groupId], references: [id])
-  profile        Profile          @relation(fields: [profileId], references: [id])
-  pointHistory   PointHistory[]
-  completedTasks Task[]           @relation("TaskCompletion")
-  assignedTasks  Task[]           @relation("TaskAssignment")
-  sentMessages   Message[]        @relation("AuthoredMessages")
-  mentionedIn    MessageMention[]
-  taskComments   TaskComment[]
-
-  @@unique([profileId, groupId])
+  id             String   @id @default(cuid()) @db.VarChar(30)
+  name           String   @db.Text
+  description    String?  @db.Text
+  invitationCode String   @unique @db.Text
+  ownerId        String   @db.VarChar(36) // References the Profile id from Supabase
+  city           String?  @db.Text
+  postalCode     String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Task {
-  id            Int            @id @default(autoincrement())
-  description   String?
+  id            String    @id @default(cuid()) @db.VarChar(30)
+  description   String?   @db.Text
   dueDate       DateTime?
-  completed     Boolean        @default(false)
-  pointValue    Int            @default(0)
-  groupId       Int
-  taskRowId     Int?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  completedBy   GroupUser?     @relation("TaskCompletion", fields: [completedById], references: [id])
-  completedById Int?
-  group         Group          @relation(fields: [groupId], references: [id])
-  taskRow       TaskRow?       @relation(fields: [taskRowId], references: [id])
-  pointHistory  PointHistory[]
-  assignedTo    GroupUser?     @relation("TaskAssignment", fields: [assignedToId], references: [id])
-  assignedToId  Int?
+  completed     Boolean   @default(false)
+  pointValue    Int       @default(0)
+  groupId       String    @db.VarChar(30)
+  taskRowId     String?   @db.VarChar(30)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  assignedToId  String?   @db.VarChar(36) // References the Profile id from Supabase
+  completedById String?   @db.VarChar(36) // References the Profile id from Supabase
   tags          TaskTag[]
-  comments      TaskComment[]
+  TaskRow       TaskRow?  @relation(fields: [taskRowId], references: [id])
+  comments      Comment[]
 }
 
 model TaskRow {
-  id        Int      @id @default(autoincrement())
-  title     String
+  id        String   @id @default(cuid()) @db.VarChar(30)
+  title     String   @db.Text
   weekStart DateTime
   weekEnd   DateTime
-  groupId   Int
+  groupId   String   @db.VarChar(30)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  group     Group    @relation(fields: [groupId], references: [id])
-  tasks     Task[]
   order     Int      @default(0)
+  tasks     Task[]
 
   @@unique([groupId, weekStart, weekEnd])
 }
 
-model PointHistory {
-  id          Int       @id @default(autoincrement())
-  points      Int
-  reason      String
-  groupUserId Int
-  taskId      Int?
-  createdAt   DateTime  @default(now())
-  groupUser   GroupUser @relation(fields: [groupUserId], references: [id])
-  task        Task?     @relation(fields: [taskId], references: [id])
-}
-
 model Message {
-  id        Int              @id @default(autoincrement())
-  content   String
-  groupId   Int
-  authorId  Int
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  isEdited  Boolean          @default(false)
-  replyToId Int?
-  replyTo   Message?         @relation("MessageReplies", fields: [replyToId], references: [id])
-  replies   Message[]        @relation("MessageReplies")
-  group     Group            @relation(fields: [groupId], references: [id])
-  author    GroupUser        @relation("AuthoredMessages", fields: [authorId], references: [id])
-  mentions  MessageMention[]
-}
+  id         String    @id @default(cuid()) @db.VarChar(30)
+  content    String    @db.Text
+  groupId    String    @db.VarChar(30)
+  authorId   String    @db.VarChar(36) // References the Profile id from Supabase
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  isEdited   Boolean   @default(false)
+  replyToId  String?   @db.VarChar(30)
+  mentionIds String[] // References to Profile ids
+  author     Profile   @relation("MessageAuthor", fields: [authorId], references: [id])
+  replyTo    Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies    Message[] @relation("MessageReplies")
 
-model MessageMention {
-  messageId   Int
-  groupUserId Int
-  message     Message   @relation(fields: [messageId], references: [id])
-  groupUser   GroupUser @relation(fields: [groupUserId], references: [id])
-
-  @@id([messageId, groupUserId])
+  @@index([authorId])
+  @@index([replyToId])
 }
 
 model Tag {
-  id        Int       @id @default(autoincrement())
+  id        String    @id @default(cuid()) @db.VarChar(30)
   title     String
   color     String
-  groupId   Int
+  groupId   String    @db.VarChar(30) // References the Group id
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  group     Group     @relation(fields: [groupId], references: [id])
-  tasks     TaskTag[]
+  tasks     TaskTag[] // Relation to TaskTag join table
 
   @@unique([title, groupId])
 }
 
+// Join table for many-to-many relationship between Task and Tag
 model TaskTag {
-  taskId Int
-  tagId  Int
-  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  taskId    String   @db.VarChar(30)
+  tagId     String   @db.VarChar(30)
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([taskId, tagId])
+  @@index([tagId])
+  @@index([taskId])
 }
 
-model TaskComment {
-  id        Int       @id @default(autoincrement())
-  content   String
-  taskId    Int
-  authorId  Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  author    GroupUser @relation(fields: [authorId], references: [id])
+model PointHistory {
+  id        String   @id @default(cuid()) @db.VarChar(30)
+  points    Int
+  reason    String
+  profileId String   @db.VarChar(36) // References the Profile id from Supabase
+  groupId   String   @db.VarChar(30) // References the Group id
+  taskId    String?  @db.VarChar(30) // References the Task id
+  createdAt DateTime @default(now())
 }
 
 enum UserRole {
@@ -171,7 +124,15 @@ enum UserRole {
   ADMIN
 }
 
-enum GroupRole {
-  MEMBER
-  ADMIN
+// Add Comment model
+model Comment {
+  id        String   @id @default(cuid()) @db.VarChar(30)
+  content   String
+  taskId    String   @db.VarChar(30)
+  authorId  String   @db.VarChar(36) // References the Profile id from Supabase
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([authorId])
 }

@@ -1,75 +1,91 @@
 <template>
-    <AppPopover
-        title="Create New Tag"
-        @close="$emit('close')"
-    >
-        <form @submit.prevent="handleSubmit">
-            <div class="mb-3">
-                <label
-                    for="tagTitle"
-                    class="form-label"
-                >Title*</label>
-                <input
-                    id="tagTitle"
-                    v-model="form.title"
-                    type="text"
-                    class="form-control"
-                    required
-                >
-            </div>
-            <div class="mb-3">
-                <label
-                    for="tagColor"
-                    class="form-label"
-                >Color*</label>
-                <div class="d-flex gap-2">
-                    <div
-                        v-for="color in predefinedColors"
-                        :key="color"
-                        class="color-option"
-                        :class="{ active: form.color === color }"
-                        :style="{ backgroundColor: color }"
-                        @click="form.color = color"
-                    />
+    <div>
+        <button
+            class="btn btn-light btn-sm rounded-pill"
+            @click="isOpen = true"
+        >
+            <i class="bi bi-tag me-2" />
+            Add Tag
+        </button>
+
+        <AppPopover
+            v-if="isOpen"
+            title="Create New Tag"
+            @close="isOpen = false"
+        >
+            <form @submit.prevent="handleSubmit">
+                <div class="mb-3">
+                    <label
+                        for="tagTitle"
+                        class="form-label"
+                    >Title*</label>
+                    <input
+                        id="tagTitle"
+                        v-model="form.title"
+                        type="text"
+                        class="form-control"
+                        required
+                    >
                 </div>
-            </div>
-            <div
-                v-if="error"
-                class="alert alert-danger"
-                role="alert"
-            >
-                {{ error }}
-            </div>
-            <div class="d-flex justify-content-end gap-2">
-                <button
-                    type="button"
-                    class="btn btn-secondary"
-                    @click="$emit('close')"
+                <div class="mb-3">
+                    <label
+                        for="tagColor"
+                        class="form-label"
+                    >Color*</label>
+                    <div class="d-flex gap-2">
+                        <div
+                            v-for="color in predefinedColors"
+                            :key="color"
+                            class="color-option"
+                            :class="{ active: form.color === color }"
+                            :style="{ backgroundColor: color }"
+                            @click="form.color = color"
+                        />
+                    </div>
+                </div>
+                <div
+                    v-if="error"
+                    class="alert alert-danger"
+                    role="alert"
                 >
-                    Cancel
-                </button>
-                <button
-                    type="submit"
-                    class="btn btn-primary"
-                    :disabled="isSubmitting"
-                >
-                    {{ isSubmitting ? 'Creating...' : 'Create Tag' }}
-                </button>
-            </div>
-        </form>
-    </AppPopover>
+                    {{ error }}
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        @click="isOpen = false"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                        :disabled="isSubmitting"
+                    >
+                        {{ isSubmitting ? 'Creating...' : 'Create Tag' }}
+                    </button>
+                </div>
+            </form>
+        </AppPopover>
+    </div>
 </template>
 
 <script setup lang="ts">
-interface Props {
-    groupId: number
-}
+const props = defineProps({
+    groupId: {
+        type: String,
+        required: true,
+    },
+})
 
-const props = defineProps<Props>()
 const emit = defineEmits<{
-    (e: 'tagCreated'): void
-    (e: 'close'): void
+    (e: 'tag-created'): void
 }>()
+
+const isOpen = ref(false)
+const error = ref('')
+const isSubmitting = ref(false)
 
 const predefinedColors = [
     '#FF6B6B', // Red
@@ -87,26 +103,20 @@ const form = ref({
     color: predefinedColors[0],
 })
 
-const error = ref('')
-const isSubmitting = ref(false)
-
 const handleSubmit = async () => {
     try {
         isSubmitting.value = true
         error.value = ''
 
-        const response = await $fetch('/api/tags/create', {
+        await $fetch(`/api/group/${props.groupId}/tags`, {
             method: 'POST',
-            body: {
-                ...form.value,
-                groupId: props.groupId,
-            },
+            body: form.value,
         })
 
-        if (response) {
-            emit('tagCreated')
-            emit('close')
-        }
+        emit('tag-created')
+        isOpen.value = false
+        form.value.title = ''
+        form.value.color = predefinedColors[0]
     } catch (e: any) {
         error.value = e.message || 'Failed to create tag'
     } finally {

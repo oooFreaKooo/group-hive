@@ -7,7 +7,7 @@
             <div class="d-flex align-items-center justify-content-between">
                 <span class="text-primary">
                     <i class="bi bi-reply me-2" />
-                    Replying to {{ replyingTo.author.profile.displayName }}
+                    Replying to {{ replyingTo.author.displayName }}
                 </span>
                 <button
                     class="btn btn-link btn-sm p-1 text-body-tertiary hover-danger transition-rotate"
@@ -21,7 +21,7 @@
         <div class="d-flex gap-3">
             <div class="flex-grow-1 position-relative">
                 <textarea
-                    ref="textareaRef"
+                    ref="messageInput"
                     v-model="message"
                     class="form-control rounded-4 py-2 px-3"
                     :class="{ 'focus-primary': message }"
@@ -30,7 +30,7 @@
                     @input="handleInput"
                 />
                 <div
-                    v-if="showMentionSuggestions && filteredMembers.length > 0"
+                    v-if="isSuggestionsVisible && filteredMembers.length > 0"
                     class="position-absolute bottom-100 start-2 end-2 mb-2 border border-primary-subtle rounded-3 shadow-sm overflow-auto max-h-200 backdrop-blur z-3"
                 >
                     <div
@@ -43,10 +43,10 @@
                             class="rounded-circle me-2 border border-gray-200 transition-transform"
                             width="24"
                             height="24"
-                            :src="member.profile.avatarUrl || '/default-avatar.png'"
-                            :alt="member.profile.displayName || 'User'"
+                            :src="member.avatarUrl || '/default-avatar.png'"
+                            :alt="member.displayName || 'User'"
                         />
-                        <span>{{ member.profile.displayName }}</span>
+                        <span>{{ member.displayName }}</span>
                     </div>
                 </div>
             </div>
@@ -67,70 +67,55 @@
 </template>
 
 <script setup lang="ts">
-import type { Prisma } from '@prisma/client'
+import type { Prisma, Profile } from '@prisma/client'
 
-type MessageWithRelations = Prisma.MessageGetPayload<{
+type MessageWithAuthor = Prisma.MessageGetPayload<{
     include: {
-        author: {
-            include: {
-                profile: true
-            }
-        }
+        author: true
         replyTo: {
             include: {
-                author: {
-                    include: {
-                        profile: true
-                    }
-                }
+                author: true
             }
         }
     }
 }>
 
 const props = defineProps<{
-    replyingTo: MessageWithRelations | undefined
-    members: Prisma.GroupUserGetPayload<{
-        include: {
-            profile: true
-        }
-    }>[]
+    replyingTo: MessageWithAuthor | null
+    members: Profile[]
 }>()
 
 const emit = defineEmits<{
-    'send': [message: string]
+    'send': [content: string]
     'cancel-reply': []
     'mention-suggestion': [suggestion: { startPosition: number, query: string }]
 }>()
 
+const messageInput = ref<HTMLTextAreaElement | null>(null)
 const message = ref('')
-const cursorPosition = ref(0)
-const showMentionSuggestions = ref(false)
-const mentionQuery = ref('')
-const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const mentionSuggestions = ref<Profile[]>([])
+const selectedSuggestionIndex = ref(0)
+const isSuggestionsVisible = ref(false)
+const lastMentionStartPosition = ref(0)
 
 const filteredMembers = computed(() => {
-    if (!mentionQuery.value) { return [] }
-    return props.members.filter(member =>
-        (member.profile.displayName || '').toLowerCase().includes(mentionQuery.value.toLowerCase()),
-    )
+    if (!mentionSuggestions.value.length) { return [] }
+    return mentionSuggestions.value
 })
 
 const handleInput = (event: Event) => {
     const textarea = event.target as HTMLTextAreaElement
-    cursorPosition.value = textarea.selectionStart
-
-    // Check for @ symbol
+    const cursorPos = textarea.selectionStart
     const text = textarea.value
-    const lastAtSymbol = text.lastIndexOf('@', cursorPosition.value)
+    const lastAtSymbol = text.lastIndexOf('@', cursorPos)
 
     if (lastAtSymbol !== -1) {
         // Check if there's a space before @ (or it's at the start)
         const charBeforeAt = lastAtSymbol > 0 ? text[lastAtSymbol - 1] : ' '
         if (charBeforeAt === ' ' || charBeforeAt === '\n') {
-            const query = text.slice(lastAtSymbol + 1, cursorPosition.value)
-            mentionQuery.value = query
-            showMentionSuggestions.value = true
+            const query = text.slice(lastAtSymbol + 1, cursorPos)
+            lastMentionStartPosition.value = lastAtSymbol
+            filterMentionSuggestions(query)
             emit('mention-suggestion', {
                 startPosition: lastAtSymbol,
                 query,
@@ -139,11 +124,11 @@ const handleInput = (event: Event) => {
         }
     }
 
-    showMentionSuggestions.value = false
-    mentionQuery.value = ''
+    isSuggestionsVisible.value = false
+    mentionSuggestions.value = []
 }
 
-const handleMentionSelect = (member: Prisma.GroupUserGetPayload<{ include: { profile: true } }>) => {
+const handleMentionSelect = (member: Profile) => {
     insertMention(member)
 }
 
@@ -153,33 +138,35 @@ const handleSend = () => {
     message.value = ''
 }
 
-const insertMention = (member: Prisma.GroupUserGetPayload<{ include: { profile: true } }>) => {
-    const mention = `@[${member.profile.displayName}](${member.id})`
-    const textarea = textareaRef.value
+function filterMentionSuggestions (query: string) {
+    mentionSuggestions.value = props.members.filter(member =>
+        member.displayName?.toLowerCase().includes(query.toLowerCase()),
+    )
+    selectedSuggestionIndex.value = 0
+    isSuggestionsVisible.value = mentionSuggestions.value.length > 0
+}
 
-    if (textarea) {
-        const currentPos = textarea.selectionStart
-        const text = message.value
-        const lastAtSymbol = text.lastIndexOf('@', currentPos)
+function insertMention (member: Profile) {
+    const textarea = messageInput.value
+    if (!textarea) { return }
 
-        if (showMentionSuggestions.value) {
-            // If suggestions are shown, replace from @ to cursor
-            message.value = text.slice(0, lastAtSymbol) + mention + text.slice(currentPos) + ' '
-        } else {
-            // If clicked on name, insert at cursor
-            message.value = text.slice(0, currentPos) + mention + ' ' + text.slice(currentPos)
-        }
+    const mention = `@[${member.displayName}](${member.id})`
+    const beforeMention = message.value.slice(0, lastMentionStartPosition.value)
+    const afterMention = message.value.slice(textarea.selectionStart)
+    message.value = `${beforeMention}${mention}${afterMention}`
 
-        // Focus and move cursor after mention and space
-        nextTick(() => {
+    isSuggestionsVisible.value = false
+    mentionSuggestions.value = []
+
+    // Set cursor position after the mention
+    nextTick(() => {
+        if (textarea) {
+            const cursorPosition = lastMentionStartPosition.value + mention.length
+            textarea.selectionStart = cursorPosition
+            textarea.selectionEnd = cursorPosition
             textarea.focus()
-            const newCursorPos = (lastAtSymbol !== -1 ? lastAtSymbol : currentPos) + mention.length + 1
-            textarea.setSelectionRange(newCursorPos, newCursorPos)
-        })
-    }
-
-    showMentionSuggestions.value = false
-    mentionQuery.value = ''
+        }
+    })
 }
 
 defineExpose({

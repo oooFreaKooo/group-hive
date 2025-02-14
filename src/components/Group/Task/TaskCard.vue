@@ -1,33 +1,36 @@
 <template>
     <div>
         <div
-            class="task-card w-100 rounded-4  text-start position-relative card shadow-sm p-3 bg-light btn btn-dark my-1"
-
+            class="task-card w-100 rounded-4 text-start position-relative card shadow-sm p-3 bg-light btn btn-dark my-1"
             :class="{ 'is-dragging': isDragging }"
             @click="showDetails = true"
         >
             <div class="d-flex flex-wrap gap-1 mb-2">
                 <span
-                    v-for="tagItem in task.tags"
-                    :key="tagItem.tagId"
+                    v-for="taskTag in task.tags"
+                    :key="taskTag.tagId"
                     class="badge rounded-pill"
-                    :style="{ backgroundColor: tagItem.tag.color }"
+                    :style="{ backgroundColor: taskTag.tag.color }"
                 >
-                    {{ tagItem.tag.title }}
+                    {{ taskTag.tag.title }}
                 </span>
             </div>
+
+            <p class="mb-2 text-dark">
+                {{ task.description }}
+            </p>
 
             <div class="d-flex justify-content-between align-items-center text-muted small">
                 <div class="d-flex align-items-center gap-2">
                     <div
-                        v-if="task.assignedTo"
+                        v-if="assignedProfile"
                         class="member-avatar"
-                        :title="task.assignedTo.profile.displayName || ''"
+                        :title="assignedProfile.displayName || ''"
                     >
                         <NuxtImg
-                            v-if="task.assignedTo.profile.avatarUrl"
-                            :src="task.assignedTo.profile.avatarUrl"
-                            :alt="task.assignedTo.profile.displayName || ''"
+                            v-if="assignedProfile.avatarUrl"
+                            :src="assignedProfile.avatarUrl"
+                            :alt="assignedProfile.displayName || ''"
                             class="rounded-circle"
                             width="25"
                             height="25"
@@ -35,7 +38,7 @@
                     </div>
                     <div
                         v-else
-                        class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                        class="rounded-circle bg-dark d-flex align-items-center justify-content-center"
                         style="width: 25px; height: 25px;"
                         title="Unassigned"
                     >
@@ -47,55 +50,51 @@
                         <i class="bi bi-star-fill me-1 text-warning" />
                         {{ task.pointValue }}
                     </span>
-                    <span>
-                        <i class="bi bi-chat-dots me-1" />
-                        {{ task.comments?.length || 0 }}
-                    </span>
                 </div>
             </div>
         </div>
         <TaskDetailsPopover
             v-if="showDetails"
-            :task="task"
+            :task-id="task.id"
+            :group-id="task.groupId"
             @close="showDetails = false"
-            @comment-added="$emit('commentAdded')"
         />
     </div>
 </template>
 
 <script setup lang="ts">
-import type { GroupUser, Profile, Task, TaskComment, TaskTag } from '@prisma/client'
+import type { Task } from '@prisma/client'
 
-interface TaskWithRelations extends Task {
-    assignedTo: (GroupUser & {
-        profile: Profile
-    }) | null
-    completedBy: (GroupUser & {
-        profile: Profile
-    }) | null
-    tags: (TaskTag & {
-        tag: {
-            id: number
-            title: string
-            color: string
-        }
-    })[]
-    comments: (TaskComment & {
-        author: GroupUser & {
-            profile: Profile
-        }
-    })[]
+interface TaskTag {
+    tagId: string
+    tag: {
+        id: string
+        title: string
+        color: string
+    }
 }
 
-defineProps({
+interface TaskWithRelations extends Task {
+    tags: TaskTag[]
+}
+
+interface Profile {
+    id: string
+    displayName: string
+    avatarUrl: string | null
+}
+
+const props = defineProps({
     task: {
         type: Object as PropType<TaskWithRelations>,
         required: true,
     },
 })
-defineEmits<{
-    (e: 'commentAdded'): void
-}>()
+
+// Fetch assigned profile if there is one
+const { data: assignedProfile } = props.task.assignedToId
+    ? await useFetch<Profile>(`/api/profiles/${props.task.assignedToId}`)
+    : { data: ref(null) }
 
 const showDetails = ref(false)
 const isDragging = ref(false)
@@ -107,7 +106,6 @@ const isDragging = ref(false)
 
     &:hover {
         transform: translateY(-1px);
-
     }
 
     &:active {
@@ -123,7 +121,7 @@ const isDragging = ref(false)
 .member-avatar {
     img {
         object-fit: cover;
-        border: 2px solid white;
+        border: 2px solid var(--bs-dark);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 }

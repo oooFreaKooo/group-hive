@@ -36,4 +36,40 @@ definePageMeta({
 useSeoMeta({
     title: 'GroupHive',
 })
+
+/*
+// Helper functions
+function calculateDueDate (weekStart: Date | string, columnIndex: number): Date {
+    const startDate = new Date(weekStart)
+    const dueDate = new Date(startDate)
+    dueDate.setDate(startDate.getDate() + columnIndex)
+    dueDate.setHours(23, 59, 59, 999)
+    return dueDate
+}
+
+// Week columns computation with memoization
+const getWeekColumns = computed(() => {
+    const days = [
+        'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+    ]
+
+    return (row: TaskRowWithRelations): TaskColumn[] => {
+        const weekStart = new Date(row.weekStart)
+
+        return days.map((day, index) => ({
+            title: day,
+            tasks: row.tasks.filter((task) => {
+                if (!task.taskRowId || !task.dueDate) { return false }
+                if (task.taskRowId !== row.id) { return false }
+
+                const taskDate = new Date(task.dueDate)
+                const columnDate = new Date(weekStart)
+                columnDate.setDate(weekStart.getDate() + index)
+
+                return taskDate.toDateString() === columnDate.toDateString()
+            }),
+        }))
+    }
+})
+ */
 </script>

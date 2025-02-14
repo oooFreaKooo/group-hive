@@ -1,7 +1,7 @@
-const activePopover = ref<number | null>(null)
+const activePopover = ref<string | null>(null)
 
 export const usePopoverState = () => {
-    const setActivePopover = (id: number | null) => {
+    const setActivePopover = (id: string | null) => {
         activePopover.value = id
     }
 

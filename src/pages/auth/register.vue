@@ -213,8 +213,8 @@ const signUpWithCredential = async () => {
             throw signUp.error
         }
 
-        // After successful signup, user is automatically logged in
-        // Just redirect to confirm page
+        // After successful signup, user needs to verify email
+        // Redirect to confirm page
         navigateTo('/auth/confirm')
     } catch (error: any) {
         if (error.inner) {

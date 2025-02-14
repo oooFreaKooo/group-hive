@@ -124,7 +124,7 @@ definePageMeta({
 
 const user = useSupabaseUser()
 const client = useSupabaseClient()
-const userStore = useUserStore()
+
 const { errorHandler } = useErrorHandler()
 
 const isLoading = ref(false)
@@ -134,13 +134,23 @@ const profileForm = reactive({
     displayName: '',
     city: '',
     postalCode: '',
+    email: user.value?.email || '',
 })
 
 // Profile validation schema
 const profileValidation = object({
-    displayName: string().required('Display name is required'),
-    city: string().required('City is required'),
-    postalCode: string().required('Postal code is required'),
+    displayName: string()
+        .required('Display name is required')
+        .max(50, 'Display name must be less than 50 characters'),
+    city: string()
+        .required('City is required')
+        .max(100, 'City must be less than 100 characters'),
+    postalCode: string()
+        .required('Postal code is required')
+        .max(20, 'Postal code must be less than 20 characters'),
+    email: string()
+        .email('Invalid email')
+        .max(255, 'Email must be less than 255 characters'),
 })
 
 const saveProfile = async () => {
@@ -153,11 +163,17 @@ const saveProfile = async () => {
         await profileValidation.validate(profileForm, { abortEarly: false })
 
         // Update profile using store
-        await userStore.updateProfile({
-            id: user.value.id,
-            displayName: profileForm.displayName,
-            city: profileForm.city,
-            postalCode: profileForm.postalCode,
+        await $fetch('/api/profile', {
+            method: 'PUT',
+            body: {
+                id: user.value.id,
+                displayName: profileForm.displayName,
+                city: profileForm.city,
+                postalCode: profileForm.postalCode,
+                email: profileForm.email,
+                groupIds: [],
+                role: 'USER',
+            },
         })
 
         // Redirect to dashboard

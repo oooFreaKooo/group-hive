@@ -1,19 +1,28 @@
 <template>
-    <div
-        class="custom-popover shadow-lg card rounded-5"
-        @click.stop
-    >
-        <div class="container popover-body p-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="mb-0">
-                    {{ title }}
-                </h3>
-                <button
-                    class="btn-close"
-                    @click="$emit('close')"
-                />
+    <div>
+        <!-- Dark overlay backdrop -->
+        <div
+            v-if="overlay"
+            class="popover-overlay"
+            @click="$emit('close')"
+        />
+
+        <div
+            class="custom-popover shadow-lg card rounded-5"
+            @click.stop
+        >
+            <div class="container popover-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="mb-0">
+                        {{ title }}
+                    </h3>
+                    <button
+                        class="btn-close"
+                        @click="$emit('close')"
+                    />
+                </div>
+                <slot />
             </div>
-            <slot />
         </div>
     </div>
 </template>
@@ -21,6 +30,7 @@
 <script setup lang="ts">
 defineProps<{
     title: string
+    overlay?: boolean
 }>()
 
 defineEmits<{
@@ -29,6 +39,18 @@ defineEmits<{
 </script>
 
 <style scoped lang="scss">
+.popover-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 1040;
+    animation: fadeIn 0.2s ease;
+}
+
 .custom-popover {
     position: fixed;
     left: 50%;
@@ -41,19 +63,12 @@ defineEmits<{
     animation: fadeIn 0.2s ease;
 }
 
-.popover-body {
-    background: var(--c-gray-800);
-    border-radius: 0 0 6px 6px;
-}
-
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translate(-50%, -60%);
     }
     to {
         opacity: 1;
-        transform: translate(-50%, -50%);
     }
 }
 </style>

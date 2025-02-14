@@ -59,21 +59,41 @@
 </template>
 
 <script setup lang="ts">
-import type { Prisma } from '@prisma/client'
+import type { Prisma, Profile } from '@prisma/client'
 import MessageInput from './MessageInput.vue'
 
-type MessageWithRelations = Prisma.MessageGetPayload<{
+type MessageWithAuthor = Prisma.MessageGetPayload<{
     include: {
         author: {
-            include: {
-                profile: true
+            select: {
+                id: true
+                displayName: true
+                email: true
+                avatarUrl: true
+                bgUrl: true
+                role: true
+                city: true
+                postalCode: true
+                createdAt: true
+                updatedAt: true
+                groupIds: true
             }
         }
         replyTo: {
             include: {
                 author: {
-                    include: {
-                        profile: true
+                    select: {
+                        id: true
+                        displayName: true
+                        email: true
+                        avatarUrl: true
+                        bgUrl: true
+                        role: true
+                        city: true
+                        postalCode: true
+                        createdAt: true
+                        updatedAt: true
+                        groupIds: true
                     }
                 }
             }
@@ -81,36 +101,18 @@ type MessageWithRelations = Prisma.MessageGetPayload<{
     }
 }>
 
-const convertDates = (obj: any): any => {
-    if (!obj) { return null }
-    return Object.entries(obj).reduce((acc, [ key, value ]) => {
-        if (key === 'createdAt' || key === 'updatedAt') {
-            acc[key] = new Date(value as string)
-        } else if (typeof value === 'object') {
-            acc[key] = convertDates(value)
-        } else {
-            acc[key] = value
-        }
-        return acc
-    }, {} as any)
-}
-
 const props = defineProps<{
     groupId: string
-    messages: MessageWithRelations[]
-    members: Prisma.GroupUserGetPayload<{
-        include: {
-            profile: true
-        }
-    }>[]
+    messages: MessageWithAuthor[]
+    members: Profile[]
     status: string
 }>()
 
-const messages = ref<MessageWithRelations[]>(props.messages)
-const messagesContainer = ref<HTMLElement>()
-const editingMessage = ref<MessageWithRelations | null>(null)
-const replyingTo = ref<MessageWithRelations | undefined>()
-const activeMember = ref<Prisma.GroupUserGetPayload<{ include: { profile: true } }> | null>(null)
+const messages = ref<MessageWithAuthor[]>(props.messages)
+const messagesContainer = ref<HTMLElement | null>(null)
+const editingMessage = ref<MessageWithAuthor | null>(null)
+const replyingTo = ref<MessageWithAuthor | null>(null)
+const activeMember = ref<Profile | null>(null)
 const popoverStyle = ref('')
 
 const { activePopover, setActivePopover, handleClickOutside, handleEscKey } = usePopoverState()
@@ -126,40 +128,44 @@ const scrollToBottom = () => {
 const sendMessage = async (content: string) => {
     if (!content.trim()) { return }
 
-    const response = await $fetch(`/api/chat/${props.groupId}`, {
-        method: 'POST',
-        body: {
-            content,
-            replyToId: replyingTo.value?.id,
-        },
-    })
+    try {
+        const response = await $fetch<MessageWithAuthor>(`/api/group/${props.groupId}/messages`, {
+            method: 'POST',
+            body: {
+                content,
+                replyToId: replyingTo.value?.id,
+            },
+        })
 
-    if (response) {
-        messages.value.push(convertDates(response) as MessageWithRelations)
-        replyingTo.value = undefined
+        messages.value.push(response)
+        replyingTo.value = null
         await nextTick()
         scrollToBottom()
+    } catch (error) {
+        console.error('Failed to send message:', error)
     }
 }
 
-const editMessage = (message: MessageWithRelations) => {
+const editMessage = (message: MessageWithAuthor) => {
     editingMessage.value = message
 }
 
 const saveEdit = async (content: string) => {
     if (!editingMessage.value || !content.trim()) { return }
 
-    const response = await $fetch(`/api/chat/${props.groupId}/${editingMessage.value.id}`, {
-        method: 'PUT',
-        body: { content },
-    })
+    try {
+        const response = await $fetch<MessageWithAuthor>(`/api/group/${props.groupId}/messages/${editingMessage.value.id}`, {
+            method: 'PUT',
+            body: { content },
+        })
 
-    if (response) {
         const index = messages.value.findIndex(m => m.id === editingMessage.value?.id)
         if (index !== -1) {
-            messages.value[index] = convertDates(response) as MessageWithRelations
+            messages.value[index] = response
         }
         editingMessage.value = null
+    } catch (error) {
+        console.error('Failed to edit message:', error)
     }
 }
 
@@ -167,33 +173,51 @@ const cancelEdit = () => {
     editingMessage.value = null
 }
 
-const deleteMessage = async (message: MessageWithRelations) => {
+const deleteMessage = async (message: MessageWithAuthor) => {
     if (!confirm('Are you sure you want to delete this message?')) { return }
 
-    await $fetch(`/api/chat/${props.groupId}/${message.id}`, {
-        method: 'DELETE',
-    })
+    try {
+        await $fetch(`/api/group/${props.groupId}/messages/${message.id}`, {
+            method: 'DELETE',
+        })
 
-    const index = messages.value.findIndex(m => m.id === message.id)
-    if (index !== -1) {
-        messages.value.splice(index, 1)
+        const index = messages.value.findIndex(m => m.id === message.id)
+        if (index !== -1) {
+            messages.value.splice(index, 1)
+        }
+    } catch (error) {
+        console.error('Failed to delete message:', error)
     }
 }
 
-const replyTo = (message: MessageWithRelations) => {
+const replyTo = (message: MessageWithAuthor) => {
     replyingTo.value = message
 }
 
 const cancelReply = () => {
-    replyingTo.value = undefined
+    replyingTo.value = null
 }
 
-const handleAvatarClick = (author: Prisma.GroupUserGetPayload<{ include: { profile: true } }>) => {
-    activeMember.value = author
+const handleAvatarClick = (author: MessageWithAuthor['author']) => {
+    // Convert message author to Profile format
+    const member: Profile = {
+        id: author.id,
+        displayName: author.displayName,
+        email: author.email,
+        avatarUrl: author.avatarUrl,
+        bgUrl: author.bgUrl,
+        role: author.role,
+        city: author.city,
+        postalCode: author.postalCode,
+        createdAt: author.createdAt,
+        updatedAt: author.updatedAt,
+        groupIds: author.groupIds,
+    }
+    activeMember.value = member
     setActivePopover(author.id)
 }
 
-const mentionUser = (member: Prisma.GroupUserGetPayload<{ include: { profile: true } }>) => {
+const mentionUser = (member: Profile) => {
     messageInputRef.value?.insertMention(member)
 }
 

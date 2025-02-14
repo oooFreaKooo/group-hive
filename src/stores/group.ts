@@ -2,17 +2,11 @@ import { defineStore } from 'pinia'
 import type { Group, Profile, Message } from '@prisma/client'
 
 interface GroupWithDetails extends Group {
-    members: {
-        profile: Profile
-    }[]
-    Message: (Message & {
-        author: {
-            profile: Profile
-        }
+    members: Profile[]
+    messages: (Message & {
+        author: Profile
         replyTo?: {
-            author: {
-                profile: Profile
-            }
+            author: Profile
         } | null
     })[]
 }
@@ -22,12 +16,27 @@ export const useGroupStore = defineStore('group', () => {
     const loading = ref(false)
 
     async function fetchGroup (id: string) {
-        if (currentGroup.value?.id === Number(id)) { return currentGroup.value }
+        if (currentGroup.value?.id === id) { return currentGroup.value }
 
         try {
             loading.value = true
-            const { data } = await useFetch<GroupWithDetails>(`/api/group/${id}`)
-            currentGroup.value = data.value || null
+            // Fetch group data
+            const { data: groupData } = await useFetch<Group>(`/api/group/${id}`)
+            if (!groupData.value) { return null }
+
+            // Fetch members
+            const { data: members } = await useFetch<Profile[]>(`/api/group/${id}/members`)
+
+            // Fetch messages
+            const { data: messages } = await useFetch<GroupWithDetails['messages']>(`/api/group/${id}/messages`)
+
+            // Combine all data
+            currentGroup.value = {
+                ...groupData.value,
+                members: members.value || [],
+                messages: messages.value || [],
+            }
+
             return currentGroup.value
         } catch (error) {
             console.error('Error fetching group:', error)

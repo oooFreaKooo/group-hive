@@ -125,6 +125,15 @@ const isLoading = ref(false)
 const dragSourceColumn = ref<number | null>(null)
 const dragTargetColumn = ref<number | null>(null)
 
+// Cleanup on unmount
+onBeforeUnmount(() => {
+    isDragging.value = false
+    error.value = null
+    isLoading.value = false
+    dragSourceColumn.value = null
+    dragTargetColumn.value = null
+})
+
 // Computed
 const columnClasses = computed(() => ({
     'is-dragging': isDragging.value,

@@ -121,7 +121,21 @@
 </template>
 
 <script setup lang="ts">
+import type { Task } from '@prisma/client'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
+
+interface TaskTag {
+    tagId: string
+    tag: {
+        id: string
+        title: string
+        color: string
+    }
+}
+
+interface TaskWithRelations extends Task {
+    tags: TaskTag[]
+}
 
 interface TaskColumn {
     title: string
@@ -138,8 +152,8 @@ const props = defineProps({
         required: true,
     },
     rowId: {
-        type: Number,
-        required: false,
+        type: String,
+        required: true,
     },
     isExpanded: {
         type: Boolean,
@@ -149,12 +163,11 @@ const props = defineProps({
 })
 
 const emit = defineEmits<{
-    (e: 'task-updated'): void
     (e: 'update:expanded', value: boolean): void
     (e: 'task-moved', payload: {
         task: TaskWithRelations
         columnIndex: number
-        rowId?: number
+        rowId?: string
         onComplete?: () => void
     }): void
 }>()
@@ -165,6 +178,15 @@ const error = ref<string | null>(null)
 const isLoading = ref(false)
 const dragSourceColumn = ref<number | null>(null)
 const dragTargetColumn = ref<number | null>(null)
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+    isDragging.value = false
+    error.value = null
+    isLoading.value = false
+    dragSourceColumn.value = null
+    dragTargetColumn.value = null
+})
 
 // Computed
 const columnClasses = computed(() => ({

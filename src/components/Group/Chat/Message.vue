@@ -12,8 +12,8 @@
                 class="avatar flex-shrink-0 rounded-circle border border-2 border-secondary shadow-sm cursor-pointer transition"
                 width="32"
                 height="32"
-                :src="message.author.profile.avatarUrl || '/default-avatar.png'"
-                :alt="message.author.profile.displayName || 'User'"
+                :src="message.author.avatarUrl || '/default-avatar.png'"
+                :alt="message.author.displayName || 'User'"
                 @click.stop="$emit('avatar-click', message.author)"
             />
             <div
@@ -63,7 +63,7 @@
                     <span
                         class="author fw-semibold cursor-pointer"
                         @click="$emit('mention-user', message.author)"
-                    >{{ message.author.profile.displayName }}</span>
+                    >{{ message.author.displayName }}</span>
                     <span class="small text-muted">{{ formattedDate }}</span>
                 </div>
 
@@ -73,7 +73,7 @@
                 >
                     <div class="border-start border-4 border-primary p-2 bg-body-tertiary small rounded-3">
                         <div class="fw-bold">
-                            {{ message.replyTo.author.profile.displayName }}
+                            {{ message.replyTo.author.displayName }}
                         </div>
                         <div>
                             {{ message.replyTo.content }}
@@ -130,36 +130,28 @@
 <script setup lang="ts">
 import type { Prisma } from '@prisma/client'
 
-type MessageWithRelations = Prisma.MessageGetPayload<{
+type MessageWithAuthor = Prisma.MessageGetPayload<{
     include: {
-        author: {
-            include: {
-                profile: true
-            }
-        }
+        author: true
         replyTo: {
             include: {
-                author: {
-                    include: {
-                        profile: true
-                    }
-                }
+                author: true
             }
         }
     }
 }>
 
 const props = defineProps<{
-    message: MessageWithRelations
+    message: MessageWithAuthor
     isEditing: boolean
 }>()
 
 defineEmits<{
-    'avatar-click': [author: Prisma.GroupUserGetPayload<{ include: { profile: true } }>]
-    'mention-user': [author: Prisma.GroupUserGetPayload<{ include: { profile: true } }>]
-    'reply': [message: MessageWithRelations]
-    'edit': [message: MessageWithRelations]
-    'delete': [message: MessageWithRelations]
+    'avatar-click': [author: MessageWithAuthor['author']]
+    'mention-user': [author: MessageWithAuthor['author']]
+    'reply': [message: MessageWithAuthor]
+    'edit': [message: MessageWithAuthor]
+    'delete': [message: MessageWithAuthor]
     'save-edit': [content: string]
     'cancel-edit': []
 }>()
@@ -176,7 +168,7 @@ onBeforeUnmount(() => {
 })
 
 const isOwnMessage = computed(() => {
-    return props.message.author.profile.id === user.value?.id
+    return props.message.authorId === user.value?.id
 })
 
 const formattedDate = computed(() => {

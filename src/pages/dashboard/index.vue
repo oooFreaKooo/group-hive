@@ -39,9 +39,9 @@
 </template>
 
 <script setup lang="ts">
-const userStore = useUserStore()
+const { data } = await useFetch('/api/profile')
 
-const hasGroups = computed(() => (userStore.profile?.ownedGroups?.length ?? 0) > 0)
+const hasGroups = computed(() => (data?.value?.profile.groupIds?.length ?? 0) > 0)
 const showCreateModal = ref(false)
 const showJoinModal = ref(false)
 

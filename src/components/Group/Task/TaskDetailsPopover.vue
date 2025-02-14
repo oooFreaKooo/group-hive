@@ -3,165 +3,185 @@
         title="Task Details"
         @close="$emit('close')"
     >
-        <p class="mb-3 text-muted">
-            {{ task.description }}
-        </p>
-
-        <div class="d-flex flex-wrap gap-1 mb-3">
-            <span
-                v-for="tagItem in task.tags"
-                :key="tagItem.tagId"
-                class="badge"
-                :style="{ backgroundColor: tagItem.tag.color }"
-            >
-                {{ tagItem.tag.title }}
-            </span>
+        <div
+            v-if="isLoading"
+            class="text-center py-4"
+        >
+            <div class="spinner-border text-primary" />
         </div>
 
-        <div class="mb-3">
-            <div class="d-flex gap-2 align-items-center mb-2">
-                <div
-                    v-if="task.assignedTo"
-                    class="member-avatar"
-                    :title="task.assignedTo.profile.displayName || ''"
+        <template v-else-if="task">
+            <p class="mb-3 text-muted">
+                {{ task.description }}
+            </p>
+
+            <div class="d-flex flex-wrap gap-1 mb-3">
+                <span
+                    v-for="taskTag in task.tags"
+                    :key="taskTag.tagId"
+                    class="badge"
+                    :style="{ backgroundColor: taskTag.tag.color }"
                 >
-                    <img
-                        v-if="task.assignedTo.profile.avatarUrl"
-                        :src="task.assignedTo.profile.avatarUrl"
-                        :alt="task.assignedTo.profile.displayName || ''"
-                        class="rounded-circle"
-                        width="25"
-                        height="25"
-                    >
+                    {{ taskTag.tag.title }}
+                </span>
+            </div>
+
+            <div class="mb-3">
+                <div class="d-flex gap-2 align-items-center mb-2">
                     <div
-                        v-else
-                        class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white"
-                        style="width: 25px; height: 25px;"
+                        v-if="assignedProfile"
+                        class="member-avatar"
+                        :title="assignedProfile.displayName || ''"
                     >
-                        {{ task.assignedTo.profile.displayName?.[0] || '' }}
-                    </div>
-                </div>
-                <span class="text-muted">{{ task.assignedTo?.profile.displayName || 'Unassigned' }}</span>
-            </div>
-            <div class="text-muted small">
-                <i class="bi bi-star-fill me-1 text-warning" />
-                {{ task.pointValue }} points
-            </div>
-        </div>
-
-        <!-- Comments Section -->
-        <div class="comments-section">
-            <h5 class="mb-3">
-                Comments
-            </h5>
-            <div
-                v-if="task.comments?.length"
-                class="comments-list mb-3"
-            >
-                <div
-                    v-for="comment in task.comments"
-                    :key="comment.id"
-                    class="comment-item mb-2"
-                >
-                    <div class="d-flex gap-2 align-items-start">
-                        <div
-                            class="member-avatar"
-                            :title="comment.author.profile.displayName || ''"
+                        <img
+                            v-if="assignedProfile.avatarUrl"
+                            :src="assignedProfile.avatarUrl"
+                            :alt="assignedProfile.displayName || ''"
+                            class="rounded-circle"
+                            width="25"
+                            height="25"
                         >
-                            <img
-                                v-if="comment.author.profile.avatarUrl"
-                                :src="comment.author.profile.avatarUrl"
-                                :alt="comment.author.profile.displayName || ''"
-                                class="rounded-circle"
-                                width="20"
-                                height="20"
-                            >
-                            <div
-                                v-else
-                                class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white"
-                                style="width: 20px; height: 20px; font-size: 0.75rem"
-                            >
-                                {{ comment.author.profile.displayName?.[0] || '' }}
-                            </div>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between">
-                                <span class="fw-bold small">{{ comment.author.profile.displayName }}</span>
-                                <span class="text-muted small">{{ formatDate(comment.createdAt) }}</span>
-                            </div>
-                            <p class="mb-0 small">
-                                {{ comment.content }}
-                            </p>
+                        <div
+                            v-else
+                            class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white"
+                            style="width: 25px; height: 25px;"
+                        >
+                            {{ assignedProfile.displayName?.[0] || '' }}
                         </div>
                     </div>
+                    <span class="text-muted">{{ assignedProfile?.displayName || 'Unassigned' }}</span>
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-star-fill me-1 text-warning" />
+                    {{ task.pointValue }} points
                 </div>
             </div>
 
-            <form @submit.prevent="addComment">
-                <div class="input-group">
-                    <input
-                        v-model="newComment"
-                        type="text"
-                        class="form-control"
-                        placeholder="Add a comment..."
-                        required
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <h5 class="mb-3">
+                    Comments
+                </h5>
+                <div
+                    v-if="comments?.length"
+                    class="comments-list mb-3"
+                >
+                    <div
+                        v-for="comment in comments"
+                        :key="comment.id"
+                        class="comment-item mb-2"
                     >
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                        :disabled="isSubmitting"
-                    >
-                        <i
-                            v-if="isSubmitting"
-                            class="spinner-border spinner-border-sm"
-                        />
-                        <i
-                            v-else
-                            class="bi bi-send"
-                        />
-                    </button>
+                        <div class="d-flex gap-2 align-items-start">
+                            <div
+                                class="member-avatar"
+                                :title="comment.author.displayName || ''"
+                            >
+                                <img
+                                    v-if="comment.author.avatarUrl"
+                                    :src="comment.author.avatarUrl"
+                                    :alt="comment.author.displayName || ''"
+                                    class="rounded-circle"
+                                    width="20"
+                                    height="20"
+                                >
+                                <div
+                                    v-else
+                                    class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white"
+                                    style="width: 20px; height: 20px; font-size: 0.75rem"
+                                >
+                                    {{ comment.author.displayName?.[0] || '' }}
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold small">{{ comment.author.displayName }}</span>
+                                    <span class="text-muted small">{{ formatDate(comment.createdAt) }}</span>
+                                </div>
+                                <p class="mb-0 small">
+                                    {{ comment.content }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </form>
-        </div>
+
+                <form @submit.prevent="addComment">
+                    <div class="input-group">
+                        <input
+                            v-model="newComment"
+                            type="text"
+                            class="form-control"
+                            placeholder="Add a comment..."
+                            required
+                        >
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                            :disabled="isSubmitting"
+                        >
+                            <i
+                                v-if="isSubmitting"
+                                class="spinner-border spinner-border-sm"
+                            />
+                            <i
+                                v-else
+                                class="bi bi-send"
+                            />
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </template>
     </AppPopover>
 </template>
 
 <script setup lang="ts">
-import type { GroupUser, Profile, Task, TaskComment, TaskTag } from '@prisma/client'
+import type { Task, Comment, Profile } from '@prisma/client'
 
 interface TaskWithRelations extends Task {
-    assignedTo: (GroupUser & {
-        profile: Profile
-    }) | null
-    completedBy: (GroupUser & {
-        profile: Profile
-    }) | null
-    tags: (TaskTag & {
+    tags: {
+        tagId: string
         tag: {
-            id: number
+            id: string
             title: string
             color: string
         }
-    })[]
-    comments: (TaskComment & {
-        author: GroupUser & {
-            profile: Profile
-        }
-    })[]
+    }[]
 }
 
-interface Props {
-    task: TaskWithRelations
+interface CommentWithAuthor extends Comment {
+    author: Profile
 }
 
-const props = defineProps<Props>()
-const emit = defineEmits<{
-    (e: 'commentAdded'): void
+const props = defineProps({
+    taskId: {
+        type: String,
+        required: true,
+    },
+    groupId: {
+        type: String,
+        required: true,
+    },
+})
+
+defineEmits<{
     (e: 'close'): void
 }>()
 
+const isLoading = ref(true)
 const newComment = ref('')
 const isSubmitting = ref(false)
+
+// Fetch task details
+const { data: task } = await useFetch<TaskWithRelations>(`/api/group/${props.groupId}/task/${props.taskId}`)
+
+// Fetch assigned profile if there is one
+const { data: assignedProfile } = task.value?.assignedToId
+    ? await useFetch<Profile>(`/api/profiles/${task.value.assignedToId}`)
+    : { data: ref(null) }
+
+// Fetch comments
+const { data: comments, refresh: refreshComments } = await useFetch<CommentWithAuthor[]>(`/api/group/${props.groupId}/task/${props.taskId}/comments`)
 
 const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -175,20 +195,29 @@ const formatDate = (date: Date) => {
 const addComment = async () => {
     try {
         isSubmitting.value = true
-        await $fetch(`/api/tasks/${props.task.id}/comments`, {
+        await $fetch(`/api/group/${props.groupId}/task/${props.taskId}/comments`, {
             method: 'POST',
             body: {
                 content: newComment.value,
             },
         })
         newComment.value = ''
-        emit('commentAdded')
+        refreshComments()
     } catch (error) {
         console.error('Failed to add comment:', error)
     } finally {
         isSubmitting.value = false
     }
 }
+
+// Set loading state after initial data fetch
+watch([
+    task, assignedProfile, comments,
+], ([newTask]) => {
+    if (newTask) {
+        isLoading.value = false
+    }
+})
 </script>
 
 <style scoped lang="scss">
