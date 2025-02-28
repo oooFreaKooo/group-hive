@@ -10,7 +10,7 @@
                     />
                     <Bee3D
                         class="bee-avatar rounded-4"
-                        :avatar="previewAvatar || '/default-avatar.png'"
+                        :avatar="previewAvatar || '/images/default-avatar.png'"
                     />
 
                     <AvatarMenu

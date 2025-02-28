@@ -1,3 +1,7 @@
+@use "./settings/variables" as *;
+@use "./settings/typography" as *;
+@use "./settings/mixins" as *;
+
 $primary: #FF6B6B;
 $secondary: #4ECDC4;
 $tertiary: #FFD93D;
@@ -224,4 +228,19 @@ $color-mode-type: data-bs-theme;
 
 @include color-mode(dark) {
     @include generate-theme(map-get($themes, "dark"));
+}
+
+.page-enter-active,
+.page-leave-active {
+    transition: all 0.4s;
+}
+
+.page-enter-from,
+.page-leave-to {
+    opacity: 0;
+    filter: blur(1rem);
+}
+
+.z-1000 {
+    z-index: 1000;
 }

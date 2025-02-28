@@ -7,7 +7,7 @@
                     <AppIcon
                         name="bell"
                         size="lg"
-                        class="text-primary"
+                        color="primary"
                     />
                     <div>
                         <h3 class="h6 mb-1">
@@ -87,7 +87,7 @@
                     <AppIcon
                         name="shield"
                         size="lg"
-                        class="text-primary"
+                        color="primary"
                     />
                     <div>
                         <h3 class="h6 mb-1">
@@ -148,7 +148,7 @@
                     <AppIcon
                         name="gear"
                         size="lg"
-                        class="text-primary"
+                        color="primary"
                     />
                     <div>
                         <h3 class="h6 mb-1">

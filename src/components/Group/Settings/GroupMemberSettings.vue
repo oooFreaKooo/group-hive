@@ -30,7 +30,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <NuxtImg
-                                        :src="member.profile.avatarUrl || '/default-avatar.png'"
+                                        :src="member.profile.avatarUrl || '/images/default-avatar.png'"
                                         :alt="member.profile.displayName || ''"
                                         class="rounded-circle"
                                         width="32"

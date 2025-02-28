@@ -33,7 +33,11 @@ export default defineNuxtConfig({
             ],
         },
     },
-    css: [ 'usebootstrap/scss/usebootstrap', '~/assets/css/main.scss' ],
+    css: [
+        '@/assets/scss/main.scss',
+        'usebootstrap/scss/usebootstrap',
+    ],
+
     srcDir: 'src/',
 
     compatibilityDate: '2025-01-04',
@@ -47,18 +51,18 @@ export default defineNuxtConfig({
         css: {
             preprocessorOptions: {
                 scss: {
-                    additionalData: '@import "@/assets/css/_grid.scss";',
+                    additionalData: `
+                        @use "@/assets/scss/settings/variables" as *;
+                        @use "@/assets/scss/settings/mixins" as *;
+                    `,
                 },
             },
         },
     },
 
-    googleFonts: {
-        families: {
-            Inter: [
-                400, 500, 600, 700,
-            ],
-        },
+    image: {
+        dir: 'assets',
+        format: ['webp'],
     },
 
     supabase: {

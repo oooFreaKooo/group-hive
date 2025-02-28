@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client'
 import { defineEventHandler, readBody, createError } from 'h3'
-import { nanoid } from 'nanoid'
 import { serverSupabaseUser } from '#supabase/server'
 
 const prisma = new PrismaClient()
@@ -17,40 +16,57 @@ export default defineEventHandler(async (event) => {
         }
 
         // Read request body
-        const { name, description, city, postalCode } = await readBody(event)
+        const { invitationCode } = await readBody(event)
 
         // Validate required fields
-        const validation: Record<string, string> = {}
-        if (!name?.trim()) { validation.name = 'Group name is required' }
-        if (!city?.trim()) { validation.city = 'City is required' }
-        if (!postalCode?.trim()) { validation.postalCode = 'Postal code is required' }
-
-        if (Object.keys(validation).length > 0) {
+        if (!invitationCode?.trim()) {
             throw createError({
                 statusCode: 400,
-                statusMessage: 'Validation failed',
-                data: { validation },
+                statusMessage: 'Invitation code is required',
             })
         }
 
-        // Generate a unique invitation code
-        const invitationCode = nanoid(8)
-
-        // Create the group
-        const group = await prisma.group.create({
-            data: {
-                name,
-                description: description || '',
-                city,
-                postalCode,
-                ownerId: user.id,
+        // Find the group with the invitation code
+        const group = await prisma.group.findUnique({
+            where: {
                 invitationCode,
             },
         })
 
-        // Update the user's profile to include this group
+        if (!group) {
+            throw createError({
+                statusCode: 404,
+                statusMessage: 'Group not found. Invalid invitation code.',
+            })
+        }
+
+        // Get the user's profile
+        const profile = await prisma.profile.findUnique({
+            where: {
+                id: user.id,
+            },
+        })
+
+        if (!profile) {
+            throw createError({
+                statusCode: 404,
+                statusMessage: 'User profile not found',
+            })
+        }
+
+        // Check if user is already a member of this group
+        if (profile.groupIds.includes(group.id)) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: 'You are already a member of this group',
+            })
+        }
+
+        // Add the user to the group
         await prisma.profile.update({
-            where: { id: user.id },
+            where: {
+                id: user.id,
+            },
             data: {
                 groupIds: {
                     push: group.id,
@@ -60,7 +76,7 @@ export default defineEventHandler(async (event) => {
 
         return group
     } catch (error: unknown) {
-        console.error('Error creating group:', error)
+        console.error('Error joining group:', error)
 
         // Handle known error types
         if (error && typeof error === 'object' && 'statusCode' in error) {

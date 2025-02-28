@@ -43,7 +43,7 @@
                             class="rounded-circle me-2 border border-gray-200 transition-transform"
                             width="24"
                             height="24"
-                            :src="member.avatarUrl || '/default-avatar.png'"
+                            :src="member.avatarUrl || '/images/default-avatar.png'"
                             :alt="member.displayName || 'User'"
                         />
                         <span>{{ member.displayName }}</span>

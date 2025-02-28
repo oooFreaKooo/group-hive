@@ -12,7 +12,7 @@
                 class="avatar flex-shrink-0 rounded-circle border border-2 border-secondary shadow-sm cursor-pointer transition"
                 width="32"
                 height="32"
-                :src="message.author.avatarUrl || '/default-avatar.png'"
+                :src="message.author.avatarUrl || '/images/default-avatar.png'"
                 :alt="message.author.displayName || 'User'"
                 @click.stop="$emit('avatar-click', message.author)"
             />

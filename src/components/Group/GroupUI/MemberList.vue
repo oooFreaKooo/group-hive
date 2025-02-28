@@ -35,7 +35,7 @@
                                 class="rounded-circle member-avatar"
                                 width="40"
                                 height="40"
-                                :src="member.profile.avatarUrl || '/default-avatar.png'"
+                                :src="member.profile.avatarUrl || '/images/default-avatar.png'"
                                 :alt="member.profile.displayName || 'Member'"
                             />
                         </div>

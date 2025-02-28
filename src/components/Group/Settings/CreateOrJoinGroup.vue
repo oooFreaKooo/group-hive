@@ -20,9 +20,15 @@
                                 v-model="groupForm.name"
                                 type="text"
                                 class="form-control"
-                                :class="{ 'is-invalid': formError }"
+                                :class="{ 'is-invalid': formErrors.name }"
                                 required
                             >
+                            <div
+                                v-if="formErrors.name"
+                                class="invalid-feedback"
+                            >
+                                {{ formErrors.name }}
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label
@@ -47,9 +53,15 @@
                                 v-model="groupForm.city"
                                 type="text"
                                 class="form-control"
-                                :class="{ 'is-invalid': formError }"
+                                :class="{ 'is-invalid': formErrors.city }"
                                 required
                             >
+                            <div
+                                v-if="formErrors.city"
+                                class="invalid-feedback"
+                            >
+                                {{ formErrors.city }}
+                            </div>
                         </div>
 
                         <div class="mb-4">
@@ -62,8 +74,15 @@
                                 v-model="groupForm.postalCode"
                                 type="text"
                                 class="form-control"
+                                :class="{ 'is-invalid': formErrors.postalCode }"
                                 required
                             >
+                            <div
+                                v-if="formErrors.postalCode"
+                                class="invalid-feedback"
+                            >
+                                {{ formErrors.postalCode }}
+                            </div>
                         </div>
 
                         <button
@@ -83,7 +102,7 @@
             <div class="col-14 col-lg-6">
                 <button
                     class="card shadow card-btn h-100 w-100 align-items-center justify-content-center p-4"
-                    @click="joinGroup = true"
+                    @click="showJoinModal = true"
                 >
                     <h5 class="card-text">
                         Join Group
@@ -94,11 +113,21 @@
                 </button>
             </div>
         </div>
+
+        <!-- Join Group Modal -->
+        <JoinGroupModal
+            v-if="showJoinModal"
+            @close="showJoinModal = false"
+            @joined="handleGroupJoined"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
-const joinGroup = ref(false)
+import JoinGroupModal from './JoinGroupModal.vue'
+
+const router = useRouter()
+const showJoinModal = ref(false)
 
 const groupForm = ref({
     name: '',
@@ -108,24 +137,87 @@ const groupForm = ref({
 })
 
 const formStatus = ref('idle')
-const formError = ref()
+const formErrors = ref({
+    name: '',
+    city: '',
+    postalCode: '',
+    general: '',
+})
 
-const { data } = await useFetch('/api/profile/get')
+// Fetch the current user profile - we don't need to use the data directly
+// as the server will use the authenticated user
+await useFetch('/api/profile')
 
 async function createGroup () {
-    const { error, status } = await useFetch('/api/group/create', {
-        method: 'POST',
-        body: { ...groupForm.value, ownerId: data.value?.profile?.id },
-    })
+    formStatus.value = 'pending'
 
-    return { status, error }
+    try {
+        const response: any = await $fetch('/api/group/create', {
+            method: 'POST',
+            body: {
+                ...groupForm.value,
+            },
+        })
+
+        // Reset form status and navigate to the group page
+        formStatus.value = 'success'
+
+        // Navigate to the new group page
+        if (response && response.id) {
+            await router.push(`/dashboard/group/${response.id}`)
+        }
+
+        return { success: true }
+    } catch (error: any) {
+        formStatus.value = 'error'
+
+        // Handle validation errors
+        if (error.response?.status === 400 && error.response?.data?.validation) {
+            const validationErrors = error.response.data.validation
+            formErrors.value = {
+                ...formErrors.value,
+                ...validationErrors,
+            }
+        } else {
+            // Generic error
+            formErrors.value.general = error.message || 'Failed to create group'
+        }
+
+        return { success: false, error }
+    }
+}
+
+function handleGroupJoined (_group: any) {
+    showJoinModal.value = false
+    // Additional logic if needed after joining a group
 }
 
 async function submitForm () {
-    const { status, error } = await createGroup()
-    formStatus.value = status.value
-    formError.value = error.value
-    return { status, error }
+    // Reset errors
+    formErrors.value = {
+        name: '',
+        city: '',
+        postalCode: '',
+        general: '',
+    }
+
+    // Validate form
+    if (!groupForm.value.name.trim()) {
+        formErrors.value.name = 'Group name is required'
+        return
+    }
+
+    if (!groupForm.value.city.trim()) {
+        formErrors.value.city = 'City is required'
+        return
+    }
+
+    if (!groupForm.value.postalCode.trim()) {
+        formErrors.value.postalCode = 'Postal code is required'
+        return
+    }
+
+    await createGroup()
 }
 </script>
 

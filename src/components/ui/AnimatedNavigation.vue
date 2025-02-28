@@ -34,7 +34,6 @@
 
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core'
-import { ref, computed, watch } from 'vue'
 
 const route = useRoute()
 
