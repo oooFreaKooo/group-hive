@@ -1,11 +1,10 @@
 import { PrismaClient } from '@prisma/client'
-import { defineEventHandler, readBody, createError } from 'h3'
+import { defineEventHandler, createError } from 'h3'
 
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
     const groupId = event.context.params?.id
-    const body = await readBody(event)
 
     if (!groupId) {
         throw createError({
@@ -14,27 +13,12 @@ export default defineEventHandler(async (event) => {
         })
     }
 
-    if (!body.title) {
-        throw createError({
-            statusCode: 400,
-            message: 'Tag title is required',
-        })
-    }
-
-    if (!body.color) {
-        throw createError({
-            statusCode: 400,
-            message: 'Tag color is required',
-        })
-    }
-
-    const tag = await prisma.tag.create({
-        data: {
-            title: body.title,
-            color: body.color,
+    // Fetch tags for this group
+    const tags = await prisma.tag.findMany({
+        where: {
             groupId,
         },
     })
 
-    return tag
+    return tags
 })

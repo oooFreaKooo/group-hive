@@ -3,17 +3,14 @@
         v-if="!hasGroups"
         class="text-center py-5"
     >
-        <div class="mb-4">
-            <AppIcon
-                name="people"
-                size="xl"
-            />
-        </div>
-        <h2 class="mb-3">
+        <CreateOrJoinGroup />
+    </div>
+    <div v-else>
+        <h3 class="h4 text-center">
             Welcome to GroupHive!
-        </h2>
-        <p class="text-muted mb-4">
-            Get started by creating a new group or joining an existing one.
+        </h3>
+        <p class="small mb-4 text-center">
+            Select a group or create/join a new one in the sidebar.
         </p>
     </div>
 </template>

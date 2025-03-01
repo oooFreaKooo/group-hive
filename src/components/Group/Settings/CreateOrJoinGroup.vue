@@ -1,131 +1,126 @@
 <template>
-    <div class="container mb-5">
-        <div class="row g-4">
-            <div class="col-14 col-lg-6">
-                <div class="card shadow p-4 h-100">
-                    <h3 class="h4 text-center">
-                        Welcome to GroupHive!
-                    </h3>
-                    <p class="small my-4 text-center">
-                        To get started, create a new group or join an existing one.
-                    </p>
-                    <form @submit.prevent="submitForm">
-                        <div class="mb-3">
-                            <label
-                                for="displayName"
-                                class="form-label"
-                            >Group Name</label>
-                            <input
-                                id="displayName"
-                                v-model="groupForm.name"
-                                type="text"
-                                class="form-control"
-                                :class="{ 'is-invalid': formErrors.name }"
-                                required
-                            >
-                            <div
-                                v-if="formErrors.name"
-                                class="invalid-feedback"
-                            >
-                                {{ formErrors.name }}
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label
-                                for="description"
-                                class="form-label"
-                            >Description</label>
-                            <textarea
-                                id="description"
-                                v-model="groupForm.description"
-                                rows="3"
-                                class="form-control"
-                            />
-                        </div>
-
-                        <div class="mb-3">
-                            <label
-                                for="city"
-                                class="form-label"
-                            >City</label>
-                            <input
-                                id="city"
-                                v-model="groupForm.city"
-                                type="text"
-                                class="form-control"
-                                :class="{ 'is-invalid': formErrors.city }"
-                                required
-                            >
-                            <div
-                                v-if="formErrors.city"
-                                class="invalid-feedback"
-                            >
-                                {{ formErrors.city }}
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label
-                                for="postalCode"
-                                class="form-label"
-                            >Postal Code</label>
-                            <input
-                                id="postalCode"
-                                v-model="groupForm.postalCode"
-                                type="text"
-                                class="form-control"
-                                :class="{ 'is-invalid': formErrors.postalCode }"
-                                required
-                            >
-                            <div
-                                v-if="formErrors.postalCode"
-                                class="invalid-feedback"
-                            >
-                                {{ formErrors.postalCode }}
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            class="btn btn-secondary w-100"
-                            :disabled="formStatus === 'pending'"
-                        >
-                            <span
-                                v-if="formStatus === 'pending'"
-                                class="spinner-border spinner-border-sm me-2"
-                            />
-                            Create Group
-                        </button>
-                    </form>
+    <div class="d-flex justify-content-center align-items-center mb-5">
+        <div class="card shadow p-4 h-100 rounded-4 bg-light">
+            <h3 class="h4 text-center">
+                Welcome to GroupHive!
+            </h3>
+            <p class="small mb-4 text-center">
+                To get started, create a new group or join an existing one.
+            </p>
+            <form @submit.prevent="submitForm">
+                <div class="mb-3">
+                    <label
+                        for="displayName"
+                        class="form-label"
+                    >Group Name</label>
+                    <input
+                        id="displayName"
+                        v-model="groupForm.name"
+                        type="text"
+                        class="form-control border-dark"
+                        :class="{ 'is-invalid': formErrors.name }"
+                        required
+                    >
+                    <div
+                        v-if="formErrors.name"
+                        class="invalid-feedback"
+                    >
+                        {{ formErrors.name }}
+                    </div>
                 </div>
-            </div>
-            <div class="col-14 col-lg-6">
-                <button
-                    class="card shadow card-btn h-100 w-100 align-items-center justify-content-center p-4"
-                    @click="showJoinModal = true"
-                >
-                    <h5 class="card-text">
-                        Join Group
-                    </h5>
-                    <p class="card-text">
-                        Join an existing group with a code.
-                    </p>
-                </button>
-            </div>
-        </div>
+                <div class="mb-3">
+                    <label
+                        for="description"
+                        class="form-label"
+                    >Description</label>
+                    <textarea
+                        id="description"
+                        v-model="groupForm.description"
+                        rows="3"
+                        class="form-control border-dark"
+                    />
+                </div>
 
-        <!-- Join Group Modal -->
-        <JoinGroupModal
-            v-if="showJoinModal"
-            @close="showJoinModal = false"
-            @joined="handleGroupJoined"
-        />
+                <div class="mb-3">
+                    <label
+                        for="city"
+                        class="form-label"
+                    >City</label>
+                    <input
+                        id="city"
+                        v-model="groupForm.city"
+                        type="text"
+                        class="form-control border-dark"
+                        :class="{ 'is-invalid': formErrors.city }"
+                        required
+                    >
+                    <div
+                        v-if="formErrors.city"
+                        class="invalid-feedback"
+                    >
+                        {{ formErrors.city }}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label
+                        for="postalCode"
+                        class="form-label"
+                    >Postal Code</label>
+                    <input
+                        id="postalCode"
+                        v-model="groupForm.postalCode"
+                        type="text"
+                        class="form-control border-dark"
+                        :class="{ 'is-invalid': formErrors.postalCode }"
+                        required
+                    >
+                    <div
+                        v-if="formErrors.postalCode"
+                        class="invalid-feedback"
+                    >
+                        {{ formErrors.postalCode }}
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary w-100"
+                    :disabled="formStatus === 'pending'"
+                >
+                    <span
+                        v-if="formStatus === 'pending'"
+                        class="spinner-border spinner-border-sm me-2"
+                    />
+                    Create Group
+                </button>
+            </form>
+
+            <div class="position-relative my-2">
+                <hr>
+                <span class="position-absolute top-0 start-50 translate-middle-x bg-light px-2 lh-lg">
+                    OR
+                </span>
+            </div>
+
+            <button
+                class="btn btn-dark w-100 text-light"
+                @click="showJoinModal = true"
+            >
+                Join an existing Group
+            </button>
+        </div>
     </div>
+
+    <!-- Join Group Modal -->
+    <JoinGroupModal
+        v-if="showJoinModal"
+        @close="showJoinModal = false"
+        @joined="handleGroupJoined"
+    />
 </template>
 
 <script setup lang="ts">
-import JoinGroupModal from './JoinGroupModal.vue'
-
 const router = useRouter()
 const showJoinModal = ref(false)
 

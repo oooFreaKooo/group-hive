@@ -8728,6 +8728,7 @@ __metadata:
     three: "npm:^0.172.0"
     typescript: "npm:^5.4.2"
     usebootstrap: "npm:^3.5.100"
+    v-gsap-nuxt: "npm:^1.3.14"
     vite-svg-loader: "npm:^5.1.0"
     vue-draggable-next: "npm:^2.2.1"
     yup: "npm:^1.6.1"
@@ -15708,6 +15709,17 @@ __metadata:
     "@popperjs/core": ^2.0.0
     vue: ^3.2.0
   checksum: 10c0/e80a76df78f6dba696e654a891d8744bead48992687f9dd72e784a8870869180e34eb1b36c73edd8f1ffe907f93f5fdfe77af24070abba3bd0ccba5606f33f24
+  languageName: node
+  linkType: hard
+
+"v-gsap-nuxt@npm:^1.3.14":
+  version: 1.3.14
+  resolution: "v-gsap-nuxt@npm:1.3.14"
+  dependencies:
+    "@nuxt/kit": "npm:^3.14.1592"
+    defu: "npm:^6.1.4"
+    gsap: "npm:^3.12.5"
+  checksum: 10c0/f684bf8f44904dc90754f5c27f898dd3665ec3c7c27d7e8bb16c601decd934ac4f41887cd68b9637bdfdb0f38fc65f71503ad7e4cd8bbc24aad1ffec076b6545
   languageName: node
   linkType: hard
 

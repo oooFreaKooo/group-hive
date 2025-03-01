@@ -26,22 +26,24 @@
                 <div
                     v-for="member in members"
                     :key="member.id"
-                    class="position-relative cursor-pointer mb-2"
-                    @click.stop="setActivePopover(member.id)"
+                    class="position-relative mb-2"
                 >
-                    <div class="d-flex align-items-center gap-3 p-2 member-card border-bottom">
-                        <div class="position-relative flex-shrink-0">
+                    <div
+                        class="d-flex align-items-center gap-3 p-2 member-card border-bottom"
+                        @click="selectedMemberId = member.id"
+                    >
+                        <div class="position-relative flex-shrink-0 btn p-0 m-0 border-0">
                             <NuxtImg
                                 class="rounded-circle member-avatar"
                                 width="40"
                                 height="40"
-                                :src="member.profile.avatarUrl || '/images/default-avatar.png'"
-                                :alt="member.profile.displayName || 'Member'"
+                                :src="member.avatarUrl || '/images/default-avatar.png'"
+                                :alt="member.displayName || 'Member'"
                             />
                         </div>
                         <div class="flex-grow-1 min-w-0">
                             <div class="fw-semibold text-truncate">
-                                {{ member.profile.displayName }}
+                                {{ member.displayName }}
                                 <span
                                     v-if="member.role === 'ADMIN'"
                                     title="Admin"
@@ -52,14 +54,16 @@
 
                             <div class="fs-7 text-gray-600 d-flex align-items-center gap-2">
                                 <i class="bi bi-star-fill text-warning" />
-                                {{ member.points }}
+                                <!-- We'll need to implement points calculation -->
+                                0
                             </div>
                         </div>
                     </div>
 
                     <MemberPopover
-                        v-if="activePopover === member.id"
+                        v-if="selectedMemberId === member.id"
                         :member="member"
+                        @close="selectedMemberId = null"
                     />
                 </div>
             </template>
@@ -68,28 +72,14 @@
 </template>
 
 <script setup lang="ts">
-import type { Prisma } from '@prisma/client'
+import type { Profile } from '@prisma/client'
 
 defineProps<{
-    members: Prisma.GroupUserGetPayload<{
-        include: {
-            profile: true
-        }
-    }>[]
+    members: Profile[]
     status: string
 }>()
 
-const { activePopover, setActivePopover, handleClickOutside, handleEscKey } = usePopoverState()
-
-onMounted(() => {
-    document.addEventListener('click', handleClickOutside)
-    document.addEventListener('keydown', handleEscKey)
-})
-
-onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside)
-    document.removeEventListener('keydown', handleEscKey)
-})
+const selectedMemberId = ref<string | null>(null)
 </script>
 
 <style scoped lang="scss">
@@ -122,12 +112,6 @@ onUnmounted(() => {
 .member-card {
     border-color: rgba(var(--bs-dark-rgb), 0.05);
     transition: all 0.2s ease;
-
-    &:hover {
-        transform: translateY(-1px);
-        background: rgba(var(--bs-primary-rgb), 0.03) !important;
-        border-color: rgba(var(--bs-primary-rgb), 0.2);
-    }
 }
 
 .member-avatar {
@@ -139,10 +123,6 @@ onUnmounted(() => {
         border-color: var(--bs-primary);
         transform: scale(1.05);
     }
-}
-
-.cursor-pointer {
-    cursor: pointer;
 }
 
 .fs-7 {

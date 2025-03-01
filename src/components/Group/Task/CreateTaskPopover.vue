@@ -11,6 +11,7 @@
         <AppPopover
             v-if="isOpen"
             title="Create New Task"
+            overlay
             @close="isOpen = false"
         >
             <form @submit.prevent="handleSubmit">
@@ -137,11 +138,11 @@
                                 Unassigned
                             </option>
                             <option
-                                v-for="profileId in groupProfileIds"
-                                :key="profileId"
-                                :value="profileId"
+                                v-for="member in members"
+                                :key="member.id"
+                                :value="member.id"
                             >
-                                {{ getProfileName(profileId) }}
+                                {{ member.displayName }}
                             </option>
                         </select>
                     </AccordionSection>
@@ -177,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Tag, TaskRow } from '@prisma/client'
+import type { TaskRow } from '@prisma/client'
 
 const props = defineProps({
     groupId: {
@@ -210,10 +211,14 @@ const form = ref({
 const selectedTagId = ref('')
 
 // Fetch tags for this group
-const { data: tags } = await useFetch<Tag[]>(() => `/api/group/${props.groupId}/tags`)
+const { data: tags } = await useFetch(() => `/api/group/${props.groupId}/tags`, {
+    default: () => [],
+})
 
 // Fetch group members
-const { data: profiles } = await useFetch<{ id: string, displayName: string }[]>(() => `/api/group/${props.groupId}/profiles`)
+const { data: members } = await useFetch(() => `/api/group/${props.groupId}/members`, {
+    default: () => [],
+})
 
 const weekDays = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
@@ -221,10 +226,6 @@ const weekDays = [
 
 const availableTags = computed(() =>
     tags.value?.filter(tag => !form.value.tagIds.includes(tag.id)) || [],
-)
-
-const groupProfileIds = computed(() =>
-    profiles.value?.map(p => p.id) || [],
 )
 
 const getTagColor = (tagId: string) => {
@@ -236,7 +237,7 @@ const getTagTitle = (tagId: string) => {
 }
 
 const getProfileName = (profileId: string) => {
-    return profiles.value?.find(p => p.id === profileId)?.displayName || 'Unknown'
+    return members.value?.find(p => p.id === profileId)?.displayName || 'Unknown'
 }
 
 const getScheduleTitle = computed(() => {

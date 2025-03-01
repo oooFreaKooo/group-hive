@@ -11,6 +11,7 @@
         <AppPopover
             v-if="isOpen"
             title="Create Task Row"
+            overlay
             @close="isOpen = false"
         >
             <form @submit.prevent="handleSubmit">

@@ -7,6 +7,7 @@ export default defineNuxtConfig({
         '@nuxt/eslint',
         '@vueuse/nuxt',
         '@nuxt/image',
+        'v-gsap-nuxt',
         'usebootstrap',
         '@nuxtjs/google-fonts',
     ],
@@ -45,7 +46,7 @@ export default defineNuxtConfig({
     vite: {
         optimizeDeps: {
             include: [
-                'yup', '@headlessui/vue', 'vue-draggable-next', 'three',
+                'yup', '@headlessui/vue', 'vue-draggable-next', 'three', 'three/examples/jsm/loaders/GLTFLoader.js', 'three/examples/jsm/controls/OrbitControls.js', 'gsap',
             ],
         },
         css: {

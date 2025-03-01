@@ -20,16 +20,16 @@
                             {{ areAllRowsExpanded ? 'Collapse All' : 'Expand All' }}
                         </button>
                         <CreateTagPopover
-                            :group-id="route.params.id[0]"
+                            :group-id="route.params.id as string"
                             @tag-created="refresh"
                         />
                         <CreateTaskRowPopover
-                            :group-id="route.params.id[0]"
+                            :group-id="route.params.id as string"
                             @row-created="refresh"
                         />
                         <CreateTaskPopover
                             v-if="taskRows"
-                            :group-id="route.params.id[0]"
+                            :group-id="route.params.id as string"
                             :task-rows="taskRows"
                             @task-created="refresh"
                         />

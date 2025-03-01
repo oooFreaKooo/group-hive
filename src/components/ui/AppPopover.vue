@@ -1,29 +1,31 @@
 <template>
     <div>
-        <!-- Dark overlay backdrop -->
-        <div
-            v-if="overlay"
-            class="popover-overlay"
-            @click="$emit('close')"
-        />
+        <Teleport to="body">
+            <!-- Dark overlay backdrop -->
+            <div
+                v-if="overlay"
+                class="popover-overlay"
+                @click="$emit('close')"
+            />
 
-        <div
-            class="custom-popover shadow-lg card rounded-5"
-            @click.stop
-        >
-            <div class="container popover-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">
-                        {{ title }}
-                    </h3>
-                    <button
-                        class="btn-close"
-                        @click="$emit('close')"
-                    />
+            <div
+                class="custom-popover shadow-lg card rounded-5"
+                @click.stop
+            >
+                <div class="container popover-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">
+                            {{ title }}
+                        </h3>
+                        <button
+                            class="btn-close"
+                            @click="$emit('close')"
+                        />
+                    </div>
+                    <slot />
                 </div>
-                <slot />
             </div>
-        </div>
+        </Teleport>
     </div>
 </template>
 

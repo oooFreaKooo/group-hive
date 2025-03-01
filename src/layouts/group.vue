@@ -5,8 +5,8 @@
             class="text-decoration-none position-fixed top-0 start-0 m-2 ms-4 logo-icon"
         >
             <NuxtImg
-                src="/logo-icon.png"
-                width="36"
+                src="/images/logo-icon.png"
+                width="45"
                 height="36"
                 alt="Logo"
                 class="img-fluid"

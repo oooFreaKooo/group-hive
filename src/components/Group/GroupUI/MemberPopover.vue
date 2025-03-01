@@ -1,71 +1,103 @@
 <template>
-    <div
-        class="profile-card rounded-4 bg-white shadow-lg"
-        @click.stop
-    >
-        <div class="bee-container bg-white shadow-lg rounded-4">
-            <NuxtImg
-                :src="member.profile.bgUrl || 'https://picsum.photos/300'"
-                class="bee-avatar"
-            />
-            <Bee3D
-                class="bee-avatar"
-                :avatar="member.profile.avatarUrl || undefined"
-                is-popover
-            />
-        </div>
+    <Teleport to="body">
+        <div
+            class="popover-overlay"
+            @click="emit('close')"
+        />
+        <div
+            class="profile-card rounded-4 bg-white shadow-lg"
+            @click.stop
+        >
+            <div class="bee-container bg-white shadow-lg rounded-4">
+                <NuxtImg
+                    :src="member.bgUrl || 'https://picsum.photos/300'"
+                    class="bee-avatar"
+                />
+                <Bee3D
+                    class="bee-avatar"
+                    :avatar="member.avatarUrl || undefined"
+                    is-popover
+                />
+            </div>
 
-        <div class="content">
-            <div class="details">
-                <h2>
-                    {{ member.profile.displayName }}   <b-button
-                        v-if="member.role === 'ADMIN'"
-                        toggle="tooltip"
-                        title="Admin"
-                        size="md"
-                        padding="0"
-                    >
-                        <i
-                            class="bi bi-shield-fill-check"
-                        />
-                    </b-button><br>
-                    <span class="text-muted">
-                        <i class="bi bi-geo-alt me-1" />
-                        {{ member.profile.city }}
-                    </span>
-                </h2>
-                <div class="data">
-                    <h3>342<br><span>Posts</span></h3>
-                    <h3>123<br><span>Achievements</span></h3>
-                    <h3>123<br><span>Points</span></h3>
-                </div>
-                <div class="action-btn">
-                    <button>
-                        Follow
-                    </button>
-                    <button>
-                        Message
-                    </button>
+            <div class="content">
+                <div class="details">
+                    <h2>
+                        {{ member.displayName }}   <b-button
+                            v-if="member.role === 'ADMIN'"
+                            toggle="tooltip"
+                            title="Admin"
+                            size="md"
+                            padding="0"
+                        >
+                            <i
+                                class="bi bi-shield-fill-check"
+                            />
+                        </b-button><br>
+                        <span class="text-muted">
+                            <i class="bi bi-geo-alt me-1" />
+                            {{ member.city }}
+                        </span>
+                    </h2>
+                    <div class="data">
+                        <h3>342<br><span>Posts</span></h3>
+                        <h3>123<br><span>Achievements</span></h3>
+                        <h3>123<br><span>Points</span></h3>
+                    </div>
+                    <div class="action-btn">
+                        <button>
+                            Follow
+                        </button>
+                        <button>
+                            Message
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </Teleport>
 </template>
 
 <script lang="ts" setup>
-import type { Prisma } from '@prisma/client'
+import type { Profile } from '@prisma/client'
 
 defineProps<{
-    member: Prisma.GroupUserGetPayload<{
-        include: {
-            profile: true
-        }
-    }>
+    member: Profile
     style?: string
 }>()
+
+const emit = defineEmits<{
+    (e: 'close'): void
+}>()
+
+const handleEscKey = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+        emit('close')
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('keydown', handleEscKey)
+})
+
+onUnmounted(() => {
+    document.removeEventListener('keydown', handleEscKey)
+})
 </script>
 
 <style scoped lang="scss">
+.popover-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 1040;
+    animation: fadeIn 0.2s ease;
+}
+
 .profile-card {
     position: fixed;
     left: 50%;

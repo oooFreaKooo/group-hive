@@ -11,6 +11,7 @@
         <AppPopover
             v-if="isOpen"
             title="Create New Tag"
+            overlay
             @close="isOpen = false"
         >
             <form @submit.prevent="handleSubmit">
@@ -108,7 +109,7 @@ const handleSubmit = async () => {
         isSubmitting.value = true
         error.value = ''
 
-        await $fetch(`/api/group/${props.groupId}/tags`, {
+        await $fetch(`/api/group/${props.groupId}/tags/create`, {
             method: 'POST',
             body: form.value,
         })
