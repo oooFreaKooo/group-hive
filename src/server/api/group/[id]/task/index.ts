@@ -1,11 +1,10 @@
 import { PrismaClient } from '@prisma/client'
-import { defineEventHandler, readBody, createError } from 'h3'
+import { defineEventHandler, createError } from 'h3'
 
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
     const groupId = event.context.params?.id
-    const body = await readBody(event)
 
     if (!groupId) {
         throw createError({
@@ -14,22 +13,10 @@ export default defineEventHandler(async (event) => {
         })
     }
 
-    const task = await prisma.task.create({
-        data: {
-            description: body.description,
-            dueDate: body.dueDate ? new Date(body.dueDate) : null,
-            pointValue: body.pointValue,
+    // Fetch tasks for this group with tags included
+    const tasks = await prisma.task.findMany({
+        where: {
             groupId,
-            taskRowId: body.taskRowId,
-            assignedToId: body.assignedToId,
-            tags: {
-                create: body.tagIds?.map((tagId: string) => ({
-                    tag: {
-                        connect: { id: tagId },
-                    },
-                    createdAt: new Date(),
-                })) || [],
-            },
         },
         include: {
             tags: {
@@ -40,5 +27,5 @@ export default defineEventHandler(async (event) => {
         },
     })
 
-    return task
+    return tasks
 })

@@ -1,7 +1,7 @@
 <template>
     <div>
         <button
-            class="btn btn-primary btn-sm rounded-pill"
+            class="btn btn-light btn-sm rounded-pill"
             @click="isOpen = true"
         >
             <i class="bi bi-plus-lg me-2" />
@@ -10,129 +10,60 @@
 
         <AppPopover
             v-if="isOpen"
-            title="Create New Task"
+            title="Create Task"
             overlay
             @close="isOpen = false"
         >
-            <form @submit.prevent="handleSubmit">
-                <div class="mb-3">
+            <form
+                class="needs-validation"
+                @submit.prevent="handleSubmit"
+            >
+                <!-- Description -->
+                <div class="mb-4">
                     <label
                         for="taskDescription"
-                        class="form-label"
-                    >Description*</label>
+                        class="form-label fw-medium"
+                    >Description</label>
                     <textarea
                         id="taskDescription"
                         v-model="form.description"
-                        class="form-control"
+                        class="form-control form-control-lg shadow-sm"
                         rows="3"
+                        placeholder="What needs to be done?"
                         required
                     />
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Tags</label>
-                    <div class="d-flex flex-wrap gap-2 mb-2">
-                        <span
-                            v-for="tagId in form.tagIds"
-                            :key="tagId"
-                            class="badge"
-                            :style="{ backgroundColor: getTagColor(tagId) }"
+                <div class="row g-3 mb-4">
+                    <!-- Points -->
+                    <div class="col-md-6">
+                        <label
+                            for="taskPoints"
+                            class="form-label fw-medium d-flex align-items-center gap-2"
                         >
-                            {{ getTagTitle(tagId) }}
-                            <button
-                                type="button"
-                                class="btn-close btn-close-white ms-2"
-                                style="font-size: 0.5rem"
-                                @click="removeTag(tagId)"
-                            />
-                        </span>
-                    </div>
-                    <select
-                        v-model="selectedTagId"
-                        class="form-select"
-                        :disabled="!availableTags.length"
-                        @change="addSelectedTag"
-                    >
-                        <option value="">
-                            Select a tag
-                        </option>
-                        <option
-                            v-for="tag in availableTags"
-                            :key="tag.id"
-                            :value="tag.id"
-                        >
-                            {{ tag.title }}
-                        </option>
-                    </select>
-                </div>
-
-                <Accordion color="light">
-                    <AccordionSection
-                        :title="`Points: ${form.pointValue}`"
-                        :active="true"
-                        class="border"
-                    >
+                            <i class="bi bi-star-fill text-warning" />
+                            Points
+                        </label>
                         <input
                             id="taskPoints"
                             v-model.number="form.pointValue"
                             type="number"
-                            class="form-control"
+                            class="form-control shadow-sm"
                             min="0"
                             max="100"
                             required
                         >
-                    </AccordionSection>
+                    </div>
 
-                    <AccordionSection
-                        class="border"
-                        :title="`Schedule: ${getScheduleTitle}`"
-                    >
-                        <div class="row g-2">
-                            <div class="col">
-                                <select
-                                    v-model="form.taskRowId"
-                                    class="form-select"
-                                >
-                                    <option value="">
-                                        Select a week
-                                    </option>
-                                    <option
-                                        v-for="row in taskRows"
-                                        :key="row.id"
-                                        :value="row.id"
-                                    >
-                                        {{ row.title }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="col">
-                                <select
-                                    v-model="form.selectedDay"
-                                    class="form-select"
-                                    :disabled="!form.taskRowId"
-                                >
-                                    <option value="">
-                                        Select a day
-                                    </option>
-                                    <option
-                                        v-for="day in weekDays"
-                                        :key="day"
-                                        :value="day"
-                                    >
-                                        {{ day }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                    </AccordionSection>
-
-                    <AccordionSection
-                        class="border"
-                        :title="`Assign To: ${form.assignedToId ? getProfileName(form.assignedToId) : 'Unassigned'}`"
-                    >
+                    <!-- Assignee -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium d-flex align-items-center gap-2">
+                            <i class="bi bi-person-fill text-dark" />
+                            Assignee
+                        </label>
                         <select
                             v-model="form.assignedToId"
-                            class="form-select"
+                            class="form-select shadow-sm"
                         >
                             <option value="">
                                 Unassigned
@@ -145,30 +76,130 @@
                                 {{ member.displayName }}
                             </option>
                         </select>
-                    </AccordionSection>
-                </Accordion>
+                    </div>
 
+                    <!-- Due Date -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar-event text-dark" />
+                            Due Date
+                        </label>
+                        <input
+                            v-model="form.dueDate"
+                            type="date"
+                            class="form-control shadow-sm"
+                            :min="minDate"
+                            :max="maxDate"
+                        >
+                    </div>
+
+                    <!-- Due Time -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium d-flex align-items-center gap-2">
+                            <i class="bi bi-clock text-dark" />
+                            Due Time
+                        </label>
+                        <input
+                            v-model="form.dueTime"
+                            type="time"
+                            class="form-control shadow-sm"
+                            :disabled="!form.dueDate"
+                        >
+                    </div>
+                </div>
+
+                <!-- Tags Section -->
+                <div class="mb-4">
+                    <label class="form-label fw-medium d-flex align-items-center gap-2">
+                        <i class="bi bi-tags-fill text-primary" />
+                        Tags
+                    </label>
+
+                    <!-- Selected Tags -->
+                    <div class="mb-3 d-flex gap-2 flex-wrap">
+                        <span
+                            v-for="tagId in form.tagIds"
+                            :key="tagId"
+                            class="badge d-flex align-items-center"
+                            :style="{ backgroundColor: getTagColor(tagId) }"
+                        >
+                            {{ getTagTitle(tagId) }}
+                            <button
+                                type="button"
+                                class="btn text-light p-0 ms-2 opacity-75 hover-opacity-100"
+                                @click="removeTag(tagId)"
+                            >
+                                <i class="bi bi-x" />
+                            </button>
+                        </span>
+                    </div>
+
+                    <!-- Tag Selection -->
+                    <div class="d-flex gap-2 align-items-start">
+                        <select
+                            v-model="selectedTagId"
+                            class="form-select shadow-sm"
+                            :disabled="!availableTags.length"
+                        >
+                            <option value="">
+                                {{ availableTags.length ? 'Select a tag' : 'No tags available' }}
+                            </option>
+                            <option
+                                v-for="tag in availableTags"
+                                :key="tag.id"
+                                :value="tag.id"
+                            >
+                                {{ tag.title }}
+                            </option>
+                        </select>
+
+                        <button
+                            v-if="!showCreateTag"
+                            type="button"
+                            class="btn btn-outline-secondary"
+                            @click="showCreateTag = true"
+                        >
+                            <i class="bi bi-plus-lg" />
+                        </button>
+                    </div>
+
+                    <!-- Create Tag Form -->
+                    <CreateTagForm
+                        v-if="showCreateTag"
+                        :group-id="groupId"
+                        @tag-created="handleTagCreated"
+                        @cancel="showCreateTag = false"
+                    />
+                </div>
+
+                <!-- Error Alert -->
                 <div
                     v-if="error"
-                    class="alert alert-danger mt-3"
+                    class="alert alert-danger"
                     role="alert"
                 >
                     {{ error }}
                 </div>
 
-                <div class="d-flex justify-content-end gap-2 mt-3">
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
                     <button
                         type="button"
-                        class="btn btn-secondary"
+                        class="btn btn-outline-secondary px-4"
                         @click="isOpen = false"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        class="btn btn-primary"
+                        class="btn btn-primary px-4"
                         :disabled="isSubmitting"
                     >
+                        <span
+                            v-if="isSubmitting"
+                            class="spinner-border spinner-border-sm me-2"
+                            role="status"
+                        />
                         {{ isSubmitting ? 'Creating...' : 'Create Task' }}
                     </button>
                 </div>
@@ -178,18 +209,11 @@
 </template>
 
 <script setup lang="ts">
-import type { TaskRow } from '@prisma/client'
+import type { Tag } from '@prisma/client'
 
-const props = defineProps({
-    groupId: {
-        type: String,
-        required: true,
-    },
-    taskRows: {
-        type: Array as PropType<TaskRow[]>,
-        required: true,
-    },
-})
+const props = defineProps<{
+    groupId: string
+}>()
 
 const emit = defineEmits<{
     (e: 'task-created'): void
@@ -203,15 +227,15 @@ const form = ref({
     description: '',
     pointValue: 1,
     assignedToId: '',
-    taskRowId: '',
-    selectedDay: '',
+    dueDate: '',
+    dueTime: '',
     tagIds: [] as string[],
 })
 
 const selectedTagId = ref('')
 
 // Fetch tags for this group
-const { data: tags } = await useFetch(() => `/api/group/${props.groupId}/tags`, {
+const { data: tags } = await useFetch<Tag[]>(() => `/api/group/${props.groupId}/tags`, {
     default: () => [],
 })
 
@@ -220,9 +244,17 @@ const { data: members } = await useFetch(() => `/api/group/${props.groupId}/memb
     default: () => [],
 })
 
-const weekDays = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
-]
+// Computed date limits (3 months range)
+const minDate = computed(() => {
+    const date = new Date()
+    return date.toISOString().split('T')[0]
+})
+
+const maxDate = computed(() => {
+    const date = new Date()
+    date.setMonth(date.getMonth() + 3)
+    return date.toISOString().split('T')[0]
+})
 
 const availableTags = computed(() =>
     tags.value?.filter(tag => !form.value.tagIds.includes(tag.id)) || [],
@@ -236,26 +268,13 @@ const getTagTitle = (tagId: string) => {
     return tags.value?.find(t => t.id === tagId)?.title || 'Unknown'
 }
 
-const getProfileName = (profileId: string) => {
-    return members.value?.find(p => p.id === profileId)?.displayName || 'Unknown'
-}
+const showCreateTag = ref(false)
 
-const getScheduleTitle = computed(() => {
-    if (!form.value.taskRowId) { return 'Unscheduled' }
-    const row = props.taskRows.find(r => r.id === form.value.taskRowId)
-    return row ? `${row.title}${form.value.selectedDay ? ` - ${form.value.selectedDay}` : ''}` : 'Unscheduled'
-})
-
-const addSelectedTag = () => {
-    if (!selectedTagId.value) { return }
-    if (!form.value.tagIds.includes(selectedTagId.value)) {
-        form.value.tagIds.push(selectedTagId.value)
+const handleTagCreated = (newTag: Tag) => {
+    if (tags.value) {
+        tags.value.push(newTag)
     }
-    selectedTagId.value = ''
-}
-
-const removeTag = (tagId: string) => {
-    form.value.tagIds = form.value.tagIds.filter(id => id !== tagId)
+    showCreateTag.value = false
 }
 
 const handleSubmit = async () => {
@@ -263,28 +282,34 @@ const handleSubmit = async () => {
         isSubmitting.value = true
         error.value = ''
 
-        let dueDate: Date | null = null
-        if (form.value.taskRowId && form.value.selectedDay) {
-            const selectedRow = props.taskRows.find(row => row.id === form.value.taskRowId)
-            if (selectedRow) {
-                const weekStart = new Date(selectedRow.weekStart)
-                const dayOffset = weekDays.indexOf(form.value.selectedDay)
-                if (dayOffset !== -1) {
-                    dueDate = new Date(weekStart)
-                    dueDate.setDate(weekStart.getDate() + dayOffset)
-                    dueDate.setHours(23, 59, 59, 999)
-                }
+        let dueDateTime = null
+        if (form.value.dueDate) {
+            // Create date in local timezone
+            const [
+                year, month, day,
+            ] = form.value.dueDate.split('-').map(Number)
+            dueDateTime = new Date(year, month - 1, day)
+
+            if (form.value.dueTime) {
+                const [ hours, minutes ] = form.value.dueTime.split(':').map(Number)
+                dueDateTime.setHours(hours, minutes, 0)
+            } else {
+                // If no time is set, default to end of day (23:59:59)
+                dueDateTime.setHours(23, 59, 59)
             }
+
+            // Convert to UTC while preserving the local time
+            const offset = dueDateTime.getTimezoneOffset()
+            dueDateTime = new Date(dueDateTime.getTime() - (offset * 60 * 1000))
         }
 
-        await $fetch(`/api/group/${props.groupId}/task`, {
+        await $fetch(`/api/group/${props.groupId}/task/create`, {
             method: 'POST',
             body: {
                 description: form.value.description,
                 pointValue: form.value.pointValue,
                 assignedToId: form.value.assignedToId || null,
-                taskRowId: form.value.taskRowId || null,
-                dueDate,
+                dueDate: dueDateTime ? dueDateTime.toISOString() : null,
                 tagIds: form.value.tagIds,
             },
         })
@@ -296,8 +321,8 @@ const handleSubmit = async () => {
             description: '',
             pointValue: 1,
             assignedToId: '',
-            taskRowId: '',
-            selectedDay: '',
+            dueDate: '',
+            dueTime: '',
             tagIds: [],
         }
     } catch (e: any) {
@@ -306,13 +331,23 @@ const handleSubmit = async () => {
         isSubmitting.value = false
     }
 }
+
+const removeTag = (tagId: string) => {
+    form.value.tagIds = form.value.tagIds.filter(id => id !== tagId)
+}
+
+// Add watch for selectedTagId
+watch(selectedTagId, (newValue) => {
+    if (!newValue) { return }
+    if (!form.value.tagIds.includes(newValue)) {
+        form.value.tagIds.push(newValue)
+    }
+    selectedTagId.value = ''
+})
 </script>
 
 <style scoped lang="scss">
-.badge {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    font-weight: normal;
-    color: white;
+.hover-opacity-100:hover {
+    opacity: 1 !important;
 }
 </style>

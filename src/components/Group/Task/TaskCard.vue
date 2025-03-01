@@ -5,20 +5,11 @@
             :class="{ 'is-dragging': isDragging }"
             @click="showDetails = true"
         >
-            <div class="d-flex flex-wrap gap-1 mb-2">
-                <span
-                    v-for="taskTag in task.tags"
-                    :key="taskTag.tagId"
-                    class="badge rounded-pill"
-                    :style="{ backgroundColor: taskTag.tag.color }"
-                >
-                    {{ taskTag.tag.title }}
-                </span>
-            </div>
-
-            <p class="mb-2 text-dark">
-                {{ task.description }}
-            </p>
+            <TagBadge
+                v-for="taskTag in task.tags"
+                :key="taskTag.tagId"
+                :tag="taskTag.tag"
+            />
 
             <div class="d-flex justify-content-between align-items-center text-muted small">
                 <div class="d-flex align-items-center gap-2">
@@ -93,7 +84,7 @@ const props = defineProps({
 
 // Fetch assigned profile if there is one
 const { data: assignedProfile } = props.task.assignedToId
-    ? await useFetch<Profile>(`/api/profiles/${props.task.assignedToId}`)
+    ? await useFetch<Profile>(`/api/profile/${props.task.assignedToId}`)
     : { data: ref(null) }
 
 const showDetails = ref(false)

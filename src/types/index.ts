@@ -1,7 +1,32 @@
+import type { Task, TaskRow } from '@prisma/client'
+
 export { }
 
 declare global {
 
+    export interface TaskTag {
+        tagId: string
+        tag: {
+            id: string
+            title: string
+            color: string
+        }
+    }
+
+    export interface SerializedTask extends Omit<Task, 'dueDate' | 'createdAt' | 'updatedAt'> {
+        dueDate: string | null
+        createdAt: string
+        updatedAt: string
+        tags: TaskTag[]
+    }
+
+    export interface SerializedTaskRow extends Omit<TaskRow, 'weekStart' | 'weekEnd' | 'createdAt' | 'updatedAt'> {
+        weekStart: string
+        weekEnd: string
+        createdAt: string
+        updatedAt: string
+        tasks: SerializedTask[]
+    }
     interface NavigationItem {
         label: string
         href: string

@@ -8,199 +8,86 @@
                         Tasks
                     </span>
                     <div class="d-flex gap-2">
-                        <button
-                            class="btn btn-light btn-sm rounded-pill"
-                            :title="areAllRowsExpanded ? 'Collapse all weeks' : 'Expand all weeks'"
-                            @click="toggleAllRows"
-                        >
-                            <i
-                                class="bi me-2"
-                                :class="areAllRowsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"
-                            />
-                            {{ areAllRowsExpanded ? 'Collapse All' : 'Expand All' }}
-                        </button>
-                        <CreateTagPopover
-                            :group-id="route.params.id as string"
-                            @tag-created="refresh"
-                        />
-                        <CreateTaskRowPopover
-                            :group-id="route.params.id as string"
-                            @row-created="refresh"
-                        />
                         <CreateTaskPopover
-                            v-if="taskRows"
                             :group-id="route.params.id as string"
-                            :task-rows="taskRows"
                             @task-created="refresh"
                         />
                     </div>
                 </div>
             </div>
-
-            <div class="task-content bg-light p-4">
+            <div class="task-content bg-white p-4">
                 <div
-                    v-if="status === 'error'"
+                    v-if="error"
                     class="alert alert-danger mb-4"
                     role="alert"
                 >
                     Failed to load tasks
                     <button
                         class="btn btn-link p-0 ms-2"
-                        @click="refresh()"
+                        @click="() => refresh()"
                     >
                         Retry
                     </button>
                 </div>
-
-                <div class="row g-3">
-                    <div
-                        v-for="row in taskRows"
-                        :key="row.id"
-                        class="col-14 col-lg-14"
-                    >
-                        <TaskRow
-                            :title="row.title"
-                            :columns="getWeekColumns(row)"
-                            :row-id="row.id"
-                            :is-expanded="expandedRows[row.id]"
-                            @update:expanded="(value) => handleRowExpanded(row.id, value)"
-                            @task-moved="handleTaskMoved"
-                        />
-                    </div>
-                </div>
+                <TaskCalendar
+                    :tasks="tasks"
+                    @task-moved="handleTaskMoved"
+                />
             </div>
         </div>
     </AppSection>
 </template>
 
 <script setup lang="ts">
-import type { Task, TaskRow } from '@prisma/client'
-
 definePageMeta({
     layout: 'group',
 })
 
 const route = useRoute()
+const error = ref(false)
 
-interface TaskTag {
-    tagId: string
-    tag: {
-        id: string
-        title: string
-        color: string
+// Fetch tasks directly with proper typing
+const { data: tasksData } = await useFetch<SerializedTask[]>(`/api/group/${route.params.id}/task`)
+const tasks = ref<SerializedTask[]>(tasksData.value || [])
+
+// Refresh function
+const refresh = async () => {
+    try {
+        const { data } = await useFetch<SerializedTask[]>(`/api/group/${route.params.id}/task`)
+        tasks.value = data.value || []
+    } catch (e) {
+        console.error('Error refreshing tasks:', e)
+        error.value = true
     }
 }
 
-interface TaskWithRelations extends Task {
-    tags: TaskTag[]
-}
-
-interface TaskRowWithTasks extends TaskRow {
-    tasks: TaskWithRelations[]
-}
-
-const { data: taskRows, status, refresh } = await useLazyFetch<TaskRowWithTasks[]>(() => `/api/group/${route.params.id[0]}/taskRow`, {
-    key: 'taskRows',
-})
+// Initial load
+await refresh()
 
 interface TaskMovedPayload {
-    task: TaskWithRelations
-    columnIndex: number
-    rowId?: string
+    task: SerializedTask
+    date: Date
     onComplete?: () => void
 }
 
 const handleTaskMoved = async (payload: TaskMovedPayload) => {
-    if (!taskRows.value) { return }
     try {
-        const { task, columnIndex, rowId: targetRowId, onComplete } = payload
+        const { task, date, onComplete } = payload
 
-        if (!targetRowId) {
-            await $fetch(`/api/group/${route.params.id[0]}/task/${task.id}`, {
-                method: 'PUT',
-                body: {
-                    dueDate: null,
-                    taskRowId: null,
-                },
-            })
-        } else {
-            const targetRow = taskRows.value.find(row => row.id === targetRowId)
-            if (!targetRow) { return }
-
-            const dueDate = calculateDueDate(targetRow.weekStart, columnIndex)
-            await $fetch(`/api/group/${route.params.id[0]}/task/${task.id}`, {
-                method: 'PUT',
-                body: {
-                    dueDate: dueDate.toISOString(),
-                    taskRowId: targetRow.id,
-                },
-            })
-        }
+        await $fetch(`/api/group/${route.params.id}/task/${task.id}`, {
+            method: 'PUT',
+            body: {
+                dueDate: date.toISOString(),
+            },
+        })
 
         refresh()
         onComplete?.()
     } catch (e) {
         console.error('Error moving task:', e)
+        error.value = true
     }
 }
-
-// Helper functions
-function calculateDueDate (weekStart: Date | string, columnIndex: number): Date {
-    const startDate = new Date(weekStart)
-    const dueDate = new Date(startDate)
-    dueDate.setDate(startDate.getDate() + columnIndex)
-    dueDate.setHours(23, 59, 59, 999)
-    return dueDate
-}
-
-// Week columns computation with memoization
-const getWeekColumns = computed(() => {
-    const days = [
-        'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
-    ]
-
-    return (row: TaskRowWithTasks) => {
-        const weekStart = new Date(row.weekStart)
-
-        return days.map((day, index) => ({
-            title: day,
-            tasks: row.tasks?.filter((task) => {
-                if (!task.taskRowId || !task.dueDate) { return false }
-                if (task.taskRowId !== row.id) { return false }
-
-                const taskDate = new Date(task.dueDate)
-                const columnDate = new Date(weekStart)
-                columnDate.setDate(weekStart.getDate() + index)
-
-                return taskDate.toDateString() === columnDate.toDateString()
-            }) || [],
-        }))
-    }
-})
-
-const expandedRows = ref<Record<string, boolean>>({})
-const areAllRowsExpanded = ref(false)
-
-function handleRowExpanded (rowId: string, value: boolean) {
-    expandedRows.value[rowId] = value
-}
-
-function toggleAllRows () {
-    areAllRowsExpanded.value = !areAllRowsExpanded.value
-    taskRows.value?.forEach((row) => {
-        expandedRows.value[row.id] = areAllRowsExpanded.value
-    })
-}
-
-// Initialize expanded state when rows are loaded
-watch(taskRows, (newRows) => {
-    if (!newRows?.length) { return }
-    newRows.forEach((row) => {
-        if (expandedRows.value[row.id] === undefined) {
-            expandedRows.value[row.id] = true
-        }
-    })
-}, { immediate: true })
 </script>
 
 <style scoped lang="scss">

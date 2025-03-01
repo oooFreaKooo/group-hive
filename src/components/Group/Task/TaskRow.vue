@@ -108,7 +108,6 @@
                                         v-for="task in column.tasks"
                                         :key="task.id"
                                         :task="task"
-                                        class="task-card"
                                     />
                                 </TransitionGroup>
                             </draggable>
