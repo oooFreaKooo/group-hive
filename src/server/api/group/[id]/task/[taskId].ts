@@ -42,6 +42,7 @@ export default defineEventHandler(async (event) => {
                         tag: true,
                     },
                 },
+                subtasks: true,
             },
         })
     }
@@ -50,7 +51,8 @@ export default defineEventHandler(async (event) => {
     if (method === 'PUT') {
         const body = await readBody(event)
 
-        return await prisma.task.update({
+        // Update main task
+        const updatedTask = await prisma.task.update({
             where: {
                 id: taskId,
             },
@@ -78,12 +80,70 @@ export default defineEventHandler(async (event) => {
                         tag: true,
                     },
                 },
+                subtasks: true,
             },
         })
+
+        // Update or create subtasks if provided
+        if (body.subtasks) {
+            // Delete existing subtasks not in the new list
+            await prisma.task.deleteMany({
+                where: {
+                    parentId: taskId,
+                    id: {
+                        notIn: body.subtasks
+                            .filter((s: any) => s.id)
+                            .map((s: any) => s.id),
+                    },
+                },
+            })
+
+            // Update or create subtasks
+            for (const subtask of body.subtasks) {
+                if (subtask.id) {
+                    // Update existing subtask
+                    await prisma.task.update({
+                        where: { id: subtask.id },
+                        data: {
+                            description: subtask.description,
+                            pointValue: subtask.pointValue,
+                        },
+                    })
+                } else {
+                    // Create new subtask
+                    await prisma.task.create({
+                        data: {
+                            description: subtask.description,
+                            pointValue: subtask.pointValue,
+                            groupId,
+                            parentId: taskId,
+                            assignedToId: body.assignedToId,
+                            dueDate: body.dueDate ? new Date(body.dueDate) : null,
+                        },
+                    })
+                }
+            }
+
+            // Fetch updated task with all relations
+            return await prisma.task.findUnique({
+                where: { id: taskId },
+                include: {
+                    tags: {
+                        include: {
+                            tag: true,
+                        },
+                    },
+                    subtasks: true,
+                },
+            })
+        }
+
+        return updatedTask
     }
 
     // Handle DELETE request
     if (method === 'DELETE') {
+        // Delete subtasks first (should cascade automatically due to the relation)
         return await prisma.task.delete({
             where: {
                 id: taskId,

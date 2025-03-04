@@ -110,7 +110,7 @@
                         type="button"
                         class="add-task-button"
                         :title="`Add task for ${day.date.toLocaleDateString()}`"
-                        @click="openCreateTask(day.date)"
+                        @click="emit('open-create-task', day.date)"
                     >
                         <i class="bi bi-plus-lg" />
                     </button>
@@ -178,7 +178,7 @@
                     type="button"
                     class="add-task-button"
                     :title="`Add task for ${day.date.toLocaleDateString()}`"
-                    @click="openCreateTask(day.date)"
+                    @click="emit('open-create-task', day.date)"
                 >
                     <i class="bi bi-plus-lg" />
                 </button>
@@ -221,7 +221,6 @@
 
 <script setup lang="ts">
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
-import { useTaskPopover } from '@/composables/useTaskPopover'
 
 interface DayData {
     date: Date
@@ -241,9 +240,8 @@ const emit = defineEmits<{
     }): void
     (e: 'task-deleted', taskId: string): void
     (e: 'task-edited'): void
+    (e: 'open-create-task', date: Date): void
 }>()
-
-const taskPopover = useTaskPopover()
 
 // State
 const isDragging = ref(false)
@@ -473,11 +471,6 @@ const handleTaskDeleted = (taskId: string) => {
 
 const handleTaskEdited = () => {
     emit('task-edited')
-}
-
-// Update openCreateTask method
-const openCreateTask = (date: Date) => {
-    taskPopover.open(date)
 }
 </script>
 

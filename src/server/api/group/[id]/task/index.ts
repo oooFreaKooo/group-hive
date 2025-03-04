@@ -17,6 +17,8 @@ export default defineEventHandler(async (event) => {
     const tasks = await prisma.task.findMany({
         where: {
             groupId,
+            // Only fetch parent tasks (tasks without a parent)
+            parentId: null,
         },
         include: {
             tags: {
@@ -24,6 +26,7 @@ export default defineEventHandler(async (event) => {
                     tag: true,
                 },
             },
+            subtasks: true,
         },
     })
 

@@ -48,6 +48,11 @@ model Task {
   completedById String?   @db.VarChar(36) // References the Profile id from Supabase
   tags          TaskTag[]
   comments      Comment[]
+  parentId      String?   @db.VarChar(30)
+  parent        Task?     @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks      Task[]    @relation("TaskSubtasks")
+
+  @@index([parentId])
 }
 
 model Message {

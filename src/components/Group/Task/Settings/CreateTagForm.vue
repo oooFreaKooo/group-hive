@@ -1,10 +1,10 @@
 <template>
-    <div class="my-2 p-3 card">
+    <div class="my-2 p-2 card border border-primary">
         <label class="form-label fw-medium mb-2">Create New Tag</label>
         <input
             v-model="form.title"
             type="text"
-            class="form-control mb-2"
+            class="form-control form-control-sm mb-2 rounded-4"
             placeholder="Tag title"
         >
         <div class="d-flex gap-2 align-items-center">
@@ -19,14 +19,14 @@
             </div>
             <button
                 type="button"
-                class="btn btn-outline-dark btn-sm"
+                class="btn btn-outline-dark btn-sm rounded-4"
                 @click="emit('cancel')"
             >
                 Cancel
             </button>
             <button
                 type="button"
-                class="btn btn-success btn-sm"
+                class="btn btn-success btn-sm rounded-4"
                 :disabled="!form.title || isCreating"
                 @click="handleCreate"
             >
@@ -46,7 +46,7 @@
                 <div class="d-flex gap-2">
                     <select
                         v-model="selectedTagId"
-                        class="form-select"
+                        class="form-select form-select-sm rounded-4 border-2"
                     >
                         <option value="">
                             Select a tag to delete
@@ -61,7 +61,7 @@
                     </select>
                     <button
                         type="button"
-                        class="btn btn-danger"
+                        class="btn btn-danger btn-sm"
                         :disabled="!selectedTagId || isDeleting"
                         @click="handleDelete(selectedTagId)"
                     >

@@ -131,7 +131,6 @@ function handleNavClick (index: number) {
     justify-content: center;
     transition: color var(--nav-transition);
     border-radius: 0.75rem;
-    padding: 0.5rem;
 
     &::after {
         content: '';
@@ -173,7 +172,6 @@ function handleNavClick (index: number) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
 
     i {
         font-size: 1.5rem;

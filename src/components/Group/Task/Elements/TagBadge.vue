@@ -21,7 +21,7 @@
 
             <i
                 v-if="showCloseButton"
-                class="cursor-pointer bi bi-x ms-1"
+                class="cursor-pointer bi bi-x-lg ms-1"
                 :style="{ color: getContrastColor(tag.tag.color) }"
                 @click="$emit('remove', tag.tagId)"
             />
@@ -79,7 +79,6 @@ function getContrastColor (hexColor: string): string {
     align-items: center;
 
     &:hover {
-        transform: scale(1.2);
         opacity: 0.8;
     }
 }

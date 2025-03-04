@@ -23,11 +23,11 @@
                         <i class="bi bi-star-fill me-1 text-warning" />
                         {{ task.pointValue }}
                     </span>
-
-                    <i
-                        title="Edit"
-                        class="bi bi-three-dots-vertical btn p-0 border-0 text-muted"
-                        @click="showDetails = true"
+                    <TaskDetailsPopover
+                        :task-id="task.id"
+                        :group-id="task.groupId"
+                        @deleted="handleTaskDeleted"
+                        @edited="handleTaskEdited"
                     />
                 </div>
             </div>
@@ -36,16 +36,33 @@
                 class="small"
                 :tags="task.tags"
             />
-        </div>
 
-        <TaskDetailsPopover
-            v-if="showDetails"
-            :task-id="task.id"
-            :group-id="task.groupId"
-            @close="showDetails = false"
-            @deleted="handleTaskDeleted"
-            @edited="handleTaskEdited"
-        />
+            <!-- Subtasks Section -->
+            <div
+                v-if="task.subtasks?.length"
+                class="mt-1 border-top"
+            >
+                <div class="d-flex align-items-center gap-2 small text-muted">
+                    <i class="bi bi-list-check" />
+                    <span>{{ completedSubtasks }} of {{ task.subtasks.length }} subtasks</span>
+                    <div class="flex-grow-1">
+                        <div
+                            class="progress"
+                            style="height: 2px;"
+                        >
+                            <div
+                                class="progress-bar bg-success"
+                                role="progressbar"
+                                :style="{ width: `${(completedSubtasks / task.subtasks.length) * 100}%` }"
+                                :aria-valuenow="(completedSubtasks / task.subtasks.length) * 100"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -63,6 +80,7 @@ interface TaskTag {
 
 interface TaskWithRelations extends Task {
     tags: TaskTag[]
+    subtasks?: Task[]
 }
 
 interface Profile {
@@ -92,17 +110,19 @@ const { data: assignedProfile } = props.task.assignedToId
     ? await useFetch<Profile>(`/api/profile/${props.task.assignedToId}`)
     : { data: ref(null) }
 
-const showDetails = ref(false)
 const isDragging = ref(false)
 
 const handleTaskDeleted = () => {
-    showDetails.value = false
     emit('deleted', props.task.id)
 }
 
 const handleTaskEdited = () => {
     emit('edited')
 }
+
+const completedSubtasks = computed(() => {
+    return props.task.subtasks?.filter(subtask => subtask.completed).length || 0
+})
 </script>
 
 <style scoped lang="scss">

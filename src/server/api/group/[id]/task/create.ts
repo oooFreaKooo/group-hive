@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
         })
     }
 
+    // Create the main task first
     const task = await prisma.task.create({
         data: {
             description: body.description,
@@ -38,6 +39,33 @@ export default defineEventHandler(async (event) => {
             },
         },
     })
+
+    // Create subtasks if any
+    if (body.subtasks?.length) {
+        await prisma.task.createMany({
+            data: body.subtasks.map((subtask: { description: string, pointValue: number }) => ({
+                description: subtask.description,
+                pointValue: subtask.pointValue,
+                groupId,
+                assignedToId: body.assignedToId,
+                dueDate: body.dueDate ? new Date(body.dueDate) : null,
+                parentId: task.id,
+            })),
+        })
+
+        // Fetch the complete task with subtasks
+        return await prisma.task.findUnique({
+            where: { id: task.id },
+            include: {
+                tags: {
+                    include: {
+                        tag: true,
+                    },
+                },
+                subtasks: true,
+            },
+        })
+    }
 
     return task
 })

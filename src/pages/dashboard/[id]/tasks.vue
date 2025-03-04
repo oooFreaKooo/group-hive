@@ -14,7 +14,11 @@
                     </div>
                     <div class="d-flex gap-3 align-items-center">
                         <CreateTaskPopover
+                            ref="createTaskPopoverRef"
                             :group-id="route.params.id as string"
+                            :selected-date="selectedDate"
+                            @task-created="refresh()"
+                            @close="selectedDate = undefined"
                         />
                     </div>
                 </div>
@@ -41,6 +45,7 @@
                     @task-moved="handleTaskMoved"
                     @task-deleted="refresh()"
                     @task-edited="refresh()"
+                    @open-create-task="openCreateTask"
                 />
             </div>
         </div>
@@ -54,9 +59,19 @@ definePageMeta({
 
 const route = useRoute()
 const error = ref(false)
+const selectedDate = ref<Date | undefined>(undefined)
+const createTaskPopoverRef = ref<{ open: () => void }>()
 
 const { data: tasksData } = await useFetch<SerializedTask[]>(`/api/group/${route.params.id}/task`)
 const tasks = ref<SerializedTask[]>(tasksData.value || [])
+
+const openCreateTask = (date: Date) => {
+    selectedDate.value = date
+    // Need to wait for the next tick to ensure the date is set before opening
+    nextTick(() => {
+        createTaskPopoverRef.value?.open()
+    })
+}
 
 // Refresh function
 const refresh = async () => {
