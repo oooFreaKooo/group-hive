@@ -1,19 +1,15 @@
 <template>
     <AppPopover
-        ref="popoverRef"
-        title="Create Task"
-        trigger-text="Add Task"
+        title="Edit Task"
         overlay
-        @close="handleClose"
-        @open="handleOpen"
+        @close="$emit('close')"
     >
         <template #trigger="{ open }">
             <button
-                class="btn btn-light btn-sm rounded-pill"
+                class="btn btn-link text-secondary p-0"
                 @click="open"
             >
-                <i class="bi bi-plus-lg me-2" />
-                Add Task
+                <i class="bi bi-pencil-fill opacity-75 hover-opacity-100" />
             </button>
         </template>
 
@@ -67,10 +63,17 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="d-flex justify-content-center">
+            <div class="d-flex justify-content-end gap-2">
+                <button
+                    type="button"
+                    class="btn btn-light btn-sm rounded-4"
+                    @click="$emit('close')"
+                >
+                    Cancel
+                </button>
                 <button
                     type="submit"
-                    class="btn btn-primary btn-sm rounded-4 px-4 py-1"
+                    class="btn btn-primary btn-sm rounded-4"
                     :disabled="isSubmitting"
                 >
                     <span
@@ -78,7 +81,7 @@
                         class="spinner-border spinner-border-sm me-2"
                         role="status"
                     />
-                    {{ isSubmitting ? 'Creating...' : 'Create Task' }}
+                    {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
                 </button>
             </div>
         </form>
@@ -86,45 +89,51 @@
 </template>
 
 <script setup lang="ts">
-import type { Tag } from '@prisma/client'
+import type { Tag, Task } from '@prisma/client'
 import { useDateTime } from '@/composables/useDateTime'
 
+interface TaskWithRelations extends Task {
+    tags: {
+        tagId: string
+        tag: {
+            id: string
+            title: string
+            color: string
+        }
+    }[]
+    subtasks?: Task[]
+}
+
 const props = defineProps<{
+    task: TaskWithRelations
     groupId: string
-    selectedDate?: Date
+}>()
+
+const emit = defineEmits<{
+    (e: 'close'): void
+    (e: 'edited'): void
 }>()
 
 const error = ref('')
 const isSubmitting = ref(false)
-const emit = defineEmits(['task-created'])
-
-// Add ref to AppPopover
-const popoverRef = ref()
 
 // Use the datetime composable
-const { getDateLimits, formatDateForInput, createUTCDate } = useDateTime()
+const { getDateLimits, createUTCDate, parseUTCDate } = useDateTime()
 
-// Expose the open method
-defineExpose({
-    open: () => {
-        popoverRef.value?.open()
-    },
-})
-
-// Format initial date if provided
-const formattedInitialDate = computed(() => {
-    if (!props.selectedDate) { return '' }
-    return formatDateForInput(new Date(props.selectedDate))
-})
+// Initialize form with task data
+const { date: initialDate, time: initialTime } = parseUTCDate(props.task.dueDate)
 
 const form = ref({
-    description: '',
-    pointValue: 1,
-    assignedToId: '',
-    dueDate: formattedInitialDate.value,
-    dueTime: '',
-    tagIds: [] as string[],
-    subtasks: [] as { description: string, pointValue: number }[],
+    description: props.task.description || '',
+    pointValue: props.task.pointValue || 0,
+    assignedToId: props.task.assignedToId || '',
+    dueDate: initialDate,
+    dueTime: initialTime,
+    tagIds: props.task.tags.map(tag => tag.tagId),
+    subtasks: props.task.subtasks?.map(subtask => ({
+        description: subtask.description || '',
+        pointValue: subtask.pointValue,
+    })) || [],
 })
 
 // Get date limits from composable
@@ -156,8 +165,8 @@ const handleSubmit = async () => {
 
         const dueDateTime = createUTCDate(form.value.dueDate, form.value.dueTime)
 
-        await $fetch(`/api/group/${props.groupId}/task/create`, {
-            method: 'POST',
+        await $fetch(`/api/group/${props.groupId}/task/${props.task.id}`, {
+            method: 'PUT',
             body: {
                 description: form.value.description,
                 pointValue: form.value.pointValue,
@@ -168,49 +177,12 @@ const handleSubmit = async () => {
             },
         })
 
-        // Reset form
-        form.value = {
-            description: '',
-            pointValue: 1,
-            assignedToId: '',
-            dueDate: '',
-            dueTime: '',
-            tagIds: [],
-            subtasks: [],
-        }
-
-        navigateTo(`/dashboard/${props.groupId}/tasks`)
-        emit('task-created')
+        emit('edited')
+        emit('close')
     } catch (e: any) {
-        error.value = e.message || 'Failed to create task'
+        error.value = e.message || 'Failed to save changes'
     } finally {
         isSubmitting.value = false
     }
 }
-
-const handleClose = () => {
-    // Reset form
-    form.value = {
-        description: '',
-        pointValue: 1,
-        assignedToId: '',
-        dueDate: '',
-        dueTime: '',
-        tagIds: [],
-        subtasks: [],
-    }
-}
-
-const handleOpen = () => {
-    // Set initial date if provided
-    if (props.selectedDate) {
-        form.value.dueDate = formattedInitialDate.value
-    }
-}
 </script>
-
-<style scoped lang="scss">
-.hover-opacity-100:hover {
-    opacity: 1 !important;
-}
-</style>

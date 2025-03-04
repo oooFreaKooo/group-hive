@@ -98,10 +98,22 @@ const handleTaskMoved = async (payload: TaskMovedPayload) => {
     try {
         const { task, date, onComplete } = payload
 
+        // Create a new date that preserves the original time
+        const newDate = new Date(date)
+
+        // If there was an original due date, preserve its time
+        if (task.dueDate) {
+            const originalDate = new Date(task.dueDate)
+            newDate.setHours(originalDate.getHours())
+            newDate.setMinutes(originalDate.getMinutes())
+            newDate.setSeconds(originalDate.getSeconds())
+            newDate.setMilliseconds(originalDate.getMilliseconds())
+        }
+
         await $fetch(`/api/group/${route.params.id}/task/${task.id}`, {
             method: 'PUT',
             body: {
-                dueDate: date.toISOString(),
+                dueDate: newDate.toISOString(),
             },
         })
 

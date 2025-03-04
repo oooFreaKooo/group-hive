@@ -37,18 +37,18 @@
                     </div>
                 </div>
                 <div class="d-flex gap-2">
+                    <EditTaskPopover
+                        v-if="task"
+                        :task="task"
+                        :group-id="groupId"
+                        @edited="handleEdited"
+                        @close="handleEditClose"
+                    />
                     <button
-                        v-if="!isEditing"
-                        class="btn btn-link text-secondary p-0 opacity-75 hover-opacity-100"
-                        @click="startEditing"
-                    >
-                        <i class="bi bi-pencil-fill" />
-                    </button>
-                    <button
-                        class="btn btn-link text-danger p-0 opacity-75 hover-opacity-100"
+                        class="btn btn-link text-danger p-0"
                         @click="showDeleteConfirm = true"
                     >
-                        <i class="bi bi-trash-fill" />
+                        <i class="bi bi-trash-fill opacity-75 hover-opacity-100" />
                     </button>
                 </div>
             </div>
@@ -57,93 +57,36 @@
             <div class="d-flex flex-wrap gap-3 mb-3 p-2 bg-light rounded-3">
                 <!-- Assigned To -->
                 <div class="d-flex align-items-center gap-2">
-                    <div v-if="isEditing">
-                        <select
-                            v-model="editForm.assignedToId"
-                            class="form-select form-select-sm rounded-3"
-                        >
-                            <option value="">
-                                Unassigned
-                            </option>
-                            <option
-                                v-for="member in members"
-                                :key="member.id"
-                                :value="member.id"
-                            >
-                                {{ member.displayName }}
-                            </option>
-                        </select>
-                    </div>
                     <div
-                        v-else
-                        class="d-flex gap-2 align-items-center"
+                        v-if="assignedProfile"
+                        class="member-avatar"
+                        :title="assignedProfile.displayName || ''"
                     >
+                        <NuxtImg
+                            v-if="assignedProfile.avatarUrl"
+                            :src="assignedProfile.avatarUrl"
+                            :alt="assignedProfile.displayName || ''"
+                            class="rounded-circle border"
+                            width="24"
+                            height="24"
+                        />
                         <div
-                            v-if="assignedProfile"
-                            class="member-avatar"
-                            :title="assignedProfile.displayName || ''"
+                            v-else
+                            class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white border"
+                            style="width: 24px; height: 24px; font-size: 0.75rem"
                         >
-                            <img
-                                v-if="assignedProfile.avatarUrl"
-                                :src="assignedProfile.avatarUrl"
-                                :alt="assignedProfile.displayName || ''"
-                                class="rounded-circle border"
-                                width="24"
-                                height="24"
-                            >
-                            <div
-                                v-else
-                                class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white border"
-                                style="width: 24px; height: 24px; font-size: 0.75rem"
-                            >
-                                {{ assignedProfile.displayName?.[0] || '' }}
-                            </div>
+                            {{ assignedProfile.displayName?.[0] || '' }}
                         </div>
-                        <span class="small">{{ assignedProfile?.displayName || 'Unassigned' }}</span>
                     </div>
+                    <span class="small">{{ assignedProfile?.displayName || 'Unassigned' }}</span>
                 </div>
 
                 <!-- Tags -->
                 <div
-                    v-if="task.tags.length || isEditing"
+                    v-if="task.tags.length"
                     class="d-flex align-items-center gap-2"
                 >
-                    <div
-                        v-if="isEditing"
-                        class="d-flex gap-2 align-items-center"
-                    >
-                        <select
-                            v-model="selectedTagId"
-                            class="form-select form-select-sm rounded-3"
-                            style="width: 120px"
-                            :disabled="!availableTags.length"
-                        >
-                            <option value="">
-                                {{ availableTags.length ? 'Add tag' : 'No tags' }}
-                            </option>
-                            <option
-                                v-for="tag in availableTags"
-                                :key="tag.id"
-                                :value="tag.id"
-                            >
-                                {{ tag.title }}
-                            </option>
-                        </select>
-                        <TagBadge
-                            :tags="editForm.tagIds.map(id => ({
-                                tagId: id,
-                                tag: {
-                                    id,
-                                    title: getTagTitle(id),
-                                    color: getTagColor(id),
-                                },
-                            }))"
-                            :show-close-button="true"
-                            @remove="removeTag"
-                        />
-                    </div>
                     <TagBadge
-                        v-else
                         :tags="task.tags"
                     />
                 </div>
@@ -156,57 +99,14 @@
                         <i class="bi bi-list-check text-primary small" />
                         <span class="small fw-medium">Subtasks</span>
                     </div>
-                    <div v-if="!isEditing && task.subtasks?.length">
+                    <div v-if="task.subtasks?.length">
                         <span class="badge text-bg-success-subtle text-success rounded-pill small">
                             {{ completedSubtasks }}/{{ task.subtasks.length }}
                         </span>
                     </div>
                 </div>
 
-                <div v-if="isEditing">
-                    <div class="mb-2">
-                        <div
-                            v-for="(subtask, index) in editForm.subtasks"
-                            :key="index"
-                            class="d-flex gap-2 align-items-center mb-2"
-                        >
-                            <input
-                                v-model="subtask.description"
-                                type="text"
-                                class="form-control form-control-sm rounded-3"
-                                placeholder="Subtask description"
-                            >
-                            <div
-                                class="input-group input-group-sm"
-                                style="width: 100px;"
-                            >
-                                <span class="input-group-text"><i class="bi bi-star-fill text-warning small" /></span>
-                                <input
-                                    v-model.number="subtask.pointValue"
-                                    type="number"
-                                    class="form-control"
-                                    min="0"
-                                    max="100"
-                                >
-                            </div>
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-outline-danger rounded-circle p-1"
-                                @click="removeSubtask(index)"
-                            >
-                                <i class="bi bi-x-lg small" />
-                            </button>
-                        </div>
-                    </div>
-                    <button
-                        type="button"
-                        class="btn btn-outline-primary btn-sm rounded-3"
-                        @click="addSubtask"
-                    >
-                        <i class="bi bi-plus-lg me-1" /> Add
-                    </button>
-                </div>
-                <div v-else>
+                <div>
                     <div
                         v-if="task.subtasks?.length"
                         class="list-group list-group-flush small"
@@ -235,7 +135,6 @@
                                 </div>
                             </div>
                             <span class="badge text-bg-warning-subtle text-warning">
-
                                 {{ subtask.pointValue }}
                                 <i class="bi bi-star-fill text-warning small ms-2" />
                             </span>
@@ -250,37 +149,8 @@
                 </div>
             </div>
 
-            <!-- Save/Cancel Buttons when Editing -->
-            <div
-                v-if="isEditing"
-                class="alert alert-primary rounded-3 py-2 px-3 mb-3 d-flex gap-2 justify-content-end"
-            >
-                <button
-                    type="button"
-                    class="btn btn-sm btn-light rounded-3"
-                    @click="cancelEditing"
-                >
-                    Cancel
-                </button>
-                <button
-                    type="button"
-                    class="btn btn-sm btn-primary rounded-3"
-                    :disabled="isSubmitting"
-                    @click="saveChanges"
-                >
-                    <span
-                        v-if="isSubmitting"
-                        class="d-flex align-items-center gap-2"
-                    >
-                        <div class="spinner-border spinner-border-sm" />
-                        Saving
-                    </span>
-                    <span v-else>Save</span>
-                </button>
-            </div>
-
             <!-- Comments Section -->
-            <div v-if="!isEditing">
+            <div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-chat-square-text text-primary small" />
@@ -406,17 +276,6 @@ interface CommentWithAuthor extends Comment {
     author: Profile
 }
 
-interface Tag {
-    id: string
-    title: string
-    color: string
-}
-
-interface Member {
-    id: string
-    displayName: string
-}
-
 const props = defineProps({
     taskId: {
         type: String,
@@ -438,14 +297,6 @@ const newComment = ref('')
 const isSubmitting = ref(false)
 const showDeleteConfirm = ref(false)
 const isDeleting = ref(false)
-const isEditing = ref(false)
-const editForm = ref({
-    pointValue: 0,
-    assignedToId: '',
-    tagIds: [] as string[],
-    subtasks: [] as { description: string, pointValue: number }[],
-})
-const selectedTagId = ref('')
 
 // Fetch task details
 const { data: task, status: taskPending, refresh: refreshTask } = await useFetch<TaskWithRelations>(`/api/group/${props.groupId}/task/${props.taskId}`)
@@ -457,16 +308,6 @@ const { data: assignedProfile, status: profilePending } = task.value?.assignedTo
 
 // Fetch comments
 const { data: comments, refresh: refreshComments, status: commentsPending } = await useFetch<CommentWithAuthor[]>(`/api/group/${props.groupId}/task/${props.taskId}/comments`)
-
-// Fetch members
-const { data: members } = await useLazyFetch<Member[]>(`/api/group/${props.groupId}/members`, {
-    default: () => [],
-})
-
-// Fetch available tags
-const { data: availableTags } = await useLazyFetch<Tag[]>(`/api/group/${props.groupId}/tags`, {
-    default: () => [],
-})
 
 const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -529,71 +370,6 @@ const deleteTask = async () => {
     }
 }
 
-const startEditing = () => {
-    if (!task.value) { return }
-
-    isEditing.value = true
-    editForm.value = {
-        pointValue: task.value.pointValue || 0,
-        assignedToId: task.value.assignedToId || '',
-        tagIds: task.value.tags.map(tag => tag.tagId) || [],
-        subtasks: task.value.subtasks?.map(subtask => ({
-            description: subtask.description || '',
-            pointValue: subtask.pointValue,
-        })) || [],
-    }
-    selectedTagId.value = task.value.tags.length ? task.value.tags[0].tagId : ''
-}
-
-const cancelEditing = () => {
-    isEditing.value = false
-}
-
-const saveChanges = async () => {
-    try {
-        isSubmitting.value = true
-        await $fetch(`/api/group/${props.groupId}/task/${props.taskId}`, {
-            method: 'PUT',
-            body: {
-                pointValue: editForm.value.pointValue,
-                assignedToId: editForm.value.assignedToId,
-                tagIds: editForm.value.tagIds,
-                subtasks: editForm.value.subtasks,
-            },
-        })
-        isEditing.value = false
-        refreshComments()
-        refreshTask()
-        emit('edited')
-    } catch (error) {
-        console.error('Failed to save changes:', error)
-    } finally {
-        isSubmitting.value = false
-    }
-}
-
-const removeTag = (tagId: string) => {
-    editForm.value.tagIds = editForm.value.tagIds.filter(id => id !== tagId)
-}
-
-const getTagColor = (tagId: string) => {
-    const tag = availableTags.value?.find(tag => tag.id === tagId)
-    return tag ? tag.color : '#ccc'
-}
-
-const getTagTitle = (tagId: string) => {
-    const tag = availableTags.value?.find(tag => tag.id === tagId)
-    return tag ? tag.title : 'Untitled'
-}
-
-const addSubtask = () => {
-    editForm.value.subtasks.push({ description: '', pointValue: 1 })
-}
-
-const removeSubtask = (index: number) => {
-    editForm.value.subtasks.splice(index, 1)
-}
-
 const toggleSubtask = async (subtask: Task) => {
     try {
         await $fetch(`/api/group/${props.groupId}/task/${subtask.id}`, {
@@ -612,14 +388,14 @@ const completedSubtasks = computed(() => {
     return task.value?.subtasks?.filter(subtask => subtask.completed).length || 0
 })
 
-// Watch for tag selection
-watch(selectedTagId, (newValue) => {
-    if (!newValue) { return }
-    if (!editForm.value.tagIds.includes(newValue)) {
-        editForm.value.tagIds.push(newValue)
-    }
-    selectedTagId.value = ''
-})
+const handleEdited = () => {
+    refreshTask()
+    emit('edited')
+}
+
+const handleEditClose = () => {
+    // Any cleanup if needed
+}
 </script>
 
 <style scoped lang="scss">
