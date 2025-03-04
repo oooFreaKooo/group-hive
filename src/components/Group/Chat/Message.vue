@@ -1,7 +1,7 @@
 <template>
     <div
-        class="message py-2 my-2 position-relative transition"
-        :class="{ 'ps-5': message.replyTo, 'own-message': isOwnMessage }"
+        class="message py-2 position-relative transition"
+        :class="{ 'ps-4': message.replyTo, 'own-message': isOwnMessage }"
     >
         <div
             class="d-flex gap-3 align-items-start position-relative transition"
@@ -9,7 +9,8 @@
         >
             <NuxtImg
                 ref="avatarRef"
-                class="avatar flex-shrink-0 rounded-circle border border-2 border-secondary shadow-sm cursor-pointer transition"
+                class="avatar flex-shrink-0 rounded-circle border-2 shadow-sm cursor-pointer transition"
+                :class="isOwnMessage ? 'border-primary' : 'border-dark'"
                 width="32"
                 height="32"
                 :src="message.author.avatarUrl || '/images/default-avatar.png'"
@@ -20,19 +21,27 @@
                 class="message-content d-flex flex-column gap-2 flex-grow-1"
                 :class="{ 'align-items-end': isOwnMessage }"
             >
-                <div class="d-flex align-items-center gap-3">
-                    <div class="message-actions">
+                <div
+                    class="d-flex align-items-center gap-2"
+                    :class="{ 'flex-row-reverse': isOwnMessage }"
+                >
+                    <span
+                        class="author fw-semibold cursor-pointer small"
+                        @click="$emit('mention-user', message.author)"
+                    >{{ message.author.displayName }}</span>
+                    <span class="small text-muted">{{ formattedDate }}</span>
+                    <div class="message-actions ms-2">
                         <button
-                            class="btn btn-link btn-sm p-1 text-muted menu-trigger d-flex align-items-center justify-content-center transition"
+                            class="btn btn-sm p-0 text-muted menu-trigger d-flex align-items-center justify-content-center transition rounded-circle"
                             type="button"
                             @click.stop="isMenuOpen = !isMenuOpen"
                             @blur="startCloseTimeout()"
                         >
-                            <i class="bi bi-chevron-down" />
+                            <i class="bi bi-three-dots-vertical" />
                         </button>
                         <div
-                            class="dropdown-menu shadow-sm border"
-                            :class="{ show: isMenuOpen }"
+                            class="dropdown-menu shadow-sm border rounded-3"
+                            :class="{ 'show': isMenuOpen, 'dropdown-menu-end': isOwnMessage }"
                             @mousedown.prevent
                         >
                             <button
@@ -60,60 +69,58 @@
                             </template>
                         </div>
                     </div>
-                    <span
-                        class="author fw-semibold cursor-pointer"
-                        @click="$emit('mention-user', message.author)"
-                    >{{ message.author.displayName }}</span>
-                    <span class="small text-muted">{{ formattedDate }}</span>
                 </div>
 
                 <div
                     v-if="message.replyTo"
-                    class="reply-content my-2"
+                    class="reply-content mb-2"
                 >
-                    <div class="border-start border-4 border-primary p-2 bg-body-tertiary small rounded-3">
-                        <div class="fw-bold">
+                    <div class="border-start border-4 border-primary-subtle p-2 bg-light small rounded-3">
+                        <div class="fw-semibold text-primary-emphasis">
                             {{ message.replyTo.author.displayName }}
                         </div>
-                        <div>
+                        <div class="text-secondary">
                             {{ message.replyTo.content }}
                         </div>
                     </div>
                 </div>
 
                 <div
-                    class="message-bubble bg-primary shadow-sm position-relative"
-                    :class="{ 'rounded-4 p-4 border border-2 border-primary shadow': isEditing }"
+                    class="message-bubble position-relative"
+                    :class="[
+                        isOwnMessage ? 'bg-primary text-white' : 'bg-light border',
+                        { 'rounded-4 p-4 border-2 shadow': isEditing },
+                    ]"
                 >
                     <template v-if="!isEditing">
-                        <div class="text-light w-100">
+                        <div :class="{ 'text-dark': !isOwnMessage }">
                             <span v-html="formattedContent" />
                             <span
                                 v-if="message.isEdited"
-                                class="edited-badge small opacity-75 ms-3 fst-italic"
+                                class="edited-badge small opacity-75 ms-2 fst-italic"
                             >(edited)</span>
                         </div>
                     </template>
                     <template v-else>
                         <div class="edit-container w-100">
-                            <div class="fw-semibold mb-3">
+                            <div class="fw-semibold mb-3 text-dark">
                                 Edit message
                             </div>
                             <textarea
                                 v-model="editContent"
-                                class="form-control mb-2 rounded-3 p-3"
+                                class="form-control mb-3 rounded-3"
                                 @keydown.enter.prevent="$emit('save-edit', editContent)"
                                 @keydown.esc="$emit('cancel-edit')"
                             />
                             <div class="d-flex gap-2">
                                 <button
-                                    class="btn btn-sm btn-success rounded-3 px-3 py-2"
+                                    class="btn btn-sm btn-primary rounded-pill px-3"
                                     @click="$emit('save-edit', editContent)"
                                 >
-                                    Save
+                                    Save changes
                                 </button>
                                 <button
-                                    class="btn btn-sm btn-outline-warning rounded-3 px-3 py-2"
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-3"
                                     @click="$emit('cancel-edit')"
                                 >
                                     Cancel
@@ -184,15 +191,14 @@ const formattedContent = computed(() => {
 </script>
 
 <style scoped lang="scss">
-// Custom styles that can't be achieved with Bootstrap utilities
 .message {
     &:hover {
-        background-color: rgba(var(--bs-primary-rgb), 0.02);
+        background-color: var(--bs-gray-100);
     }
 }
 
 .transition {
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .cursor-pointer {
@@ -202,9 +208,11 @@ const formattedContent = computed(() => {
 .avatar {
     width: 2.5rem;
     height: 2.5rem;
+    object-fit: cover;
 
     &:hover {
         transform: scale(1.15);
+        box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.15) !important;
     }
 }
 
@@ -213,30 +221,20 @@ const formattedContent = computed(() => {
     min-width: 140px;
 }
 
-.author:hover {
-    text-decoration: underline;
+.author {
+    &:hover {
+        color: var(--bs-primary);
+    }
 }
 
 .message-bubble {
-    padding: 0.5rem 1rem;
-    border-radius: 0 1.5rem 1.5rem 1.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem 1rem 1rem 0.25rem;
     word-break: break-word;
-
-    &::before {
-        content: '';
-        position: absolute;
-        left: -0.75rem;
-        top: 1rem;
-        border: 0.75rem solid transparent;
-    }
 }
 
 .own-message .message-bubble {
-    border-radius: 1.5rem 0.25rem 1.5rem 1.5rem;
-
-    &::before {
-        display: none;
-    }
+    border-radius: 1rem 0.25rem 1rem 1rem;
 }
 
 .message-actions {
@@ -248,31 +246,38 @@ const formattedContent = computed(() => {
         height: var(--action-size);
 
         &:hover {
+            background-color: var(--bs-gray-200);
             transform: translateY(-1px);
         }
 
         i {
+            font-size: 1rem;
+        }
+    }
+
+    .dropdown-menu {
+        min-width: 180px;
+        padding: 0.5rem;
+        border-color: var(--bs-gray-200);
+
+        .dropdown-item {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
             font-size: 0.9rem;
+
+            &:hover {
+                background-color: var(--bs-light);
+            }
+
+            &.text-danger:hover {
+                background-color: var(--bs-danger-subtle);
+            }
         }
     }
 }
 
-.own-message .message-actions {
-    right: auto;
-    left: 0.25rem;
-}
-
 .message:hover .message-actions {
     opacity: 1;
-}
-
-.reply-content {
-    max-width: 90%;
-
-    .bg-body-tertiary {
-        backdrop-filter: blur(8px);
-        background-color: rgba(var(--bs-light-rgb), 0.85);
-    }
 }
 
 :deep(.mention) {
@@ -280,14 +285,15 @@ const formattedContent = computed(() => {
     cursor: pointer;
     padding: 0.15rem 0.4rem;
     border-radius: 0.5rem;
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
 
     .own-message & {
-        color: var(--bs-light);
-        background-color: rgba(255, 255, 255, 0.25);
+        color: var(--bs-white);
+        background-color: rgba(255, 255, 255, 0.2);
     }
 
     &:hover {
-        text-decoration: underline;
+        text-decoration: none;
         background-color: rgba(var(--bs-primary-rgb), 0.15);
     }
 }
@@ -295,13 +301,23 @@ const formattedContent = computed(() => {
 textarea {
     resize: vertical;
     min-height: 100px;
+    border-color: var(--bs-gray-300);
 
     &:focus {
+        border-color: var(--bs-primary);
         box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.15);
     }
 }
 
-.btn:hover {
-    transform: translateY(-2px);
+.btn {
+    transition: all 0.2s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
 }
 </style>

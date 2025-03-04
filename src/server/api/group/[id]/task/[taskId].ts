@@ -61,7 +61,6 @@ export default defineEventHandler(async (event) => {
                 completed: body.completed,
                 assignedToId: body.assignedToId,
                 completedById: body.completedById,
-                taskRowId: body.taskRowId,
                 tags: body.tagIds
                     ? {
                         deleteMany: {},

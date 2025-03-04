@@ -32,15 +32,14 @@
                                 </p>
                             </div>
                             <div class="text-center">
-                                <AnimatedButton
-                                    :label="error?.statusCode === 404 ? 'Zur Startseite' : 'Erneut versuchen'"
+                                <NuxtLink
                                     :to="error?.statusCode === 404 ? '/' : ''"
-                                    color="light"
-                                    :icon="error?.statusCode === 404 ? 'skip-backward' : 'arrow-repeat'"
                                     width="50"
-                                    class="btn btn-lg rounded-0 px-4 py-3"
+                                    class="btn btn-lg btn-dark  px-4 py-3"
                                     @click="error?.statusCode !== 404 && handleRetry()"
-                                />
+                                >
+                                    {{ error?.statusCode === 404 ? 'Zur Startseite' : 'Erneut versuchen' }}
+                                </NuxtLink>
                             </div>
                         </div>
                     </div>

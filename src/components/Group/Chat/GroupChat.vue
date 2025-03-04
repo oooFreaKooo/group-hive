@@ -1,18 +1,12 @@
 <template>
-    <div class="chat-container d-flex flex-column rounded-5 shadow">
-        <div class="p-3 bg-gradient bg-dark">
-            <span class="fw-semibold text-light ">
-                <i class="bi bi-chat-dots-fill mx-2" />
-                Group Chat
-            </span>
-        </div>
+    <div class="d-flex flex-column h-100">
         <div
             ref="messagesContainer"
-            class="messages flex-grow-1 overflow-auto bg-light position-relative"
+            class="messages flex-grow-1 overflow-auto position-relative bg-white rounded-4 border mb-3"
         >
             <div
                 v-if="status === 'pending'"
-                class="loading-overlay"
+                class="loading-overlay rounded-4"
             >
                 <div
                     class="spinner-border text-primary"
@@ -45,6 +39,7 @@
             ref="messageInputRef"
             :replying-to="replyingTo"
             :members="members"
+            class="bg-white rounded-4 border shadow-sm"
             @send="sendMessage"
             @cancel-reply="cancelReply"
             @mention-suggestion="handleMentionSuggestion"
@@ -251,30 +246,30 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.chat-container {
-    height: 75vh;
-    overflow: hidden;
-    position: relative;
-}
-
 .messages {
     position: relative;
+    height: calc(75vh - 180px);
 
     &::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
     }
 
     &::-webkit-scrollbar-track {
         background: transparent;
+        border-radius: 4px;
     }
 
     &::-webkit-scrollbar-thumb {
         background: var(--bs-gray-300);
-        border-radius: 3px;
+        border-radius: 4px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
 
         &:hover {
             background: var(--bs-gray-400);
+            border: 2px solid transparent;
+            background-clip: padding-box;
         }
     }
 
@@ -301,6 +296,7 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(4px);
+    z-index: 1;
 }
 </style>

@@ -30,21 +30,42 @@ const toggleCollapse = () => {
 <style scoped lang="scss">
 .collapse-tab {
     position: absolute;
-    right: -24px;
+    right: -28px;
     top: 50%;
     transform: translateY(-50%);
-    background: var(--bs-primary);
-    width: 24px;
-    height: 64px;
-    border: 1px solid var(--bs-light);
-    border-radius: 0 16px 16px 0;
+    background: var(--bs-dark);
+    width: 28px;
+    height: 56px;
+    border: 1px solid var(--bs-gray-800);
+    border-left: none;
+    border-radius: 0 0.75rem 0.75rem 0;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-    z-index: 1;  // Ensure tab stays above sidebar
+    transition: all 0.2s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
+    z-index: 1;
 
     &:hover {
-        background: var(--bs-dark);
+        background: var(--bs-primary);
+
+        i {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+    }
+
+    i {
+        opacity: 0.8;
+        transition: all 0.2s ease;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .collapse-tab {
+        transition: none !important;
+
+        i {
+            transition: none !important;
+        }
     }
 }
 

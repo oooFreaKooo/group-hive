@@ -2,7 +2,7 @@
     <div>
         <!-- Desktop Sidebar - Only visible on md and larger screens -->
         <div
-            class="d-none d-md-flex flex-column side-nav rounded-end-5 bg-dark bg-gradient shadow"
+            class="d-none d-md-flex flex-column side-nav bg-dark shadow"
             :class="{ collapsed: isCollapsed }"
         >
             <SidebarCollapsible
@@ -34,13 +34,23 @@ const isCollapsed = useCookie('sidebar-collapsed', { default: () => false })
 
 <style scoped lang="scss">
 .side-nav {
-    height: 75vh;
-    width: 56px;
+    --nav-height: 100vh;
+    --nav-width: 74px;
+    --nav-bg: var(--bs-dark);
+    --nav-color: var(--bs-gray-400);
+    --nav-active-color: var(--bs-primary);
+    --nav-transition: 0.2s ease;
+
+    height: var(--nav-height);
+    width: var(--nav-width);
+    background: var(--nav-bg);
+    backdrop-filter: blur(8px);
     z-index: 1020;
     position: fixed;
     top: 50%;
     transform: translateY(-50%);
-    transition: transform 0.3s ease;
+    transition: all var(--nav-transition);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
 
     &.collapsed {
         transform: translate(-100%, -50%);

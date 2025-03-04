@@ -2,17 +2,17 @@
     <div>
         <button
             class="btn btn-light btn-sm rounded-pill"
-            @click="isOpen = true"
+            @click="taskPopover.open()"
         >
             <i class="bi bi-plus-lg me-2" />
             Add Task
         </button>
 
         <AppPopover
-            v-if="isOpen"
+            v-if="taskPopover.isOpen.value"
             title="Create Task"
             overlay
-            @close="isOpen = false"
+            @close="taskPopover.close()"
         >
             <form
                 class="needs-validation"
@@ -22,12 +22,15 @@
                 <div class="mb-4">
                     <label
                         for="taskDescription"
-                        class="form-label fw-medium"
-                    >Description</label>
+                        class="form-label d-flex align-items-center gap-2 mb-2"
+                    >
+                        <i class="bi bi-card-text text-primary" />
+                        <span class="fw-medium">Description</span>
+                    </label>
                     <textarea
                         id="taskDescription"
                         v-model="form.description"
-                        class="form-control form-control-lg shadow-sm"
+                        class="form-control form-control-lg rounded-4 border-2"
                         rows="3"
                         placeholder="What needs to be done?"
                         required
@@ -39,16 +42,16 @@
                     <div class="col-md-6">
                         <label
                             for="taskPoints"
-                            class="form-label fw-medium d-flex align-items-center gap-2"
+                            class="form-label d-flex align-items-center gap-2 mb-2"
                         >
                             <i class="bi bi-star-fill text-warning" />
-                            Points
+                            <span class="fw-medium">Points</span>
                         </label>
                         <input
                             id="taskPoints"
                             v-model.number="form.pointValue"
                             type="number"
-                            class="form-control shadow-sm"
+                            class="form-control rounded-4 border-2"
                             min="0"
                             max="100"
                             required
@@ -57,13 +60,13 @@
 
                     <!-- Assignee -->
                     <div class="col-md-6">
-                        <label class="form-label fw-medium d-flex align-items-center gap-2">
-                            <i class="bi bi-person-fill text-dark" />
-                            Assignee
+                        <label class="form-label d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-person-fill text-primary" />
+                            <span class="fw-medium">Assignee</span>
                         </label>
                         <select
                             v-model="form.assignedToId"
-                            class="form-select shadow-sm"
+                            class="form-select rounded-4 border-2"
                         >
                             <option value="">
                                 Unassigned
@@ -80,14 +83,14 @@
 
                     <!-- Due Date -->
                     <div class="col-md-6">
-                        <label class="form-label fw-medium d-flex align-items-center gap-2">
-                            <i class="bi bi-calendar-event text-dark" />
-                            Due Date
+                        <label class="form-label d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-calendar-event text-primary" />
+                            <span class="fw-medium">Due Date</span>
                         </label>
                         <input
                             v-model="form.dueDate"
                             type="date"
-                            class="form-control shadow-sm"
+                            class="form-control rounded-4 border-2"
                             :min="minDate"
                             :max="maxDate"
                         >
@@ -95,14 +98,14 @@
 
                     <!-- Due Time -->
                     <div class="col-md-6">
-                        <label class="form-label fw-medium d-flex align-items-center gap-2">
-                            <i class="bi bi-clock text-dark" />
-                            Due Time
+                        <label class="form-label d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-clock text-primary" />
+                            <span class="fw-medium">Due Time</span>
                         </label>
                         <input
                             v-model="form.dueTime"
                             type="time"
-                            class="form-control shadow-sm"
+                            class="form-control rounded-4 border-2"
                             :disabled="!form.dueDate"
                         >
                     </div>
@@ -110,9 +113,9 @@
 
                 <!-- Tags Section -->
                 <div class="mb-4">
-                    <label class="form-label fw-medium d-flex align-items-center gap-2">
+                    <label class="form-label d-flex align-items-center gap-2 mb-3">
                         <i class="bi bi-tags-fill text-primary" />
-                        Tags
+                        <span class="fw-medium">Tags</span>
                     </label>
 
                     <!-- Selected Tags -->
@@ -120,7 +123,7 @@
                         <span
                             v-for="tagId in form.tagIds"
                             :key="tagId"
-                            class="badge d-flex align-items-center"
+                            class="badge rounded-pill d-flex align-items-center px-3 py-2"
                             :style="{ backgroundColor: getTagColor(tagId) }"
                         >
                             {{ getTagTitle(tagId) }}
@@ -129,16 +132,19 @@
                                 class="btn text-light p-0 ms-2 opacity-75 hover-opacity-100"
                                 @click="removeTag(tagId)"
                             >
-                                <i class="bi bi-x" />
+                                <i class="bi bi-x-lg" />
                             </button>
                         </span>
                     </div>
 
                     <!-- Tag Selection -->
-                    <div class="d-flex gap-2 align-items-start">
+                    <div
+                        v-if="!showCreateTag"
+                        class="d-flex gap-2 align-items-start"
+                    >
                         <select
                             v-model="selectedTagId"
-                            class="form-select shadow-sm"
+                            class="form-select rounded-4 border-2"
                             :disabled="!availableTags.length"
                         >
                             <option value="">
@@ -156,10 +162,10 @@
                         <button
                             v-if="!showCreateTag"
                             type="button"
-                            class="btn btn-outline-secondary"
+                            class="btn btn-outline-primary rounded-4 px-3"
                             @click="showCreateTag = true"
                         >
-                            <i class="bi bi-plus-lg" />
+                            <i class="bi bi-pencil-fill" />
                         </button>
                     </div>
 
@@ -167,7 +173,9 @@
                     <CreateTagForm
                         v-if="showCreateTag"
                         :group-id="groupId"
+                        :existing-tags="tags"
                         @tag-created="handleTagCreated"
+                        @tag-deleted="handleTagDeleted"
                         @cancel="showCreateTag = false"
                     />
                 </div>
@@ -175,24 +183,25 @@
                 <!-- Error Alert -->
                 <div
                     v-if="error"
-                    class="alert alert-danger"
+                    class="alert alert-danger rounded-4 border-0 d-flex align-items-center"
                     role="alert"
                 >
+                    <i class="bi bi-exclamation-triangle-fill me-2" />
                     {{ error }}
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="d-flex justify-content-end gap-2 mt-4">
+                <div class="d-flex justify-content-end gap-3 mt-4">
                     <button
                         type="button"
-                        class="btn btn-outline-secondary px-4"
-                        @click="isOpen = false"
+                        class="btn btn-outline-secondary rounded-4 px-4 py-2"
+                        @click="taskPopover.close()"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        class="btn btn-primary px-4"
+                        class="btn btn-primary rounded-4 px-4 py-2"
                         :disabled="isSubmitting"
                     >
                         <span
@@ -215,19 +224,22 @@ const props = defineProps<{
     groupId: string
 }>()
 
-const emit = defineEmits<{
-    (e: 'task-created'): void
-}>()
+const taskPopover = useTaskPopover()
 
-const isOpen = ref(false)
 const error = ref('')
 const isSubmitting = ref(false)
+
+// Format initial date if provided
+const formattedInitialDate = computed(() => {
+    if (!taskPopover.selectedDate.value) { return '' }
+    return taskPopover.selectedDate.value.toISOString().split('T')[0]
+})
 
 const form = ref({
     description: '',
     pointValue: 1,
     assignedToId: '',
-    dueDate: '',
+    dueDate: formattedInitialDate.value,
     dueTime: '',
     tagIds: [] as string[],
 })
@@ -277,6 +289,14 @@ const handleTagCreated = (newTag: Tag) => {
     showCreateTag.value = false
 }
 
+const handleTagDeleted = (tagId: string) => {
+    if (tags.value) {
+        tags.value = tags.value.filter(t => t.id !== tagId)
+        // Also remove the tag from the form if it was selected
+        form.value.tagIds = form.value.tagIds.filter(id => id !== tagId)
+    }
+}
+
 const handleSubmit = async () => {
     try {
         isSubmitting.value = true
@@ -295,7 +315,7 @@ const handleSubmit = async () => {
                 dueDateTime.setHours(hours, minutes, 0)
             } else {
                 // If no time is set, default to end of day (23:59:59)
-                dueDateTime.setHours(23, 59, 59)
+                dueDateTime.setHours(22, 59, 59)
             }
 
             // Convert to UTC while preserving the local time
@@ -314,8 +334,6 @@ const handleSubmit = async () => {
             },
         })
 
-        emit('task-created')
-        isOpen.value = false
         // Reset form
         form.value = {
             description: '',
@@ -325,6 +343,9 @@ const handleSubmit = async () => {
             dueTime: '',
             tagIds: [],
         }
+
+        taskPopover.close()
+        navigateTo(`/dashboard/${props.groupId}/tasks`)
     } catch (e: any) {
         error.value = e.message || 'Failed to create task'
     } finally {

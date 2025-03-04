@@ -42,28 +42,12 @@ model Task {
   completed     Boolean   @default(false)
   pointValue    Int       @default(0)
   groupId       String    @db.VarChar(30)
-  taskRowId     String?   @db.VarChar(30)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   assignedToId  String?   @db.VarChar(36) // References the Profile id from Supabase
   completedById String?   @db.VarChar(36) // References the Profile id from Supabase
   tags          TaskTag[]
-  TaskRow       TaskRow?  @relation(fields: [taskRowId], references: [id])
   comments      Comment[]
-}
-
-model TaskRow {
-  id        String   @id @default(cuid()) @db.VarChar(30)
-  title     String   @db.Text
-  weekStart DateTime
-  weekEnd   DateTime
-  groupId   String   @db.VarChar(30)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  order     Int      @default(0)
-  tasks     Task[]
-
-  @@unique([groupId, weekStart, weekEnd])
 }
 
 model Message {

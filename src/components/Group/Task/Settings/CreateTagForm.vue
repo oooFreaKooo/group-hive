@@ -1,6 +1,6 @@
 <template>
-    <div class="my-3 p-2 card bg-dark-subtle">
-        <label class="form-label">Create New Tag</label>
+    <div class="my-2 p-3 card">
+        <label class="form-label fw-medium mb-2">Create New Tag</label>
         <input
             v-model="form.title"
             type="text"
@@ -38,6 +38,41 @@
                 </span>
             </button>
         </div>
+
+        <template v-if="props.existingTags?.length">
+            <hr>
+            <div>
+                <label class="form-label fw-medium mb-2">Delete Tag</label>
+                <div class="d-flex gap-2">
+                    <select
+                        v-model="selectedTagId"
+                        class="form-select"
+                    >
+                        <option value="">
+                            Select a tag to delete
+                        </option>
+                        <option
+                            v-for="tag in props.existingTags"
+                            :key="tag.id"
+                            :value="tag.id"
+                        >
+                            {{ tag.title }}
+                        </option>
+                    </select>
+                    <button
+                        type="button"
+                        class="btn btn-danger"
+                        :disabled="!selectedTagId || isDeleting"
+                        @click="handleDelete(selectedTagId)"
+                    >
+                        <i
+                            class="bi"
+                            :class="isDeleting ? 'bi-hourglass-split' : 'bi-trash'"
+                        />
+                    </button>
+                </div>
+            </div>
+        </template>
     </div>
 
     <div
@@ -54,11 +89,13 @@ import type { Tag } from '@prisma/client'
 
 const props = defineProps<{
     groupId: string
+    existingTags?: Tag[]
 }>()
 
 const emit = defineEmits<{
     (e: 'tag-created', tag: Tag): void
     (e: 'cancel'): void
+    (e: 'tag-deleted', tagId: string): void
 }>()
 
 const form = ref({
@@ -66,8 +103,10 @@ const form = ref({
     color: '#FF6B6B',
 })
 
+const selectedTagId = ref('')
 const error = ref('')
 const isCreating = ref(false)
+const isDeleting = ref(false)
 
 const handleCreate = async () => {
     try {
@@ -94,6 +133,26 @@ const handleCreate = async () => {
         error.value = e.message || 'Failed to create tag'
     } finally {
         isCreating.value = false
+    }
+}
+
+const handleDelete = async (tagId: string) => {
+    try {
+        isDeleting.value = true
+        error.value = ''
+
+        await $fetch(`/api/group/${props.groupId}/tags/delete`, {
+            method: 'DELETE',
+            body: {
+                tagId,
+            },
+        })
+
+        emit('tag-deleted', tagId)
+    } catch (e: any) {
+        error.value = e.message || 'Failed to delete tag'
+    } finally {
+        isDeleting.value = false
     }
 }
 </script>

@@ -108,14 +108,42 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+button {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    overflow: hidden;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.05);
+
+        img {
+            transform: scale(1.1);
+        }
+    }
+
+    img {
+        width: 32px;
+        height: 32px;
+        transition: transform 0.2s ease;
+        object-fit: cover;
+    }
+}
+
 .profile-popover {
     left: calc(100% + 16px);
     bottom: 0;
     width: 240px;
     opacity: 0;
     transform: translateX(10px);
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease;
     pointer-events: none;
+    border: 1px solid var(--bs-gray-200);
+    background: var(--bs-white);
 
     &.show {
         opacity: 1;
@@ -132,10 +160,27 @@ onUnmounted(() => {
         height: 16px;
         background: var(--bs-white);
         transform: rotate(45deg);
+        border-left: 1px solid var(--bs-gray-200);
+        border-bottom: 1px solid var(--bs-gray-200);
     }
 
-    .btn:hover {
-        background: var(--bs-gray-100);
+    .btn {
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: var(--bs-gray-100);
+            transform: translateX(4px);
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    button,
+    .profile-popover,
+    .btn {
+        transition: none !important;
     }
 }
 </style>

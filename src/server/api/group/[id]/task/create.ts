@@ -20,7 +20,6 @@ export default defineEventHandler(async (event) => {
             dueDate: body.dueDate ? new Date(body.dueDate) : null,
             pointValue: body.pointValue,
             groupId,
-            taskRowId: body.taskRowId,
             assignedToId: body.assignedToId,
             tags: {
                 create: body.tagIds?.map((tagId: string) => ({

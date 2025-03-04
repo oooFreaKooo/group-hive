@@ -27,21 +27,3 @@ export default defineEventHandler(async (event) => {
 
     return group
 })
-
-/* model Group {
-  id             String      @id @default(cuid()) @db.VarChar(30)
-  name           String
-  description    String?
-  invitationCode String      @unique
-  ownerId        String      @db.VarChar(30)
-  city           String?
-  postalCode     String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  members        GroupUser[]
-  owner          Profile     @relation(fields: [ownerId], references: [id])
-  tasks          Task[]
-  Message        Message[]
-  tags           Tag[]
-  TaskRow        TaskRow[]
-} */

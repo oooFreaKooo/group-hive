@@ -1,19 +1,21 @@
 <template>
-    <div class="chat-container d-flex flex-column rounded-5 shadow">
-        <div class="p-3 bg-gradient bg-dark">
-            <span class="fw-semibold text-light d-flex align-items-center justify-content-between w-100">
+    <div class="d-flex flex-column h-100 bg-white rounded-4 border">
+        <div class="p-3 border-bottom bg-light rounded-top-4">
+            <div class="d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-people-fill mx-2" />
-                    Members
+                    <i class="bi bi-people-fill text-primary me-2" />
+                    <span class="fw-semibold">Members</span>
                 </div>
-                <span class="px-2 border-bottom rounded-circle">{{ members.length }}</span>
-            </span>
+                <span class="badge bg-primary-subtle text-primary rounded-pill px-2">
+                    {{ members.length }}
+                </span>
+            </div>
         </div>
 
         <div class="flex-grow-1 overflow-auto p-3 member-list position-relative">
             <div
                 v-if="status === 'pending'"
-                class="loading-overlay"
+                class="loading-overlay rounded-4"
             >
                 <div
                     class="spinner-border text-primary"
@@ -29,7 +31,7 @@
                     class="position-relative mb-2"
                 >
                     <div
-                        class="d-flex align-items-center gap-3 p-2 member-card border-bottom"
+                        class="d-flex align-items-center gap-3 p-2 member-card rounded-3 hover-bg-light"
                         @click="selectedMemberId = member.id"
                     >
                         <div class="position-relative flex-shrink-0 btn p-0 m-0 border-0">
@@ -46,6 +48,7 @@
                                 {{ member.displayName }}
                                 <span
                                     v-if="member.role === 'ADMIN'"
+                                    class="text-primary"
                                     title="Admin"
                                 >
                                     <i class="bi bi-shield-fill-check small" />
@@ -83,35 +86,36 @@ const selectedMemberId = ref<string | null>(null)
 </script>
 
 <style scoped lang="scss">
-.chat-container {
-    height: 75vh;
-    overflow: hidden;
-    position: relative;
-}
-
 .member-list {
+    height: calc(75vh - 180px);
+
     &::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
     }
 
     &::-webkit-scrollbar-track {
         background: transparent;
+        border-radius: 4px;
     }
 
     &::-webkit-scrollbar-thumb {
         background: var(--bs-gray-300);
-        border-radius: 3px;
+        border-radius: 4px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
 
         &:hover {
             background: var(--bs-gray-400);
+            border: 2px solid transparent;
+            background-clip: padding-box;
         }
     }
 }
 
 .member-card {
-    border-color: rgba(var(--bs-dark-rgb), 0.05);
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .member-avatar {
@@ -129,6 +133,10 @@ const selectedMemberId = ref<string | null>(null)
     font-size: 0.85rem;
 }
 
+.hover-bg-light:hover {
+    background-color: var(--bs-light);
+}
+
 @supports (scrollbar-color: auto) {
     .member-list {
         scrollbar-color: var(--bs-gray-300) transparent;
@@ -143,6 +151,7 @@ const selectedMemberId = ref<string | null>(null)
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(4px);
+    z-index: 1;
 }
 </style>

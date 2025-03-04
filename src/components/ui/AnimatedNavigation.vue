@@ -1,32 +1,32 @@
 <template>
     <div
-        class="navigation position-fixed bg-dark bg-gradient start-50 translate-middle-x z-3"
-        :class="smallerThanLg ? 'bottom-0 sm rounded-top-5 w-75' : 'top-0 lg w-100'"
+        class="navigation position-fixed start-50 translate-middle-x z-3"
+        :class="[
+            smallerThanLg ? 'bottom-0 mobile w-75' : 'top-0 desktop w-100',
+            { 'nav-expanded': isExpanded },
+        ]"
+        @mouseenter="isExpanded = true"
+        @mouseleave="isExpanded = false"
     >
         <div class="nav-container">
-            <ul class="d-flex list-unstyled position-relative mb-0">
+            <ul class="nav-list">
                 <li
                     v-for="(item, index) in navigationItems"
                     :key="item.label + index"
-                    class="list position-relative"
-                    :class="smallerThanLg ? 'sm' : 'lg'"
+                    class="nav-item"
                 >
                     <NuxtLink
                         :to="item.href"
-                        class="d-flex flex-column align-items-center text-decoration-none position-relative"
+                        class="nav-link"
+                        :class="{ active: activeIndex === index }"
                         @click="handleNavClick(index)"
                     >
-                        <span
-                            :class="`bi bi-${item.icon} icon-${smallerThanLg ? 'sm' : 'lg'}`"
-                        />
-                        <span :class="smallerThanLg ? 'text-sm' : 'text-lg'">{{ item.label }}</span>
+                        <div class="nav-link-content">
+                            <i :class="`bi bi-${item.icon}`" />
+                            <span class="nav-text">{{ item.label }}</span>
+                        </div>
                     </NuxtLink>
                 </li>
-                <div
-                    class="position-absolute"
-                    :class="smallerThanLg ? 'indicator-sm' : 'indicator-lg'"
-                    :style="{ transform: `translateX(calc(90px * ${activeIndex})) scale(0.8)` }"
-                />
             </ul>
         </div>
     </div>
@@ -36,6 +36,7 @@
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core'
 
 const route = useRoute()
+const isExpanded = ref(false)
 
 const props = defineProps<{
     navigationItems: NavigationItem[]
@@ -69,255 +70,135 @@ function handleNavClick (index: number) {
 </script>
 
 <style scoped lang="scss">
-// Variables
-$nav-height-sm: 70px;
-$nav-height-lg: 46px;
-$nav-height-default-sm: 46px;
-$nav-height-default-lg: 56px;
-$nav-height-hover: 66px;
-$nav-item-width: 90px;
-$indicator-size: 70px;
-$border-light-sm: 10px solid var(--bs-light);
-$border-light-lg: 16px solid var(--bs-light);
-$transition-duration: 0.35s;
-
-// Mixins
-@mixin indicator-pseudo {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  background: transparent;
-}
-
-@mixin nav-icon {
-  position: relative;
-  display: block;
-  line-height: 56px;
-  font-size: 1.15em;
-  text-align: center;
-  transform: translateY(0);
-  transition: all $transition-duration ease;
-}
-
-@mixin nav-text {
-  position: absolute;
-  font-weight: 400;
-  font-size: 0.7em;
-  letter-spacing: 0.05em;
-  opacity: 0;
-  transition: all $transition-duration ease;
-}
-
 .navigation {
+    --nav-height: 72px;
+    --nav-bg: var(--bs-dark);
+    --nav-color: var(--bs-gray-400);
+    --nav-active-color: var(--bs-primary);
+    --nav-transition: 0.2s ease;
 
-    &.sm {
-        height: $nav-height-default-sm;
-        border-top: $border-light-sm;
+    height: var(--nav-height);
+    background: var(--nav-bg);
+    transition: background var(--nav-transition);
+    backdrop-filter: blur(8px);
+
+    &.mobile {
+        border-radius: 1.25rem 1.25rem 0 0;
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--bs-gray-800);
+        border-bottom: none;
     }
 
-    &.lg {
-        position: relative;
-        border-bottom: none;
-        height: $nav-height-hover;
+    &.desktop {
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--bs-gray-800);
+        border-top: none;
+    }
+}
 
-        &::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 110%;
-            height: 16px;
-            background-color: var(--bs-light);
-        }
+.nav-container {
+    height: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
 
-        .list a {
-            .icon-lg {
-                font-size: 1.25em;
-            }
-        }
+.nav-list {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
 
-        .indicator-lg {
-            top: 50%;
-            transform: scale(1);
-        }
+.nav-item {
+    flex: 1;
+    height: 100%;
+    max-width: 100px;
+}
 
-        .list a.router-link-active {
-            .text-lg {
-                opacity: 1;
-                transform: translateX(-10px) translateY(-8px);
-                visibility: visible;
-            }
+.nav-link {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    color: var(--nav-color);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--nav-transition);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
 
-            .icon-lg {
-                transform: translateX(-10px) translateY(34px);
-            }
-        }
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: var(--nav-active-color);
+        transition: all var(--nav-transition);
+        transform: translateX(-50%);
+        opacity: 0;
     }
 
     &:hover {
-        height: $nav-height-hover;
-
-        .list a {
-            .icon-sm {
-                font-size: 1.25em;
-                transform: translateY(10px);
-            }
-        }
-
-        .indicator-sm {
-            transform: scale(1);
-        }
-
-        .list a.router-link-active {
-            .text-sm {
-                opacity: 1;
-                transform: translateX(-10px) translateY(20px);
-                visibility: visible;
-            }
-
-            .icon-sm {
-                transform: translateX(-10px) translateY(-22px);
-            }
-        }
+        color: var(--bs-white);
     }
 
-    .nav-container {
-        display: flex;
-        justify-content: center;
+    &.active {
+        color: var(--nav-active-color);
 
-        ul {
-            width: fit-content;
-            gap: 0;
-            display: flex;
-            justify-content: center;
-            position: relative;
+        &::after {
+            width: 24px;
+            opacity: 1;
+        }
+
+        .nav-text {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        i {
+            opacity: 1;
         }
     }
+}
 
-    .list {
-        position: relative;
-        width: $nav-item-width;
-        z-index: 1;
-        transition: all $transition-duration ease;
+.nav-link-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 
-        &.sm {
-            height: $nav-height-sm;
-        }
-
-        &.lg {
-            height: $nav-height-lg;
-        }
-
-        a {
-            position: relative;
-            color: var(--bs-light);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            width: 100%;
-            text-align: center;
-            font-weight: 500;
-
-            .icon-sm {
-                @include nav-icon;
-                line-height: 40px;
-            }
-
-            .icon-lg {
-                @include nav-icon;
-                line-height: 48px;
-            }
-
-            .text-sm, .text-lg {
-                @include nav-text;
-                opacity: 0;
-                visibility: hidden;
-            }
-
-            .text-sm {
-                transform: translateY(20px);
-            }
-
-            &.router-link-active {
-                .icon-sm {
-                    transform: translateX(-10px) translateY(-22px);
-                }
-
-                .icon-lg {
-                    transform: translateX(-10px) translateY(24px);
-                }
-
-                .text-sm, .text-lg {
-                    transform: translateX(-10px);
-                    opacity: 0;
-                    visibility: hidden;
-                }
-            }
-        }
+    i {
+        font-size: 1.5rem;
+        line-height: 1;
+        opacity: 0.8;
+        transition: opacity var(--nav-transition);
     }
+}
 
-    %indicator-base {
-        position: absolute;
-        left: 0;
-        width: $indicator-size;
-        height: $indicator-size;
-        background: var(--bs-dark);
-        border: 6px solid var(--bs-light);
-        border-radius: 50%;
-        transition: transform $transition-duration ease;
-        transform: scale(0.9);
+.nav-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.8;
+    transform: translateY(0);
+    transition: all var(--nav-transition);
+    white-space: nowrap;
+    margin-top: 0.25rem;
+}
 
-        &::before,
-        &::after {
-            @include indicator-pseudo;
-        }
-    }
-
-    .indicator-sm {
-        @extend %indicator-base;
-        top: -50%;
-
-        &::before,
-        &::after {
-            top: 50%;
-        }
-
-        &::before {
-            left: -22px;
-            border-top-right-radius: 20px;
-            box-shadow: 1px -10px 0 var(--bs-light);
-        }
-
-        &::after {
-            right: -22px;
-            border-top-left-radius: 20px;
-            box-shadow: -1px -10px 0 var(--bs-light);
-        }
-    }
-
-    .indicator-lg {
-        @extend %indicator-base;
-        top: 25%;
-
-        &::before,
-        &::after {
-            top: 0;
-        }
-
-        &::before {
-            left: -18px;
-            border-bottom-right-radius: 20px;
-            box-shadow: 1px 10px 0 var(--bs-light);
-        }
-
-        &::after {
-            right: -18px;
-            border-bottom-left-radius: 20px;
-            box-shadow: -1px 10px 0 var(--bs-light);
-        }
+@media (prefers-reduced-motion: reduce) {
+    .navigation,
+    .nav-link,
+    .nav-link-content,
+    .nav-text {
+        transition: none !important;
     }
 }
 </style>
